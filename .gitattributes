@@ -1,0 +1,11 @@
+# Finales de línea LF en el repositorio (Prettier los exige; evita diferencias con core.autocrlf en Windows)
+* text=auto eol=lf
+
+# Binarios
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.avif binary
+*.ico binary
+*.woff2 binary

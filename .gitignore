@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Recursos
+resources/
+
+# Plantilla de variables (sí se versiona)
+!.env.example
+
+# Playwright
+/test-results/
+/playwright-report/
