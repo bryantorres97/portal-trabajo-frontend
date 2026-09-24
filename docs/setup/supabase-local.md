@@ -51,4 +51,16 @@ select id, 'ADMIN_SISTEMA' from public.users where email = 'tu-correo@ejemplo.co
 
 ## Ambientes remotos
 
+**Development (nube):** proyecto `Portal Empleo` (ref `qmvyuzmitjwfdtvxzrok`, us-east-2), enlazado con `supabase link`.
+
+```bash
+supabase migration list --linked          # comparar historial local y remoto
+supabase db push --linked --dry-run       # revisar antes de aplicar
+supabase db push --linked                 # aplicar migraciones nuevas
+supabase db advisors --linked             # revisión de seguridad y rendimiento
+```
+
+- El seed (`--include-seed`) solo se aplicó en la carga inicial. Los cambios de roles y permisos posteriores van en migraciones.
+- pgTAP no está instalado en la nube: `pnpm test:db` y `pnpm test:integration` corren **solo en local** (y en CI), para no escribir datos de prueba en el proyecto remoto.
+
 Cada ambiente (dev, staging, prod) es un proyecto Supabase distinto. Las migraciones se aplican solo por CI con `supabase db push`, usando un token de acceso con alcance limitado (`SUPABASE_ACCESS_TOKEN`). Nunca se aplican a mano en producción.
