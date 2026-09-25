@@ -38,6 +38,8 @@ export function buildAuthorizeUrl(params: {
   nonce: string;
   codeChallenge: string;
   identityProvider?: IdentityProvider;
+  /** Fuerza a Cognito a pedir credenciales aunque haya una sesión SSO activa (vinculación). */
+  forceLogin?: boolean;
 }): string {
   const env = getCognitoEnv();
   const url = new URL(endpoint(env, "/oauth2/authorize"));
@@ -52,6 +54,7 @@ export function buildAuthorizeUrl(params: {
   url.searchParams.set("lang", "es");
   // Salta la pantalla de selección y va directo al proveedor social.
   if (params.identityProvider) url.searchParams.set("identity_provider", params.identityProvider);
+  if (params.forceLogin) url.searchParams.set("prompt", "login");
   return url.toString();
 }
 

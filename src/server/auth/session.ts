@@ -127,3 +127,71 @@ export async function destroySession(cookieValue: string | undefined): Promise<s
   if (tokens?.rt) await revokeRefreshToken(tokens.rt);
   return row.user_id;
 }
+
+export type SessionSummary = {
+  id: string;
+  createdAt: string;
+  lastSeenAt: string;
+  expiresAt: string;
+  userAgent: string | null;
+  ip: string | null;
+  current: boolean;
+};
+
+/** Sesiones activas del usuario (para "Mis sesiones"). */
+export async function listActiveSessions(userId: string, currentSessionId?: string): Promise<SessionSummary[]> {
+  const { data, error } = await getAdminDb()
+    .from("auth_sessions")
+    .select("id, created_at, last_seen_at, expires_at, user_agent, ip")
+    .eq("user_id", userId)
+    .is("revoked_at", null)
+    .gt("expires_at", new Date().toISOString())
+    .order("last_seen_at", { ascending: false })
+    .returns<
+      {
+        id: string;
+        created_at: string;
+        last_seen_at: string;
+        expires_at: string;
+        user_agent: string | null;
+        ip: string | null;
+      }[]
+    >();
+  if (error) throw error;
+  return (data ?? []).map((s) => ({
+    id: s.id,
+    createdAt: s.created_at,
+    lastSeenAt: s.last_seen_at,
+    expiresAt: s.expires_at,
+    userAgent: s.user_agent,
+    ip: s.ip,
+    current: s.id === currentSessionId,
+  }));
+}
+
+/** Revoca en Cognito los refresh tokens contenidos en sesiones cifradas (errores ignorados). */
+export async function revokeEncryptedTokens(tokensEnc: string[]): Promise<void> {
+  await Promise.all(
+    tokensEnc.map(async (jwe) => {
+      const tokens = await descifrarTokens(jwe);
+      if (tokens?.rt) await revokeRefreshToken(tokens.rt);
+    }),
+  );
+}
+
+/**
+ * Revoca sesiones del usuario: una en particular o todas ("cerrar sesión en todos los dispositivos").
+ * Devuelve cuántas se revocaron. También revoca los refresh tokens en Cognito.
+ */
+export async function revokeUserSessions(userId: string, sessionId?: string): Promise<number> {
+  let query = getAdminDb()
+    .from("auth_sessions")
+    .update({ revoked_at: new Date().toISOString() })
+    .eq("user_id", userId)
+    .is("revoked_at", null);
+  if (sessionId) query = query.eq("id", sessionId);
+  const { data, error } = await query.select("tokens_enc").returns<{ tokens_enc: string }[]>();
+  if (error) throw error;
+  await revokeEncryptedTokens((data ?? []).map((r) => r.tokens_enc));
+  return data?.length ?? 0;
+}

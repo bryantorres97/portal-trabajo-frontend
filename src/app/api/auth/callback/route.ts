@@ -3,9 +3,9 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getSessionEnv, isAuthConfigured } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { logAudit } from "@/server/audit/log";
-import { exchangeCode } from "@/server/auth/cognito";
+import { exchangeCode, revokeRefreshToken } from "@/server/auth/cognito";
 import { decryptPayload } from "@/server/auth/crypto";
-import { createSession } from "@/server/auth/session";
+import { createSession, resolveSession } from "@/server/auth/session";
 import {
   INTERNAL_SESSION_MAX_AGE_SECONDS,
   OAUTH_COOKIE,
@@ -14,11 +14,18 @@ import {
   SESSION_MAX_AGE_SECONDS,
   cookieOptions,
 } from "@/server/auth/session-cookie";
-import { identityFromIdToken, isInternalUser, loadUser, upsertUserFromLogin } from "@/server/auth/users";
+import {
+  identityFromIdToken,
+  isInternalUser,
+  loadUser,
+  upsertUserFromLogin,
+  type IdentityClaims,
+} from "@/server/auth/users";
 import { verifyAccessToken, verifyIdToken } from "@/server/auth/verify";
-import { requestInfo, safeReturnTo } from "@/server/http/request-info";
+import { requestInfo, safeReturnTo, type RequestContext } from "@/server/http/request-info";
+import { linkIdentity } from "@/server/users/identities";
 
-type OAuthState = { state: string; nonce: string; verifier: string; returnTo: string };
+type OAuthState = { state: string; nonce: string; verifier: string; returnTo: string; intent?: "login" | "link" };
 
 function fallo(request: NextRequest, motivo: string) {
   const response = NextResponse.redirect(new URL(`/cuenta?error=${motivo}`, request.url));
@@ -57,6 +64,9 @@ export async function GET(request: NextRequest) {
     if (idClaims.sub !== accessClaims.sub) throw new Error("Los tokens pertenecen a sujetos distintos");
 
     const identity = identityFromIdToken(idClaims);
+
+    if (guardado.intent === "link") return await vincular(request, identity, tokens.refresh_token, info);
+
     const { user, created } = await upsertUserFromLogin(identity);
 
     if (user.status !== "ACTIVO") {
@@ -101,4 +111,25 @@ export async function GET(request: NextRequest) {
     await logAudit({ action: "USER_LOGIN_FAILED", result: "ERROR", ...info }).catch(() => undefined);
     return fallo(request, "login_fallido");
   }
+}
+
+/**
+ * Vinculación (ADR-008): la identidad recién autenticada se agrega a la cuenta de la sesión
+ * actual. No se crea una sesión nueva; el refresh token de la segunda identidad se revoca.
+ */
+async function vincular(
+  request: NextRequest,
+  identity: IdentityClaims,
+  refreshToken: string | undefined,
+  info: RequestContext,
+) {
+  if (refreshToken) await revokeRefreshToken(refreshToken);
+  const session = await resolveSession(request.cookies.get(SESSION_COOKIE)?.value);
+  if (!session) return fallo(request, "vinculo_sin_sesion");
+
+  const resultado = await linkIdentity(session.userId, identity, info);
+  const response = NextResponse.redirect(new URL(`/cuenta?vinculo=${resultado}`, request.url));
+  response.cookies.delete(OAUTH_COOKIE);
+  response.headers.set("Cache-Control", "no-store");
+  return response;
 }

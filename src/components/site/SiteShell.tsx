@@ -37,6 +37,9 @@ export function SiteShell({ children }: { children: ReactNode }) {
             <Link href="/privacidad" className="font-semibold text-primary">
               Privacidad y derechos del titular
             </Link>
+            <Link href="/terminos" className="font-semibold text-primary">
+              Términos y condiciones
+            </Link>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">
             © {new Date().getFullYear()} {institucion.gad}. Tarifas referenciales, no vinculantes.

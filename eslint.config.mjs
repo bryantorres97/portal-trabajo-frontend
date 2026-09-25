@@ -9,6 +9,8 @@ const eslintConfig = defineConfig([
     rules: {
       // Contenido de usuario nunca se inyecta como HTML (docs/analysis/05-seguridad-auditoria.md).
       "react/no-danger": "error",
+      // Parámetros exigidos por firmas (p. ej. Server Actions con useActionState) se prefijan con _.
+      "@typescript-eslint/no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
     },
   },
   // Override default ignores of eslint-config-next.

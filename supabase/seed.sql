@@ -75,3 +75,27 @@ from (values
   ('SUPERVISOR', 'audit.read'), ('SUPERVISOR', 'metrics.read'), ('SUPERVISOR', 'data.export')
 ) as r(role_code, permission_code)
 on conflict do nothing;
+
+-- -----------------------------------------------------------------------------
+-- Documentos legales PROVISIONALES (v1). Pendientes de validación jurídica (P-15).
+-- Una nueva versión publicada obliga a los usuarios a aceptarla de nuevo (RN-18).
+-- -----------------------------------------------------------------------------
+insert into public.legal_documents (code, version, title, content_md, published_at) values
+('TERMINOS', 1, 'Términos y condiciones de uso (versión preliminar)',
+$md$
+**Versión preliminar sujeta a validación jurídica del GAD Municipalidad de Ambato.**
+
+1. Acolita.App es una plataforma municipal de intermediación entre ciudadanos y trabajadores de oficio habilitados por el GAD Municipalidad de Ambato.
+2. La plataforma no constituye relación de dependencia laboral entre las partes ni con el GAD.
+3. Las tarifas publicadas son referenciales y no vinculantes. El precio y las condiciones se acuerdan entre las partes dentro de la plataforma.
+4. Las condiciones aceptadas por ambas partes quedan registradas y no pueden modificarse; cualquier cambio requiere una nueva aceptación.
+5. Las conversaciones pueden ser revisadas por personal autorizado del GAD únicamente cuando exista una denuncia relacionada, y cada acceso queda registrado.
+6. El uso indebido de la plataforma puede dar lugar a advertencias, suspensión o bloqueo de la cuenta.
+$md$, now()),
+('PRIVACIDAD', 1, 'Aviso de privacidad (versión preliminar)',
+$md$
+**Versión preliminar sujeta a validación jurídica del GAD Municipalidad de Ambato.**
+
+El GAD Municipalidad de Ambato trata tus datos personales conforme a la Ley Orgánica de Protección de Datos Personales para registrar y habilitar trabajadores, facilitar el contacto y los acuerdos entre ciudadanos y trabajadores, atender denuncias y generar estadísticas institucionales. Consulta el detalle en la página de Privacidad y datos del portal.
+$md$, now())
+on conflict (code, version) do nothing;
