@@ -63,9 +63,14 @@ select id, 'ADMIN_SISTEMA' from public.users where email = 'tu-correo@ejemplo.co
 
 (A partir de la Fase 2 esto se hará desde `/admin/usuarios`.)
 
-## 5. (Opcional, Fase 5) Pre Token Generation Lambda
+## 5. Pre Token Generation Lambda: **no se necesita**
 
-Solo si se valida el camino principal de ADR-004. *Extensions → Add Lambda trigger → Pre token generation*. La Lambda agrega `role: "authenticated"` a los claims. Personalizar el access token requiere el evento V2 (planes Essentials/Plus). En el pool de desarrollo se puede probar sin afectar a nadie.
+ADR-004 decidió que Realtime use tokens emitidos por el propio servidor, así que **no hay que agregar ningún Lambda** al pool (ni al personal ni al del GAD).
+
+Si alguna vez hiciera falta saber en qué plan (tier) está un pool:
+- **Consola:** Amazon Cognito → *User pools* → el pool → pestaña **Settings** → *Feature plan* (Lite, Essentials o Plus).
+- **AWS CLI:** `aws cognito-idp describe-user-pool --user-pool-id <id> --query "UserPool.UserPoolTier"` → `LITE`, `ESSENTIALS` o `PLUS`.
+- Los pools creados desde fines de 2024 son **Essentials** por defecto. El del GAD solo lo puede consultar su equipo.
 
 ## 6. Diferencias conocidas con el pool institucional
 

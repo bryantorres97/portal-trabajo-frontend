@@ -28,7 +28,7 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
 - **Decisión:**
   - Los ambientes local y development usan un User Pool propio en la cuenta AWS personal del desarrollador (creado el 2026-09-24, región `us-east-1`). Replica lo relevante del pool del GAD: client confidencial, authorization code, scopes `openid email profile` y, si se prueba, Google como proveedor federado.
   - Producción usa un **App Client propio** del portal en el pool de ciudadanos del GAD (lo solicita el equipo al GAD, instructivo Paso 1).
-  - Staging: como el GAD no tiene pool no productivo, se usa un pool de staging propio del proyecto (idealmente en una cuenta institucional) y solo una prueba controlada, coordinada con el GAD, contra el pool real antes del paso a producción.
+  - Staging: **confirmado por el GAD (2026-09-24)**, no existe pool de pruebas ni de staging institucional. Staging usa el **pool personal**, con un app client aparte y callbacks del dominio de staging. Antes del paso a producción se hace una única prueba controlada, coordinada con el GAD, contra el pool real.
 - **Alternativas:** ver `docs/analysis/03-identidad-ambientes.md` §2 (opciones A–D y mock local).
 - **Consecuencias:**
   - Ningún desarrollo toca recursos productivos.
@@ -39,21 +39,22 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
 - **Estado:** ACEPTADA (usuario, 2026-09-24)
 - **Decisión:** Se entrega el análisis completo y la fundación técnica. Después se pausa para que el usuario revise y el GAD responda las preguntas bloqueantes.
 
-## ADR-004 — Cognito como "third-party auth" de Supabase
+## ADR-004 — Autorización de Realtime con tokens propios del servidor (sin Lambda en Cognito)
 
-- **Estado:** PROPUESTA (se valida en la Fase 1 y se usa desde la Fase 5)
-- **Contexto:** El chat necesita tiempo real. Supabase Realtime autoriza con RLS usando el JWT del cliente.
+- **Estado:** ACEPTADA (2026-09-24). Reemplaza la propuesta inicial de usar Cognito como *third-party auth* de Supabase.
+- **Contexto:** El chat (Fase 5) necesita tiempo real. Supabase Realtime autoriza los canales privados con RLS sobre `realtime.messages` usando el JWT que presenta el navegador.
+- **Opción descartada — Cognito como third-party auth:**
+  - Requiere un **Pre Token Generation Lambda** en el pool que agregue `"role": "authenticated"` (Cognito no lo emite). Personalizar el *access token* exige el evento V2, disponible solo en los planes Essentials/Plus.
+  - En producción el pool es **del GAD y compartido**: el Lambda afectaría a todas sus aplicaciones y dependería de su equipo y de su plan.
+  - Además, el `sub` de Cognito no es estable por persona (ADR-008): RLS igual tendría que traducir identidades.
 - **Decisión:**
-  - Se registra el User Pool de Cognito como proveedor third-party en Supabase. Así `auth.jwt()` contiene los claims del token de Cognito y RLS puede resolver al usuario mediante `sub`.
-  - Supabase Auth **no** se usa para gestionar usuarios.
-- **Requisito verificado (docs de Supabase, 2026-09):**
-  - Cognito no emite el claim `role`. Se necesita un **Pre Token Generation Lambda trigger** que agregue `"role": "authenticated"`. Sin él, Supabase trata el token como `anon`.
-  - Agregar claims al *access token* requiere el trigger V2, disponible solo en los planes Essentials/Plus de Cognito.
-- **Riesgo:** en el pool institucional compartido, esa Lambda afecta a todas las aplicaciones del GAD. → **[PENDIENTE]** confirmar con TI del GAD.
-- **Alternativa (fallback):** el servidor emite un JWT de corta vida (≤10 min) para Realtime, firmado con una clave registrada en Supabase y con `role=authenticated` y `sub` = id interno del usuario. Solo se entrega a usuarios con una sesión Cognito válida. Así no se toca el pool.
+  - Se importa en Supabase una **clave de firma propia** (JWT signing key, verificado en la documentación de Supabase 2026-09).
+  - El servidor emite un JWT de **corta vida (≤ 10 min)** con `sub = users.id`, `role = authenticated` y `iss` propio. Solo lo entrega a usuarios con sesión válida, mediante `POST /api/v1/realtime/token`, y el cliente lo renueva antes de que venza.
+  - RLS en `realtime.messages` verifica que `sub` sea participante de la conversación del canal.
+  - La clave privada vive solo en el servidor (variable de entorno), y cada ambiente tiene la suya.
 - **Consecuencias:**
-  - El navegador necesita un token válido para suscribirse. Se entrega mediante un endpoint controlado, con vida corta.
-  - RLS sigue siendo una defensa en profundidad incluso para el acceso desde el servidor.
+  - **No se modifica el pool de Cognito** (ni el personal ni el del GAD). El tier del pool deja de importar.
+  - Hay que ajustar `private.current_user_id()` en la Fase 5 para aceptar el `iss` propio (`sub` = `users.id`).
   - Desde abril de 2026 Supabase **no expone automáticamente** las tablas nuevas a la Data API, lo que encaja con el acceso solo desde el servidor (ADR-001).
 
 ## ADR-005 — Sesión web con cookie httpOnly cifrada y OIDC authorization code + PKCE
@@ -82,14 +83,18 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - Si más adelante el GAD da de alta el portal en su catálogo de roles (`app_roles`/`app_permissions`), esos claims se sincronizan como fuente adicional, no como la única. Queda **[PENDIENTE]** P-20.
 - **Consecuencias:** El portal no depende de que el GAD cree grupos en el pool compartido. Los cambios de rol quedan auditados en la base.
 
-## ADR-007 — Proveedor de CI: GitHub Actions; proveedor de despliegue pendiente
+## ADR-007 — CI con GitHub Actions y despliegue en Vercel
 
-- **Estado:** PROPUESTA
-- **Contexto:** El repositorio es git. No hay un remoto ni un proveedor de hosting confirmado.
+- **Estado:** ACEPTADA (despliegue confirmado por el GAD, 2026-09-24)
 - **Decisión:**
-  - Se usa GitHub Actions para CI (lint, typecheck, test, build, lint de migraciones), por ser el estándar y gratuito para repositorios privados pequeños.
-  - El despliegue (Vercel, AWS Amplify, contenedor en la infraestructura del GAD) queda **[PENDIENTE]** hasta conocer las restricciones institucionales.
-- **Consecuencias:** El workflow es portable. Si el GAD usa GitLab o Azure DevOps, los pasos se traducen uno a uno.
+  - CI con **GitHub Actions**: lint, formato, tipos, tests, build, lint y pruebas de la base, detección de secretos.
+  - Despliegue en **Vercel**, con la región de funciones **`cle1` (Cleveland)**, junto a Supabase (`us-east-2`) y al pool de Cognito del GAD (`us-east-2`), para minimizar la latencia servidor↔base.
+  - Ambientes: *Preview* (ramas y PR) → development; rama `main` → production. Las variables de entorno se definen por ambiente en Vercel. `COGNITO_DOMAIN` también se necesita en el build (CSP).
+  - Las migraciones **no** las aplica Vercel: se aplican por CI con `supabase db push` antes de promover el despliegue (patrón *expand/contract*).
+- **Consecuencias:**
+  - Las funciones son serverless y sin estado. El rate limiting de la Fase 5 usará un almacén compartido (Upstash Redis vía la integración de Vercel, o una tabla en Postgres).
+  - Las tareas programadas (expiración de propuestas, outbox de notificaciones) siguen en `pg_cron` dentro de Supabase, no en Vercel Cron, para no depender de la invocación HTTP.
+  - Rollback: *Instant Rollback* de Vercel sobre el despliegue anterior. Las migraciones son compatibles hacia atrás.
 
 ## ADR-008 — Modelo de identidad: un usuario, varias identidades; sin cédula
 
@@ -118,4 +123,39 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - Las fotos de oficios que ya vienen del prototipo (`public/images/oficios`) se mantienen como provisionales.
   - Las fotos de personas del prototipo (ficticias) **no** se versionan.
 - **Consecuencias:** Toda imagen provisional queda identificada en código con un comentario `// Provisional (ADR-009)` o en el propio contenido, para reemplazarla fácilmente.
+
+## ADR-010 — Contacto con el trabajador solo por el chat interno
+
+- **Estado:** ACEPTADA (GAD, 2026-09-24)
+- **Decisión:** el teléfono y el WhatsApp del trabajador **nunca** se muestran a los clientes (RN-19). Todo contacto pasa por el chat interno, que queda registrado. El canal institucional del GAD (página de contacto) no cambia.
+- **Consecuencias:** `worker_profiles.phone` es un dato privado (solo lo ve el personal del GAD con `worker.read.private`). Las vistas públicas no lo incluyen. En la Fase 5 se evaluará detectar números en los mensajes para desalentar el contacto por fuera.
+
+## ADR-011 — Calificación bidireccional con visibilidad restringida
+
+- **Estado:** ACEPTADA (GAD, 2026-09-24)
+- **Decisión:**
+  - Al finalizar una contratación, el cliente califica al trabajador y el trabajador califica al cliente (RN-06), una vez cada uno.
+  - La calificación del **cliente al trabajador** es pública, en el perfil del trabajador.
+  - La calificación del **trabajador al cliente** solo la ven usuarios con rol `TRABAJADOR` activo y el personal del GAD (RN-20). Nunca aparece en páginas públicas ni ante otros clientes.
+- **Consecuencias:** `reviews.direction` con unique `(contract_id, direction)`. La visibilidad se aplica en el dominio, en las vistas y en RLS, y tiene tests de autorización específicos en la Fase 7.
+
+## ADR-012 — Acceso del personal del GAD con Microsoft Entra ID (Microsoft 365)
+
+- **Estado:** ACEPTADA (usuario, 2026-09-24) — opción (b) de P-21
+- **Contexto:** El personal del GAD usa Microsoft 365 con MFA corporativo. El pool de personal del GAD (federado con Azure AD) no admite aplicaciones de terceros. El pool de ciudadanos no tiene MFA.
+- **Decisión:**
+  - Dos puertas de entrada:
+    - **Ciudadanos y trabajadores** → Cognito (pool de ciudadanos del GAD).
+    - **Personal del GAD** → **Microsoft Entra ID** del tenant del GAD, integrado directamente por el portal (OIDC authorization code + PKCE, cliente confidencial, endpoint v2.0).
+  - La aplicación es **single-tenant**: solo se aceptan tokens cuyo `iss` sea `https://login.microsoftonline.com/{TENANT_GAD}/v2.0` y cuyo `tid` coincida. Se rechazan cuentas invitadas de otros tenants (claim `idp` distinto del emisor).
+  - Identidad del personal en `user_identities`: `issuer` = emisor del tenant, `sub` = **`oid`** (inmutable y el mismo en todas las apps del tenant; verificado en la documentación de Microsoft). Proveedor `ENTRA`.
+  - **MFA:** el ID token v2 de Entra **no incluye `amr`**, así que el portal no puede verificarlo por sí mismo. El GAD debe aplicar **acceso condicional con MFA obligatorio** a la aplicación del portal. Es un requisito a pedir junto con el app registration.
+  - **Los permisos internos solo se ejercen en sesiones abiertas con Entra ID.** Una sesión de Cognito nunca accede a `/admin` ni a APIs administrativas, aunque la cuenta tenga roles internos. `auth_sessions` registra el origen de la sesión.
+  - Las cuentas del personal **no** reciben el rol `CLIENTE` en el alta just-in-time: entran sin roles hasta que un `ADMIN_SISTEMA` se los asigne. El primer `ADMIN_SISTEMA` se crea con un comando de *bootstrap* (lista de `oid` en una variable de entorno de un solo uso, o SQL).
+  - Los roles internos siguen en Postgres (ADR-006). Opcional a futuro: mapear *app roles* de Entra.
+- **Ambientes:** en desarrollo, un tenant de Entra propio (gratuito) con un app registration de prueba. En producción, el app registration lo crea el equipo de TI del GAD en su tenant.
+- **Consecuencias:**
+  - El personal usa su cuenta corporativa con MFA real. Si deja el GAD y TI deshabilita su cuenta, pierde el acceso al renovar la sesión.
+  - La sesión del personal dura como máximo 12 h y se renueva con el refresh token de Entra.
+  - Hay que solicitar al GAD: app registration (client ID, tenant ID, secreto o certificado), redirect URI `https://<dominio>/api/auth/staff/callback`, logout URI y acceso condicional con MFA.
 

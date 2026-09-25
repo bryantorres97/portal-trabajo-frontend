@@ -36,29 +36,30 @@ Se priorizan las que bloquean decisiones técnicas. **Bloquea** indica la primer
 |---|---|---|---|---|
 | P-01 | ~~Claim de cédula~~ → **Reformulada:** el portal no maneja cédula (decisión del usuario) y el `sub` cambia según el proveedor (instructivo). ¿El GAD exigirá en el futuro usar el `userId` maestro del Identity & Onboarding Service (que requiere cédula)? | Identidad | F2 | No integrar en el MVP. `users.master_user_id` queda preparado (ADR-008) |
 | P-02 | Solicitar al GAD el **App Client confidencial** del portal en `contribuyentes-externos` (tipo backend, callback `https://<dominio>/api/auth/callback`, logout `https://<dominio>/`, contacto técnico). ¿Qué dominio tendrá el portal? | Autenticación / infraestructura | F10 (prod) | Solicitarlo en cuanto se conozca el dominio |
-| P-03 | ✅ Respondida en parte: el GAD **no tiene** pool ni cuenta no productiva. Queda por decidir en qué cuenta vive el pool de staging del proyecto | Infraestructura | F10 | Una cuenta institucional separada, o la del proyecto |
-| P-04 | El pool de personal del GAD (Azure AD) **no admite terceros**. ¿Cómo se autentica el personal que administra el portal? ¿Con cuentas del pool de ciudadanos y roles internos del portal? ¿Se exige MFA (hoy apagado en ese pool)? | Seguridad / autenticación | F2 | Cuentas del pool de ciudadanos + roles en el portal + sesiones cortas (12 h); MFA a solicitar al GAD |
-| P-05 | ✅ Respondida: usuario y contraseña, Google y Facebook (este último pendiente de aprobación de Meta). Solo falta confirmar cuándo habilitar el botón de Facebook | Autenticación / UX | F2 | Mostrar Google; Facebook cuando el GAD lo confirme |
+| P-03 | ✅ **Respondida (GAD, 2026-09-24):** no hay pool de pruebas ni de staging en el GAD. Desarrollo y staging usan el **pool personal** del equipo | — | — | Staging con un app client aparte en el pool personal |
+| P-04 | ✅ Respondida en parte: el personal del GAD usa **MFA corporativo de Microsoft 365**. **Nueva duda → P-21** | Seguridad / autenticación | F2 | Ver P-21 |
+| P-05 | ✅ **Respondida:** el pool de ciudadanos tiene federación con **Google y Facebook** | — | — | `COGNITO_IDENTITY_PROVIDERS=Google,Facebook` en producción (Facebook cuando Meta lo apruebe) |
 | P-06 | ¿Qué documentos son obligatorios para habilitar a un trabajador? ¿Se exige el certificado de antecedentes penales? ¿Tienen vigencia? | Datos / legal | F4 | Tipos configurables; ninguno bloqueante hasta que se confirme |
 | P-07 | ¿La plataforma participa en pagos o solo registra el precio acordado como referencia? | Contratación / arquitectura | F6 | Solo referencia, sin pagos |
-| P-08 | ¿Se permite mostrar el teléfono o WhatsApp del trabajador, o todo contacto debe pasar por el chat interno? | Privacidad / UX | F3 | Solo chat interno (trazabilidad) |
+| P-08 | ✅ **Respondida:** **no** se muestra el teléfono ni el WhatsApp del trabajador. Todo contacto pasa por el chat interno | — | — | Regla RN-19 |
 | P-09 | ~~Registro Civil~~ → **Descartada:** el portal no maneja cédula | — | — | — |
-| P-10 | ¿El trabajador califica al cliente? ¿Esa calificación es pública? | Calificaciones | F7 | Post-MVP y privada |
-| P-11 | ¿Quién puede habilitar? ¿Se exige que quien habilita sea distinto de quien registró (separación de funciones)? | Roles | F4 | Sí, separación configurable, activa por defecto |
+| P-10 | ✅ **Respondida:** el trabajador **sí** califica al cliente. Esa calificación la ven **solo otros trabajadores y el personal del GAD**, nunca los clientes | — | — | Regla RN-20, ADR-011 |
+| P-11 | ✅ **Respondida:** no se segregan funciones. Habilita el personal autorizado del GAD (quien tenga `worker.enable`), aunque haya registrado al trabajador | — | — | — |
 | P-12 | ¿Qué granularidad de ubicación usar: parroquias urbanas y rurales de Ambato, sectores o barrios? ¿Hay un catálogo oficial? | Búsqueda / datos | F3 | Catálogo de parroquias del cantón |
 | P-13 | ¿Cómo es el proceso de capacitación: presencial, virtual, con evaluación, por oficio o general? ¿Tiene vigencia y requiere renovación? | Capacitación | F4 | Un curso general, resultado aprobado/reprobado, sin vencimiento |
 | P-14 | ¿Qué sanciones aplica el GAD, cuáles son los plazos de atención de denuncias y a quién se escala? ¿Hay una ordenanza aplicable? | Moderación | F8 | Catálogo de acciones de §16 configurable |
 | P-15 | Validación jurídica: base legal del tratamiento, transferencia internacional (AWS, Supabase, Firebase fuera de Ecuador), retención, textos legales | Legal / infraestructura | F2 (textos), F10 (prod) | Iniciar la consulta al área jurídica en paralelo |
-| P-16 | ¿Dónde se desplegará: Vercel, AWS o infraestructura propia del GAD? ¿Hay restricciones de proveedor o de región? | Infraestructura | F10 | Vercel + Supabase en us-east (latencia baja a Ecuador) |
-| P-17 | ¿Se puede agregar un Pre Token Generation Lambda al pool institucional (claim `role`)? ¿En qué plan (tier) está el pool? | Chat / realtime | F5 | Fallback: JWT propio para Realtime (ADR-004) |
+| P-16 | ✅ **Respondida:** despliegue en **Vercel** | — | — | ADR-007: región `cle1` (Cleveland), junto a Supabase y Cognito en us-east-2 |
+| P-17 | ✅ **Resuelta sin tocar el pool:** no se necesita el Pre Token Generation Lambda. El servidor emite tokens propios de corta vida para Realtime (ADR-004). El tier del pool solo importaría si se quisiera el Lambda | — | — | ADR-004 |
 | P-18 | ¿El nombre "Acolita.App" y la identidad visual del prototipo están aprobados? ¿Pueden entregar los logotipos en alta resolución (SVG/PNG)? | UX / marca | F1 (visual) | Usar provisionalmente el nombre y un logotipo textual |
 | P-19 | ¿Rotará el GAD el client secret que aparece en `cognito-data.md`? | Seguridad | Inmediato | Recomendado: sí |
 | P-20 | ¿Conviene dar de alta el portal en el catálogo de roles del GAD (claims `app_roles` y `app_permissions` en el ID token, instructivo §6)? | Roles | F2 | No en el MVP: los roles viven en la base del portal (ADR-006). Reevaluar si el GAD lo exige |
+| P-21 | ✅ **Decidida (usuario, 2026-09-24): opción (b).** El portal integra **Microsoft Entra ID** del tenant del GAD, solo para el personal (ADR-012). Queda **pedir al GAD**: app registration single-tenant (client ID, tenant ID, secreto), redirect `https://<dominio>/api/auth/staff/callback` y **acceso condicional con MFA** para la app | Seguridad / autenticación | F2B | — |
 
 ## 28. Recomendaciones finales
 
 1. **Solicitar el App Client exclusivo** del portal (P-02) y pedir al GAD que rote el client secret de la otra aplicación que circula en `cognito-data.md` (P-19).
-2. **Iniciar ya las consultas institucionales** (P-01, P-06, P-13, P-15, P-17), en paralelo a las Fases 1–3, que no dependen de ellas.
+2. **Iniciar ya las consultas institucionales** (P-01, P-06, P-13, P-15, P-21), en paralelo a las Fases 1–3, que no dependen de ellas.
 3. **Tratar el chat y los documentos como datos sensibles** desde el diseño: sin acceso administrativo libre y con auditoría de cada lectura.
 4. **Mantener el MVP pequeño:** sin pagos, sin score de reputación, sin mapa, sin adjuntos. El valor diferencial es "trabajador habilitado por el GAD + acuerdo registrado".
 5. **API-first real:** que la web use la misma capa de dominio que la API para que la app móvil no requiera reescrituras.

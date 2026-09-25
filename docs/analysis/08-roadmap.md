@@ -100,7 +100,7 @@ Cada fase indica objetivo, funcionalidades, componentes, dependencias, decisione
   - edición limitada del perfil por el propio trabajador.
 - **Componentes:** `domain/workers` (state-machine), `domain/documents`, `domain/training`, `server/storage`, `app/admin/trabajadores/**`.
 - **Dependencias:** Fases 2 y 3.
-- **Decisiones:** P-06 (documentos), P-11 (quién habilita, separación de funciones), P-13 (proceso de capacitación).
+- **Decisiones:** P-06 (documentos), P-13 (proceso de capacitación), P-21 (acceso del personal con Microsoft 365). Sin separación de funciones (P-11 respondida).
 - **Pruebas:**
   - todas las transiciones válidas e inválidas;
   - habilitar sin capacitación aprobada → error;
@@ -115,6 +115,7 @@ Cada fase indica objetivo, funcionalidades, componentes, dependencias, decisione
 ## Fase 5 — Chat
 
 - **Objetivo:** comunicación segura en tiempo real entre cliente y trabajador.
+- **Autorización de Realtime (ADR-004, decidido):** el servidor emite un JWT propio de corta vida (clave de firma importada en Supabase, `sub` = `users.id`, `role=authenticated`). No se usa el Pre Token Generation Lambda.
 - **Funcionalidades:**
   - crear conversación;
   - enviar y listar mensajes (paginados);
@@ -167,6 +168,7 @@ Cada fase indica objetivo, funcionalidades, componentes, dependencias, decisione
 ## Fase 7 — Calificaciones
 
 - **Objetivo:** reputación basada en contrataciones reales.
+- **Alcance ampliado (GAD, 2026-09-24):** calificación **bidireccional**. El trabajador también califica al cliente, pero esa calificación solo la ven trabajadores y personal del GAD (RN-20, ADR-011).
 - **Funcionalidades:**
   - reseña 1–5 + comentario ≤200 palabras (frontend, backend y base);
   - edición durante 7 días;
@@ -232,7 +234,7 @@ Cada fase indica objetivo, funcionalidades, componentes, dependencias, decisione
   - OpenAPI;
   - staging → producción;
   - capacitación de usuarios GAD.
-- **Dependencias:** todas. Pool institucional y dominio (P-02, P-03).
+- **Dependencias:** todas. App client del portal en el pool del GAD y dominio (P-02). Despliegue en Vercel (ADR-007).
 - **Criterios de aceptación:**
   - 0 vulnerabilidades altas;
   - RPO ≤ 24 h (PITR ≤ 5 min con plan Pro);

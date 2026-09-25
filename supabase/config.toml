@@ -351,8 +351,8 @@ enabled = false
 
 # Use AWS Cognito (Amplify) as a third-party provider alongside Supabase Auth.
 [auth.third_party.aws_cognito]
-# ADR-004: activar cuando el pool dev tenga el trigger Pre Token Generation (claim `role`).
-# Mientras tanto, el servidor usa la secret key y RLS queda como defensa en profundidad.
+# ADR-004: NO se usa. Realtime usa tokens emitidos por el servidor (clave de firma importada),
+# así que el pool de Cognito no necesita el trigger Pre Token Generation.
 enabled = false
 # user_pool_id = "env(COGNITO_USER_POOL_ID)"
 # user_pool_region = "env(COGNITO_REGION)"

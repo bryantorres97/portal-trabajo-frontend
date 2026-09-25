@@ -75,7 +75,7 @@ src/
 | **Realtime** | Canal privado por conversación para mensajes nuevos, lectura y typing | Evita montar WebSockets propios |
 | **pg_cron** | Expiración de propuestas, procesamiento del outbox, recálculo de métricas | Tareas internas sin infraestructura adicional |
 | **Edge Functions** | No se usan en el MVP | La lógica vive en Next. Se reevalúa para webhooks o procesos largos |
-| **Supabase Auth** | **No se usa** para identidad | Identidad centralizada en Cognito (§20). Solo se aprovecha *third-party auth* para validar JWT (ADR-004) |
+| **Supabase Auth** | **No se usa** | La identidad está centralizada en Cognito (§20). Para Realtime, el servidor emite JWT propios de corta vida, firmados con una clave importada en Supabase (ADR-004) |
 | **GraphQL / Data API** | Deshabilitado o sin exposición de tablas de negocio | Reduce la superficie de ataque. Desde 2026-04 las tablas nuevas no se exponen por defecto |
 
 Mapeo de responsabilidades (§20):
@@ -124,7 +124,7 @@ Autorización por endpoint: `authorize(user, "worker.enable")`. Permiso granular
 - **Difusión.** Opciones:
   - A: Realtime *Postgres Changes* sobre `messages`, filtrado por `conversation_id`.
   - B **[RECOMENDACIÓN]**: el servidor publica en un canal *Broadcast* privado `conversation:{id}` después de insertar. Es más escalable y no depende de replicación por fila.
-  - En ambos casos la autorización del canal se hace con políticas RLS sobre `realtime.messages`, que verifican que el `sub` del JWT sea participante.
+  - En ambos casos la autorización del canal se hace con políticas RLS sobre `realtime.messages`, que verifican que el `sub` del JWT (= `users.id`, token emitido por el servidor) sea participante.
 - **Token para Realtime:** ver ADR-004. El navegador obtiene el token por `POST /api/v1/realtime/token` y lo renueva antes de que expire.
 - **Estado de lectura:** `conversation_participants.last_read_message_id` y `last_read_at`, más un evento broadcast `read`.
 - **Anti-abuso:**

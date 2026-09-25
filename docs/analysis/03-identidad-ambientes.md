@@ -23,7 +23,7 @@ Fuentes:
 | App Client | Dedicado por aplicación, lo crea el GAD | Hay que **solicitarlo** con: tipo (backend/confidencial), callbacks, logout URLs y contacto técnico → P-02 |
 | Flujo | Confidencial: authorization code con `client_secret` (Basic) | El portal además usa PKCE y `nonce` (defensa en profundidad; Cognito lo admite en clientes confidenciales) |
 | Roles | Catálogo compartido opcional del GAD → claims `app_roles`, `app_permissions` | Opción futura para ADR-006 → P-20 |
-| MFA | **Apagado** en el pool de ciudadanos | Relevante para el personal GAD → P-04 |
+| MFA | **Apagado** en el pool de ciudadanos | El personal del GAD usa MFA corporativo de **Microsoft 365** → cómo ingresa al panel: P-21 |
 | Vida de tokens | Acceso e ID: 60 min · refresh: **5 días** (referencia) | La sesión web dura como máximo lo que permita el refresh token: al fallar la renovación, la sesión se revoca |
 | Ambiente de pruebas | **No existe** (todo es producción) | Desarrollo con pool personal (ADR-002). Las pruebas contra el pool real deben coordinarse con el GAD |
 | Client secret de `cognito-data.md` | Presente en texto plano | ⚠️ Pertenece a **otra** aplicación. No se usa ni se copia. El instructivo prohíbe reutilizar credenciales ajenas. Recomendación: que el GAD lo rote (B3) |
@@ -33,7 +33,7 @@ Conclusiones:
 1. El portal necesita **su propio App Client confidencial** en el pool de ciudadanos (P-02).
 2. La identidad en el portal es `users` + `user_identities (issuer, sub)`, sin cédula (ADR-008).
 3. El pool es compartido y productivo: el portal **no** depende de modificarlo (Lambdas, grupos). La autorización se resuelve en la base de datos (ADR-006).
-4. **Acceso del personal del GAD:** el pool de personal (Azure AD) no admite terceros. Mientras no haya otra definición, el personal ingresa con una cuenta del pool de ciudadanos y recibe roles internos en el portal. **[PENDIENTE]** P-04, junto con la exigencia de MFA.
+4. **Acceso del personal del GAD:** decidido (ADR-012). El personal ingresa con **Microsoft Entra ID** (Microsoft 365, MFA corporativo por acceso condicional), integrado directamente por el portal. Los permisos internos solo se ejercen en sesiones de Entra.
 
 ## 23. Autenticación vs. autorización vs. permisos de negocio
 
@@ -78,7 +78,7 @@ Manejo de tokens:
 
 **Decisión (ADR-002):**
 - Local y development: **Opción B**, un pool propio en la cuenta personal del desarrollador.
-- Staging y production: el instructivo confirma que **el GAD no tiene pool ni cuenta no productiva**. Staging usa un pool propio del proyecto (opción A/C; P-03 queda en qué cuenta alojarlo). Producción usa el App Client del portal en el pool de ciudadanos. Antes del paso a producción se hace una prueba controlada, coordinada con el GAD.
+- Staging y production: el GAD confirmó que **no tiene pool de pruebas ni de staging**. Staging usa el **pool personal** del equipo, con un app client aparte (P-03 respondida). Producción usa el app client del portal en el pool de ciudadanos del GAD.
 - Mock: solo para **tests automatizados**. El verificador de JWT acepta un JWKS local de prueba en `NODE_ENV=test`, de modo que los tests no dependan de AWS.
 
 Reglas: **nunca** usar el pool productivo ni sus usuarios en local o dev; cada ambiente tiene su app client y sus callback URLs; los secretos van por ambiente en el gestor de secrets del proveedor de despliegue.
@@ -101,7 +101,7 @@ Reglas: **nunca** usar el pool productivo ni sus usuarios en local o dev; cada a
 
 ## 36. CI/CD
 
-Proveedor propuesto: **GitHub Actions** (ADR-007). El despliegue está [PENDIENTE] (Vercel es lo más simple para Next 16; alternativas: AWS Amplify, contenedor en la infraestructura del GAD).
+CI con **GitHub Actions** y despliegue en **Vercel**, región `cle1` (ADR-007, confirmado por el GAD).
 
 ```text
 PR → development / main

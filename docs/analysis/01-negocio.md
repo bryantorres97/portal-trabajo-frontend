@@ -59,7 +59,7 @@ El MVP cubre el ciclo completo: registrar al trabajador → habilitarlo → que 
 | `RESP_DENUNCIAS` | Casos | Gestionar denuncias, acceso auditado a la evidencia, aplicar sanciones |
 | `SUPERVISOR` | Control | Lectura de reportes, métricas y auditoría; escalar casos |
 
-Principios: mínimo privilegio y separación de funciones. Quien registra a un trabajador no debería ser quien lo habilita; la regla se puede configurar y es **[PENDIENTE]** confirmar con el GAD. La matriz fina de permisos está en `04-modelo-datos.md` (tabla `permissions`).
+Principios: mínimo privilegio. **[CONFIRMADO, GAD 2026-09-24]** No se exige separación de funciones: el personal del GAD con permiso de habilitación puede habilitar aunque haya registrado al trabajador.
 
 ## 4. Casos de uso principales
 
@@ -74,6 +74,7 @@ Principios: mínimo privilegio y separación de funciones. Quien registra a un t
 | CU-07 | Cliente/Trabajador | Proponer, contraproponer y aceptar condiciones | 6 |
 | CU-08 | Cliente/Trabajador | Cancelar, marcar como finalizada o abrir una disputa | 6 |
 | CU-09 | Cliente | Calificar y comentar una contratación finalizada | 7 |
+| CU-09b | Trabajador | Calificar al cliente de una contratación finalizada (visible solo para trabajadores y GAD) | 7 |
 | CU-10 | Cliente/Trabajador | Denunciar un perfil, mensaje, reseña o contratación; consultar su estado | 8 |
 | CU-11 | Trabajador | Vincular su cuenta Cognito al registro presencial (código de activación) | 2/4 |
 | CU-12 | Trabajador | Editar la parte autorizada de su perfil y su disponibilidad | 2/4 |
@@ -95,7 +96,7 @@ Principios: mínimo privilegio y separación de funciones. Quien registra a un t
 | RN-03 | La habilitación la ejecuta un rol autorizado y queda auditada (`WORKER_ENABLED`) | CONFIRMADO |
 | RN-04 | Una conversación no implica contratación. La contratación existe solo cuando **ambas partes aceptaron la misma versión** de condiciones | CONFIRMADO |
 | RN-05 | Las condiciones aceptadas son inmutables. Cualquier cambio genera una nueva versión que requiere una nueva aceptación de ambas partes | CONFIRMADO |
-| RN-06 | Solo el cliente de una contratación `FINALIZADA` puede calificar al trabajador, una sola vez por contratación | CONFIRMADO / RECOMENDACIÓN |
+| RN-06 | En una contratación `FINALIZADA`, el cliente califica al trabajador y el trabajador califica al cliente, **una vez cada uno** | CONFIRMADO |
 | RN-07 | El comentario de una reseña tiene un máximo de **200 palabras**, validado en frontend, backend y base de datos | CONFIRMADO |
 | RN-08 | La reseña puede editarse durante 7 días y no puede eliminarla su autor (sí ocultarla un moderador) | RECOMENDACIÓN / PENDIENTE |
 | RN-09 | El personal del GAD solo accede al contenido de una conversación si existe una denuncia que la involucre; cada acceso registra la justificación en auditoría | CONFIRMADO |
@@ -108,6 +109,8 @@ Principios: mínimo privilegio y separación de funciones. Quien registra a un t
 | RN-16 | No se permite la auto-denuncia ni denunciar dos veces el mismo objeto mientras exista una denuncia abierta del mismo denunciante | RECOMENDACIÓN |
 | RN-17 | El precio acordado es informativo. La plataforma no procesa pagos | INFERIDO / PENDIENTE |
 | RN-18 | El cliente debe aceptar los términos y dar su consentimiento de tratamiento de datos antes de usar funciones transaccionales; se guarda la versión aceptada | CONFIRMADO (consentimiento) / RECOMENDACIÓN (versionado) |
+| RN-19 | El teléfono y el WhatsApp del trabajador **nunca** se muestran a clientes. Todo contacto pasa por el chat interno | CONFIRMADO (GAD) |
+| RN-20 | La calificación que el trabajador hace del cliente es visible **solo para trabajadores y personal del GAD**, nunca para otros clientes ni en páginas públicas | CONFIRMADO (GAD) |
 
 ## 6. Estados de cada proceso
 
@@ -244,7 +247,7 @@ Visitante → busca por texto, categoría o sector → ve la lista de habilitado
 | Trabajadores (admin) | RF-TR-01 Alta presencial · RF-TR-02 Documentos · RF-TR-03 Capacitación · RF-TR-04 Transiciones de estado · RF-TR-05 Historial | 4 |
 | Chat | RF-CH-01 Conversación 1:1 · RF-CH-02 Mensajes de texto con hora · RF-CH-03 Estado de lectura · RF-CH-04 Tiempo real · RF-CH-05 Bloqueo · RF-CH-06 Denunciar mensaje | 5 |
 | Contratación | RF-CO-01 Propuesta versionada · RF-CO-02 Aceptación bilateral · RF-CO-03 Cancelación, rechazo, expiración · RF-CO-04 Inicio y fin · RF-CO-05 Disputa | 6 |
-| Calificaciones | RF-CA-01 Escala 1–5 · RF-CA-02 Comentario de ≤200 palabras · RF-CA-03 Promedio y conteo en el perfil · RF-CA-04 Moderación | 7 |
+| Calificaciones | RF-CA-01 Escala 1–5 · RF-CA-02 Comentario de ≤200 palabras · RF-CA-03 Promedio y conteo en el perfil · RF-CA-04 Moderación · RF-CA-05 Calificación del trabajador al cliente con visibilidad restringida | 7 |
 | Denuncias | RF-DN-01 Crear denuncia con evidencia · RF-DN-02 Seguimiento · RF-DN-03 Bandeja admin · RF-DN-04 Acciones · RF-DN-05 Acceso auditado | 8 |
 | Notificaciones | RF-NT-01 In-app · RF-NT-02 Push web con FCM · RF-NT-03 Preferencias | 5+ |
 | Administración | RF-AD-01 Dashboard · RF-AD-02 Reportes básicos + CSV · RF-AD-03 Auditoría consultable · RF-AD-04 Gestión de roles internos | 9 |

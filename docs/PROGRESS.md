@@ -7,7 +7,7 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 2 — Usuarios y perfiles** (implementada; pendiente validación manual y commit) |
+| Fase actual | **Fase 2 — Usuarios y perfiles** (commit `3d9ca0d`; pendiente validación manual con login real) |
 | Siguiente fase | Fase 3 — Catálogo y búsqueda |
 | Rama de trabajo | `development` · último commit `b208b58` (Fase 0 + 1). Se commitea solo con confirmación del usuario |
 | Última actualización | 2026-09-24 |
@@ -16,8 +16,8 @@
 
 1. ~~Commit de Fase 0 + 1~~ ✅ `b208b58`.
 2. **Probar el login real con el pool dev** (B2). Todo está listo: `.env.local` completo, migraciones aplicadas en el proyecto Supabase dev en la nube (`Portal Empleo`), callback `http://localhost:3000/api/auth/callback` aceptado por Cognito. Solo falta que el usuario inicie sesión en el navegador (`pnpm dev` → `/cuenta`). Checklist en `docs/setup/cognito-dev.md`.
-3. Solicitar al GAD el App Client del portal (P-02) y enviar las preguntas bloqueantes (`docs/analysis/09-riesgos-preguntas.md`): P-02, P-04, P-06, P-13, P-15, P-17 y P-20.
-4. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) y commitear con la confirmación del usuario. Después, Fase 3.
+3. Solicitar al GAD el App Client del portal (P-02). Preguntas abiertas: P-02, P-06, P-13, P-15, P-20 (P-21 decidida: Entra ID para el personal, ADR-012). Pedir al GAD el app registration de Entra (texto listo en `docs/setup/entra-dev.md` §4).
+4. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
 
 ## Bloqueos y dependencias externas
 
@@ -55,6 +55,7 @@ Detalle en `docs/phases/fase-01-fundacion.md`.
 ### Fases 2–11
 Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al iniciarse.
 - [x] Fase 2 — Usuarios y perfiles → `docs/phases/fase-02-usuarios-perfiles.md` (el código de activación pasa a la Fase 4) · validación manual pendiente
+- [ ] Fase 2B — Acceso del personal con Microsoft Entra ID → `docs/phases/fase-02b-acceso-personal-entra.md` (planificada)
 - [ ] Fase 3 — Catálogo y búsqueda (incluye el seed de categorías desde `src/content/site.ts`)
 - [ ] Fase 4 — Gestión de trabajadores (incluye el código de activación del trabajador, movido desde la Fase 2)
 - [ ] Fase 5 — Chat
@@ -82,4 +83,5 @@ pnpm test:e2e                                           # requiere build previo
 | 2026-09-24 | **Revisión pre-commit** con `resources/instructivo-integracion-cognito.md` y decisiones del usuario: **sin cédula**; el `sub` no es estable entre proveedores → modelo `users` + `user_identities` (ADR-008); scopes `openid email profile` (el pool del GAD no tiene `phone`); login social configurable (`COGNITO_IDENTITY_PROVIDERS`); multimedia provisional desde Unsplash (ADR-009); fotos ficticias de personas retiradas; el GAD no tiene ambiente de pruebas. Tests: unit 47, integración 8, pgTAP 15, E2E 24. |
 | 2026-09-24 | Commit `b208b58` (Fase 0 + 1). **Supabase dev en la nube** (`Portal Empleo`, us-east-2, enlazado con la CLI): migraciones y seed aplicados con `supabase db push --include-seed`. Verificado en remoto: historial de migraciones sincronizado, advisors sin issues, 9 roles, 25 permisos y 50 asignaciones, RLS en todas las tablas, privilegios correctos, `audit_log` inmutable, acceso de la app vía API con la secret key y la publishable key bloqueada en `users`. pgTAP no corre en la nube (sin extensión `pgtap`): los tests SQL se ejecutan en local y en CI. Scope `phone` quitado de `.env.local`. Puerto 3000 libre: `/api/auth/login` redirige al pool dev y Cognito acepta el callback y los scopes. |
 | 2026-09-24 | Commit de docs `dcc3267`. **Fase 2 implementada**: consentimiento versionado obligatorio (TERMINOS y PRIVACIDAD v1 provisionales, página `/terminos`), perfil de cliente, panel `/cuenta` (perfil, formas de ingreso con vinculación y fusión segura (ADR-008), sesiones activas, cierre en todos los dispositivos), `/admin/usuarios` (búsqueda, roles internos, bloqueo con revocación de sesiones), API `/api/v1/me`, `/me/consents` y `/me/sessions` (RFC 9457, CSRF por origen, Bearer para la app móvil). Cambios administrativos con auditoría atómica en funciones SQL. Tests: unit 72, integración 24, pgTAP 26, E2E 40. Migración aplicada en la nube. El código de activación pasa a la Fase 4. |
-
+| 2026-09-24 | **Respuestas del GAD** incorporadas: sin pool de staging (se usa el personal), personal con MFA de Microsoft 365 (nueva P-21), federación Google + Facebook, contacto solo por chat (ADR-010), calificación bidireccional con visibilidad restringida (ADR-011), sin separación de funciones, despliegue en Vercel región `cle1` (ADR-007, `vercel.json`). ADR-004 decidido: **sin Pre Token Generation Lambda**; Realtime usará tokens propios del servidor. |
+| 2026-09-24 | **P-21 decidida (opción b)**: el personal del GAD ingresa con Microsoft Entra ID (ADR-012). Nueva Fase 2B planificada, con guía `docs/setup/entra-dev.md` y el texto del pedido al GAD. Verificado en la documentación de Microsoft: identidad por `oid`; el ID token v2 no trae `amr`, así que el MFA se exige con acceso condicional del GAD. |

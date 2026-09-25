@@ -42,8 +42,8 @@ Entregable §37: 20. Cubre §29.
 | "Modo jornada segura" con botón SOS | `garantias` | [FUTURO / NO RECOMENDADO en el MVP]: implica responsabilidad institucional y un protocolo de respuesta |
 | Registro de trabajador desde la app | `pasos` | [FUTURO] (app móvil) |
 | Pre-registro con cuenta bancaria | `/trabajadores` | [NO RECOMENDADO]: recoge datos financieros sin finalidad definida (la plataforma no procesa pagos) |
-| Login social (Facebook, Google, M365) | `SolicitarFlow` | [PENDIENTE] P-05: depende de la federación del pool de Cognito |
-| Contacto por WhatsApp directo | varios | [PENDIENTE] P-08: pierde la trazabilidad del chat interno |
+| Login social (Facebook, Google, M365) | `SolicitarFlow` | ✅ Google y Facebook sí (P-05). Microsoft 365 no aplica a ciudadanos |
+| Contacto por WhatsApp directo con el trabajador | varios | ❌ **No permitido** (P-08, RN-19): solo chat interno. El WhatsApp **institucional** del GAD en la página de contacto sí se mantiene |
 | "Pedir que el municipio seleccione" un trabajador (intermediación asistida) | `/oficios/$slug` | [PENDIENTE]: no está en los requisitos. Implicaría una bandeja de solicitudes para el GAD. Candidato POST-MVP |
 | "No constituye relación de dependencia", Ordenanza RC-025-2019 | footer | [PENDIENTE] validación jurídica |
 

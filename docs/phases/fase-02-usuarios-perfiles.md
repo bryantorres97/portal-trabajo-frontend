@@ -1,6 +1,6 @@
 # Fase 2 — Usuarios y perfiles (checklist)
 
-Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEMENTADA (2026-09-24)**. Pendiente: validación manual con login real (B2) y commit con confirmación del usuario.
+Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEMENTADA (2026-09-24)**. Commit `3d9ca0d`. Pendiente: validación manual con login real (B2).
 
 ## Decisiones de alcance (al iniciar la fase)
 

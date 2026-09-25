@@ -100,7 +100,7 @@ Evolución futura (no en el MVP): `training_modules`, `assessments`, `attempts`,
 |---|---|---|
 | `reviews` | `id`, `contract_id` (unique), `worker_id`, `author_user_id`, `rating` smallint 1–5, `comment`, `status` (`PUBLICADA`, `OCULTA`), `edited_at`, `hidden_by`, `hidden_reason` | `CHECK (array_length(regexp_split_to_array(trim(comment), '\s+'),1) <= 200)`. Se funden `Rating` y `Review` |
 
-**[PENDIENTE]** Evaluar si el trabajador califica al cliente. Si se aprueba, se agrega `direction` (`CLIENTE_A_TRABAJADOR`/`TRABAJADOR_A_CLIENTE`) y el unique pasa a ser `(contract_id, direction)`. Por ahora la calificación del cliente sería privada y visible solo para el GAD.
+**[CONFIRMADO, GAD 2026-09-24]** El trabajador califica al cliente (RN-20, ADR-011). `reviews` tendrá `direction` (`CLIENTE_A_TRABAJADOR` / `TRABAJADOR_A_CLIENTE`) y unique `(contract_id, direction)`. Las calificaciones `TRABAJADOR_A_CLIENTE` **nunca** se exponen en vistas públicas: solo las leen usuarios con rol `TRABAJADOR` activo y el personal del GAD. Se aplica en el dominio y con RLS.
 
 **[RECOMENDACIÓN]** En lugar de los 6 parámetros del prototipo (`EvaluacionFlow`), el MVP usa una sola escala general de 1 a 5. Los sub-criterios pueden llegar después como `review_scores (review_id, criterion, score)`.
 
@@ -186,5 +186,5 @@ Definidos en `01-negocio.md` §6. En la base se implementan como enums: `worker_
 | Ubicación exacta del trabajo (`contract_terms.location_detail`) | **Personal** | Solo las partes del contrato |
 | Nombre del autor de una reseña | **Público parcial** | Se muestra como "María G." (inicial del apellido) |
 
-- **[RECOMENDACIÓN]** El teléfono del trabajador **no** se muestra públicamente. El contacto se hace por chat para mantener la trazabilidad. El prototipo usa enlaces de WhatsApp; eso queda como decisión [PENDIENTE] P-08.
+- **[CONFIRMADO, RN-19]** El teléfono y el WhatsApp del trabajador **no** se muestran nunca a clientes. El contacto se hace solo por el chat interno, que mantiene la trazabilidad.
 - Retención [PENDIENTE jurídico]: mensajes (N años tras la última actividad), documentos (mientras el trabajador esté activo + N años), auditoría (≥5 años). Tras la eliminación de una cuenta, se anonimizan los datos personales y se conserva el registro de auditoría con un ID seudónimo.

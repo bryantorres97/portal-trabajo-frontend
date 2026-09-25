@@ -77,7 +77,7 @@ Ajustes respecto a §32 y su justificación:
 | Credencial QR (prototipo) | FUTURO | |
 | Botón SOS / jornada segura (prototipo) | NO RECOMENDADO para el MVP | Implica protocolos de respuesta y responsabilidad institucional |
 | Adjuntos en el chat | POST-MVP | Riesgos de malware y privacidad; requiere moderación |
-| Calificación del trabajador al cliente | POST-MVP [PENDIENTE P-10] | |
+| Calificación del trabajador al cliente | **MVP** (Fase 7) | Confirmado por el GAD. Visible solo para trabajadores y GAD (RN-20) |
 | Pre-registro online de trabajadores | FUTURO | El requisito dice registro presencial |
 
 ## 22. Funcionalidades futuras (post-MVP y futuro)
