@@ -6,18 +6,22 @@ test.describe("portal público", () => {
     await expect(page).toHaveTitle(/Acolita\.App/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("necesitas");
     await expect(page.locator("html")).toHaveAttribute("lang", "es-EC");
+    await page.waitForLoadState("networkidle"); // el filtro en vivo requiere la hidratación de React
 
     await page.getByPlaceholder(/albañilería/).fill("plome");
-    await expect(page.getByRole("heading", { name: /Resultados \(1\)/ })).toBeVisible();
+    await expect(page.getByRole("heading", { name: /Oficios que coinciden \(1\)/ })).toBeVisible();
     await expect(page.getByRole("link", { name: /Plomería y gasfitería/ })).toBeVisible();
 
     await page.getByPlaceholder(/albañilería/).fill("zzzz");
-    await expect(page.getByText("No encontramos esa actividad")).toBeVisible();
+    await expect(page.getByText(/Ningún oficio coincide/)).toBeVisible();
   });
 
   test("oficios: listado y detalle", async ({ page }) => {
     await page.goto("/oficios");
-    await page.getByRole("link", { name: /Electricidad/ }).click();
+    await page
+      .getByRole("link", { name: /^Electricidad/ })
+      .first()
+      .click();
     await expect(page).toHaveURL(/\/oficios\/electricidad$/);
     await expect(page.getByRole("heading", { level: 1, name: "Electricidad" })).toBeVisible();
   });

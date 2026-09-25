@@ -1,7 +1,5 @@
 /**
  * Contenido institucional estático (portado de resources/src/content/site.ts).
- * Los oficios se migran a la tabla `categories` en la Fase 3; mientras tanto,
- * este archivo alimenta las páginas públicas y el seed de la base de datos.
  * Los textos marcados como [PENDIENTE] en docs/analysis deben validarse con el GAD.
  */
 
@@ -17,100 +15,7 @@ export const institucion = {
   horario: "Lunes a viernes, 08:00 a 17:00",
 };
 
-export type ColorMarca = "verde" | "azul" | "magenta" | "amarillo" | "naranja";
-
-export type Oficio = {
-  slug: string;
-  nombre: string;
-  descripcion: string;
-  jornal: string;
-  imagen: string;
-  color: ColorMarca;
-};
-
-/** Imágenes provisionales tomadas del prototipo (ADR-009): reemplazar por material oficial del GAD. */
-export const oficios: Oficio[] = [
-  {
-    slug: "albanileria",
-    nombre: "Albañilería",
-    descripcion: "Mampostería, enlucidos, contrapisos y reparaciones menores.",
-    jornal: "$25 – $35 por jornal",
-    imagen: "/images/oficios/albanileria.jpg",
-    color: "verde",
-  },
-  {
-    slug: "plomeria",
-    nombre: "Plomería y gasfitería",
-    descripcion: "Fugas, cambio de grifería, desagües y sanitarios.",
-    jornal: "$25 – $40 por jornal",
-    imagen: "/images/oficios/plomeria.jpg",
-    color: "azul",
-  },
-  {
-    slug: "electricidad",
-    nombre: "Electricidad",
-    descripcion: "Puntos de luz, tomacorrientes y revisión de tableros.",
-    jornal: "$30 – $45 por jornal",
-    imagen: "/images/oficios/electricidad.jpg",
-    color: "amarillo",
-  },
-  {
-    slug: "carpinteria",
-    nombre: "Carpintería",
-    descripcion: "Muebles a medida, puertas, closets y arreglos de madera.",
-    jornal: "$28 – $42 por jornal",
-    imagen: "/images/oficios/carpinteria.jpg",
-    color: "naranja",
-  },
-  {
-    slug: "jardineria",
-    nombre: "Jardinería",
-    descripcion: "Poda, mantenimiento de césped y sembrado de plantas.",
-    jornal: "$20 – $30 por jornal",
-    imagen: "/images/oficios/jardineria.jpg",
-    color: "verde",
-  },
-  {
-    slug: "limpieza",
-    nombre: "Limpieza del hogar",
-    descripcion: "Limpieza profunda de viviendas, oficinas y locales.",
-    jornal: "$20 – $30 por jornal",
-    imagen: "/images/oficios/limpieza.jpg",
-    color: "magenta",
-  },
-  {
-    slug: "pintura",
-    nombre: "Pintura",
-    descripcion: "Pintura interior y exterior, empaste y acabados.",
-    jornal: "$25 – $38 por jornal",
-    imagen: "/images/oficios/pintura.jpg",
-    color: "azul",
-  },
-  {
-    slug: "cerrajeria",
-    nombre: "Cerrajería",
-    descripcion: "Apertura de puertas, cambio de cerraduras y llaves.",
-    jornal: "$15 – $35 por servicio",
-    imagen: "/images/oficios/cerrajeria.jpg",
-    color: "naranja",
-  },
-  {
-    slug: "mudanzas",
-    nombre: "Mudanzas y fletes",
-    descripcion: "Carga, transporte y embalaje de muebles y enseres.",
-    jornal: "$30 – $60 por servicio",
-    imagen: "/images/oficios/mudanzas.jpg",
-    color: "amarillo",
-  },
-  {
-    slug: "cuidado",
-    nombre: "Cuidado de personas",
-    descripcion: "Acompañamiento de adultos mayores y cuidado infantil.",
-    jornal: "$20 – $35 por jornada",
-    imagen: "/images/oficios/cuidado.jpg",
-    color: "magenta",
-  },
-];
+// El catálogo de oficios vive en la base de datos (tabla `services`, Fase 3).
 
 /**
  * Proceso público. Solo describe pasos confirmados en IMPLEMENTATION_PLAN.md:

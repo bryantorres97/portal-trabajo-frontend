@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { connection } from "next/server";
 
-import { BuscadorOficios } from "@/components/site/BuscadorOficios";
+import { BuscadorOficios, type OficioResumen } from "@/components/site/BuscadorOficios";
 import { Section } from "@/components/site/SiteShell";
-import { oficios, pasos } from "@/content/site";
+import { pasos } from "@/content/site";
+import { formatearTarifa } from "@/lib/busqueda";
+import { logger } from "@/lib/logger";
+import { getPublicServices } from "@/server/catalog/catalog";
 
 export const metadata: Metadata = {
   title: { absolute: "Buscar un profesional en Ambato | Acolita.App" },
@@ -11,7 +15,27 @@ export const metadata: Metadata = {
     "Busca el oficio que necesitas —albañilería, plomería, electricidad, carpintería, cerrajería y más— con trabajadores habilitados por el GAD Municipalidad de Ambato.",
 };
 
-export default function InicioPage() {
+async function cargarOficios(): Promise<OficioResumen[]> {
+  try {
+    return (await getPublicServices()).map((s) => ({
+      slug: s.slug,
+      name: s.name,
+      description: s.description,
+      imagePath: s.imagePath,
+      tarifa: formatearTarifa(s.priceMin, s.priceMax, s.priceUnit),
+      enabledWorkers: s.enabledWorkers,
+    }));
+  } catch (error) {
+    // Si la base no responde, el inicio sigue funcionando (el buscador lleva a /buscar).
+    logger.error("inicio.catalogo_no_disponible", { error });
+    return [];
+  }
+}
+
+export default async function InicioPage() {
+  await connection();
+  const oficios = await cargarOficios();
+
   return (
     <>
       <BuscadorOficios oficios={oficios} />

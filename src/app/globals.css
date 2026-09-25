@@ -25,6 +25,8 @@
   --color-magenta: var(--magenta);
   --color-amarillo: var(--amarillo);
   --color-naranja: var(--naranja);
+  /* Variante de texto con contraste AA (≥ 4.5:1) sobre fondos claros; verde de marca solo en íconos y fondos. */
+  --color-verde-fuerte: var(--verde-fuerte);
 }
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -91,6 +93,7 @@
   --input: oklch(0.9 0.012 90);
   --ring: oklch(0.52 0.16 252);
   --verde: oklch(0.62 0.15 152);
+  --verde-fuerte: oklch(0.47 0.12 152);
   --azul: oklch(0.55 0.16 250);
   --magenta: oklch(0.55 0.24 340);
   --amarillo: oklch(0.8 0.16 88);
@@ -120,6 +123,7 @@
 }
 
 .dark {
+  --verde-fuerte: oklch(0.78 0.14 152);
   --background: oklch(0.129 0.042 264.695);
   --foreground: oklch(0.984 0.003 247.858);
   --card: oklch(0.208 0.042 265.755);

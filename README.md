@@ -36,7 +36,7 @@ pnpm dev                        # http://localhost:3000
 | `pnpm test` | Tests unitarios (Vitest) |
 | `pnpm test:integration` | Integración contra Supabase local (requiere `pnpm db:start`) |
 | `pnpm test:db` | Tests SQL (pgTAP) de seguridad de la base |
-| `pnpm test:e2e` | Smoke tests con Playwright (requiere `pnpm build`) |
+| `pnpm test:e2e:local` | Build + E2E y accesibilidad (axe) contra Supabase local (`--serve` para revisar en :3210) |
 | `pnpm db:reset` | Recrea la base local con migraciones y seed |
 
 ## Estructura

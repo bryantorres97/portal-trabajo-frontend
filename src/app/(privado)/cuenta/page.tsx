@@ -183,7 +183,7 @@ async function Panel({ auth }: { auth: CurrentAuth }) {
                       <div className="min-w-0">
                         <p className="font-bold">
                           {etiquetaProveedor(i.provider)}
-                          {enUso && <span className="ml-2 text-xs font-semibold text-verde">en uso</span>}
+                          {enUso && <span className="ml-2 text-xs font-semibold text-verde-fuerte">en uso</span>}
                         </p>
                         <p className="truncate text-xs text-muted-foreground">
                           {i.email ?? "sin correo"} · último ingreso {formatearFechaHora(i.lastLoginAt)}
@@ -278,7 +278,7 @@ async function Panel({ auth }: { auth: CurrentAuth }) {
                     <div className="min-w-0">
                       <p className="text-sm font-bold">
                         {describirDispositivo(s.userAgent)}
-                        {s.current && <span className="ml-2 text-xs font-semibold text-verde">esta sesión</span>}
+                        {s.current && <span className="ml-2 text-xs font-semibold text-verde-fuerte">esta sesión</span>}
                       </p>
                       <p className="text-xs text-muted-foreground">Activa desde {formatearFechaHora(s.createdAt)}</p>
                     </div>

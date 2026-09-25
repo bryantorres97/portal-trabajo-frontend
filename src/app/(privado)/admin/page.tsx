@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ClipboardList, GraduationCap, Flag, HardHat, Users, type LucideIcon } from "lucide-react";
+import { ArrowRight, ClipboardList, GraduationCap, Flag, HardHat, Tags, Users, type LucideIcon } from "lucide-react";
 
 import { PageHeader, Section } from "@/components/site/SiteShell";
 import { etiquetaRol } from "@/lib/formatos";
@@ -18,6 +18,13 @@ const modulos: Modulo[] = [
     icon: Users,
     permiso: "user.read",
     href: "/admin/usuarios",
+  },
+  {
+    titulo: "Catálogo",
+    detalle: "Categorías, oficios y tarifas referenciales.",
+    icon: Tags,
+    permiso: "catalog.manage",
+    href: "/admin/catalogo",
   },
   {
     titulo: "Trabajadores",

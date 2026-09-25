@@ -99,3 +99,58 @@ $md$
 El GAD Municipalidad de Ambato trata tus datos personales conforme a la Ley Orgánica de Protección de Datos Personales para registrar y habilitar trabajadores, facilitar el contacto y los acuerdos entre ciudadanos y trabajadores, atender denuncias y generar estadísticas institucionales. Consulta el detalle en la página de Privacidad y datos del portal.
 $md$, now())
 on conflict (code, version) do nothing;
+
+
+-- -----------------------------------------------------------------------------
+-- Trabajadores FICTICIOS de desarrollo (datos del prototipo). NUNCA en producción.
+-- UUID fijos 00000000-0000-4000-a000-0000000000NN. Calificaciones ficticias hasta la Fase 7.
+-- 2 trabajadores no habilitados para comprobar que no aparecen en búsquedas públicas.
+-- -----------------------------------------------------------------------------
+insert into public.worker_profiles (id, first_names, last_names, phone, public_display_name, specialty, public_bio, years_experience, is_available, parish_id, status, enabled_at, rating_avg, rating_count, contracts_completed) values
+  ($q$00000000-0000-4000-a000-000000000001$q$, $q$Manuel$q$, $q$Yánez$q$, $q$0990000001$q$, $q$Manuel Y.$q$, $q$Enlucidos y contrapisos$q$, $q$Maestro albañil con más de 15 años construyendo y reparando hogares en Ambato. Especialista en acabados impecables, contrapisos y enlucidos.$q$, 15, true, (select id from public.parishes where code = $q$huachi-chico$q$), $q$HABILITADO$q$, now() - interval $q$20 days$q$, 5.00, 77, 128),
+  ($q$00000000-0000-4000-a000-000000000002$q$, $q$Segundo$q$, $q$Pilco$q$, $q$0990000002$q$, $q$Segundo P.$q$, $q$Mampostería y acabados$q$, $q$Maestro de mampostería y pintura. Combina fuerza en la estructura con buen gusto en los acabados de color.$q$, 10, true, (select id from public.parishes where code = $q$atocha-ficoa$q$), $q$HABILITADO$q$, now() - interval $q$40 days$q$, 3.65, 38, 64),
+  ($q$00000000-0000-4000-a000-000000000003$q$, $q$Rosa$q$, $q$Chicaiza$q$, $q$0990000003$q$, $q$Rosa C.$q$, $q$Limpieza profunda de hogares$q$, $q$Experiencia en limpieza profunda de hogares y cuidado de personas. Usa productos seguros y respeta los espacios de cada cliente.$q$, 12, false, (select id from public.parishes where code = $q$la-merced$q$), $q$HABILITADO$q$, now() - interval $q$60 days$q$, 3.80, 55, 91),
+  ($q$00000000-0000-4000-a000-000000000004$q$, $q$Luis$q$, $q$Naranjo$q$, $q$0990000004$q$, $q$Luis N.$q$, $q$Fugas y sanitarios$q$, $q$Plomero especializado en fugas difíciles, instalación de sanitarios y mantenimiento de tuberías residenciales.$q$, 11, true, (select id from public.parishes where code = $q$atocha-ficoa$q$), $q$HABILITADO$q$, now() - interval $q$80 days$q$, 3.95, 44, 73),
+  ($q$00000000-0000-4000-a000-000000000005$q$, $q$Wilson$q$, $q$Guamán$q$, $q$0990000005$q$, $q$Wilson G.$q$, $q$Gasfitería y grifería$q$, $q$Técnico en gasfitería y grifería. Apoya también en aperturas de cerrajería básicas. En constante capacitación.$q$, 4, true, (select id from public.parishes where code = $q$izamba$q$), $q$HABILITADO$q$, now() - interval $q$100 days$q$, 2.60, 13, 21),
+  ($q$00000000-0000-4000-a000-000000000006$q$, $q$Édison$q$, $q$Chango$q$, $q$0990000006$q$, $q$Édison C.$q$, $q$Tableros y puntos de luz$q$, $q$Electricista certificado para instalaciones residenciales e industriales. Experto en tableros, puntos de luz y revisiones eléctricas.$q$, 14, true, (select id from public.parishes where code = $q$la-matriz$q$), $q$HABILITADO$q$, now() - interval $q$120 days$q$, 4.75, 67, 112),
+  ($q$00000000-0000-4000-a000-000000000007$q$, $q$Ana Lucía$q$, $q$Vega$q$, $q$0990000007$q$, $q$Ana Lucía V.$q$, $q$Instalaciones residenciales$q$, $q$Electricista joven en crecimiento. Instala puntos de luz, tomacorrientes y lámparas con buena disposición.$q$, 2, false, (select id from public.parishes where code = $q$la-merced$q$), $q$HABILITADO$q$, now() - interval $q$140 days$q$, 1.90, 7, 12),
+  ($q$00000000-0000-4000-a000-000000000008$q$, $q$Carlos$q$, $q$Freire$q$, $q$0990000008$q$, $q$Carlos F.$q$, $q$Muebles a medida y closets$q$, $q$Carpintero artesanal. Diseña y fabrica muebles a medida, closets y puertas con madera de calidad.$q$, 13, true, (select id from public.parishes where code = $q$izamba$q$), $q$HABILITADO$q$, now() - interval $q$160 days$q$, 3.55, 35, 58),
+  ($q$00000000-0000-4000-a000-000000000009$q$, $q$Jorge$q$, $q$Llerena$q$, $q$0990000009$q$, $q$Jorge L.$q$, $q$Puertas y cerraduras$q$, $q$Nuevo en la plataforma. Combina carpintería básica con servicios de cerrajería para puertas y cerraduras.$q$, 1, true, (select id from public.parishes where code = $q$huachi-loreto$q$), $q$CAPACITACION_EN_PROCESO$q$, null, 1.70, 2, 4),
+  ($q$00000000-0000-4000-a000-000000000010$q$, $q$María$q$, $q$Pérez$q$, $q$0990000010$q$, $q$María P.$q$, $q$Poda y mantenimiento de césped$q$, $q$Jardinera con experiencia en poda, corte de césped y mantenimiento de jardines residenciales.$q$, 6, true, (select id from public.parishes where code = $q$san-bartolome-de-pinllo$q$), $q$HABILITADO$q$, now() - interval $q$200 days$q$, 2.85, 23, 39),
+  ($q$00000000-0000-4000-a000-000000000011$q$, $q$Fabián$q$, $q$Sailema$q$, $q$0990000011$q$, $q$Fabián S.$q$, $q$Jardines y fletes menores$q$, $q$Recién inicia en Acolita. Ofrece jardinería y apoyo en fletes menores dentro de Ambato.$q$, 1, false, (select id from public.parishes where code = $q$totoras$q$), $q$SUSPENDIDO$q$, null, 1.00, 2, 3),
+  ($q$00000000-0000-4000-a000-000000000012$q$, $q$Diana$q$, $q$Moposita$q$, $q$0990000012$q$, $q$Diana M.$q$, $q$Oficinas y locales comerciales$q$, $q$Especialista en limpieza de oficinas y locales comerciales. Rápida, organizada y con buena referencia.$q$, 5, true, (select id from public.parishes where code = $q$celiano-monge$q$), $q$HABILITADO$q$, now() - interval $q$240 days$q$, 2.65, 20, 34),
+  ($q$00000000-0000-4000-a000-000000000013$q$, $q$Patricio$q$, $q$Bonilla$q$, $q$0990000013$q$, $q$Patricio B.$q$, $q$Fachadas y empaste$q$, $q$Pintor experto en fachadas, empaste y acabados exteriores. Conocido por la durabilidad de su trabajo.$q$, 12, true, (select id from public.parishes where code = $q$san-bartolome-de-pinllo$q$), $q$HABILITADO$q$, now() - interval $q$260 days$q$, 3.80, 31, 52),
+  ($q$00000000-0000-4000-a000-000000000014$q$, $q$Nelson$q$, $q$Toapanta$q$, $q$0990000014$q$, $q$Nelson T.$q$, $q$Camión de 3 toneladas y embalaje$q$, $q$Ofrece mudanzas locales con camión de 3 toneladas y servicio de embalaje. Cuidadoso con los muebles.$q$, 9, true, (select id from public.parishes where code = $q$cunchibamba$q$), $q$HABILITADO$q$, now() - interval $q$280 days$q$, 3.95, 28, 47),
+  ($q$00000000-0000-4000-a000-000000000015$q$, $q$Blanca$q$, $q$Sisa$q$, $q$0990000015$q$, $q$Blanca S.$q$, $q$Adultos mayores con experiencia$q$, $q$Cuidadora de adultos mayores con amplia experiencia. Paciente, cariñosa y certificada en primeros auxilios.$q$, 15, true, (select id from public.parishes where code = $q$atocha-ficoa$q$), $q$HABILITADO$q$, now() - interval $q$300 days$q$, 4.60, 52, 87),
+  ($q$00000000-0000-4000-a000-000000000016$q$, $q$Iván$q$, $q$Zurita$q$, $q$0990000016$q$, $q$Iván Z.$q$, $q$Apertura de puertas 24/7$q$, $q$Cerrajero disponible las 24 horas para aperturas de puertas, cambio de cerraduras y llaves.$q$, 7, true, (select id from public.parishes where code = $q$la-matriz$q$), $q$HABILITADO$q$, now() - interval $q$320 days$q$, 2.75, 25, 41),
+  ($q$00000000-0000-4000-a000-000000000017$q$, $q$Hugo$q$, $q$Paredes$q$, $q$0990000017$q$, $q$Hugo P.$q$, $q$Reparaciones menores$q$, $q$Trabajador verificado en reparaciones menores de albañilería. Ideal para arreglos pequeños y rápidos.$q$, 3, true, (select id from public.parishes where code = $q$picaigua$q$), $q$HABILITADO$q$, now() - interval $q$340 days$q$, 1.90, 6, 10)
+on conflict (id) do nothing;
+
+insert into public.worker_services (worker_id, service_id, is_primary)
+select v.worker_id::uuid, s.id, v.is_primary
+from (values
+  ($q$00000000-0000-4000-a000-000000000001$q$, $q$albanileria$q$, true),
+  ($q$00000000-0000-4000-a000-000000000002$q$, $q$albanileria$q$, true),
+  ($q$00000000-0000-4000-a000-000000000002$q$, $q$pintura$q$, false),
+  ($q$00000000-0000-4000-a000-000000000003$q$, $q$limpieza$q$, true),
+  ($q$00000000-0000-4000-a000-000000000003$q$, $q$cuidado$q$, false),
+  ($q$00000000-0000-4000-a000-000000000004$q$, $q$plomeria$q$, true),
+  ($q$00000000-0000-4000-a000-000000000005$q$, $q$plomeria$q$, true),
+  ($q$00000000-0000-4000-a000-000000000005$q$, $q$cerrajeria$q$, false),
+  ($q$00000000-0000-4000-a000-000000000006$q$, $q$electricidad$q$, true),
+  ($q$00000000-0000-4000-a000-000000000007$q$, $q$electricidad$q$, true),
+  ($q$00000000-0000-4000-a000-000000000008$q$, $q$carpinteria$q$, true),
+  ($q$00000000-0000-4000-a000-000000000009$q$, $q$carpinteria$q$, true),
+  ($q$00000000-0000-4000-a000-000000000009$q$, $q$cerrajeria$q$, false),
+  ($q$00000000-0000-4000-a000-000000000010$q$, $q$jardineria$q$, true),
+  ($q$00000000-0000-4000-a000-000000000011$q$, $q$jardineria$q$, true),
+  ($q$00000000-0000-4000-a000-000000000011$q$, $q$mudanzas$q$, false),
+  ($q$00000000-0000-4000-a000-000000000012$q$, $q$limpieza$q$, true),
+  ($q$00000000-0000-4000-a000-000000000013$q$, $q$pintura$q$, true),
+  ($q$00000000-0000-4000-a000-000000000014$q$, $q$mudanzas$q$, true),
+  ($q$00000000-0000-4000-a000-000000000015$q$, $q$cuidado$q$, true),
+  ($q$00000000-0000-4000-a000-000000000016$q$, $q$cerrajeria$q$, true),
+  ($q$00000000-0000-4000-a000-000000000017$q$, $q$albanileria$q$, true)
+) as v(worker_id, service_slug, is_primary)
+join public.services s on s.slug = v.service_slug
+on conflict do nothing;

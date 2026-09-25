@@ -7,8 +7,8 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 2 — Usuarios y perfiles** (commit `3d9ca0d`; pendiente validación manual con login real) |
-| Siguiente fase | Fase 3 — Catálogo y búsqueda |
+| Fase actual | **Fase 3 — Catálogo y búsqueda** (implementada; pendiente commit). Fase 2: validación manual pendiente. Fase 2B: planificada |
+| Siguiente fase | Fase 2B (acceso del personal con Entra ID) cuando haga falta, luego Fase 4 |
 | Rama de trabajo | `development` · último commit `b208b58` (Fase 0 + 1). Se commitea solo con confirmación del usuario |
 | Última actualización | 2026-09-24 |
 
@@ -56,7 +56,7 @@ Detalle en `docs/phases/fase-01-fundacion.md`.
 Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al iniciarse.
 - [x] Fase 2 — Usuarios y perfiles → `docs/phases/fase-02-usuarios-perfiles.md` (el código de activación pasa a la Fase 4) · validación manual pendiente
 - [ ] Fase 2B — Acceso del personal con Microsoft Entra ID → `docs/phases/fase-02b-acceso-personal-entra.md` (planificada)
-- [ ] Fase 3 — Catálogo y búsqueda (incluye el seed de categorías desde `src/content/site.ts`)
+- [x] Fase 3 — Catálogo y búsqueda → `docs/phases/fase-03-catalogo-busqueda.md` (incluye el seed de categorías desde `src/content/site.ts`)
 - [ ] Fase 4 — Gestión de trabajadores (incluye el código de activación del trabajador, movido desde la Fase 2)
 - [ ] Fase 5 — Chat
 - [ ] Fase 6 — Contrataciones
@@ -85,3 +85,5 @@ pnpm test:e2e                                           # requiere build previo
 | 2026-09-24 | Commit de docs `dcc3267`. **Fase 2 implementada**: consentimiento versionado obligatorio (TERMINOS y PRIVACIDAD v1 provisionales, página `/terminos`), perfil de cliente, panel `/cuenta` (perfil, formas de ingreso con vinculación y fusión segura (ADR-008), sesiones activas, cierre en todos los dispositivos), `/admin/usuarios` (búsqueda, roles internos, bloqueo con revocación de sesiones), API `/api/v1/me`, `/me/consents` y `/me/sessions` (RFC 9457, CSRF por origen, Bearer para la app móvil). Cambios administrativos con auditoría atómica en funciones SQL. Tests: unit 72, integración 24, pgTAP 26, E2E 40. Migración aplicada en la nube. El código de activación pasa a la Fase 4. |
 | 2026-09-24 | **Respuestas del GAD** incorporadas: sin pool de staging (se usa el personal), personal con MFA de Microsoft 365 (nueva P-21), federación Google + Facebook, contacto solo por chat (ADR-010), calificación bidireccional con visibilidad restringida (ADR-011), sin separación de funciones, despliegue en Vercel región `cle1` (ADR-007, `vercel.json`). ADR-004 decidido: **sin Pre Token Generation Lambda**; Realtime usará tokens propios del servidor. |
 | 2026-09-24 | **P-21 decidida (opción b)**: el personal del GAD ingresa con Microsoft Entra ID (ADR-012). Nueva Fase 2B planificada, con guía `docs/setup/entra-dev.md` y el texto del pedido al GAD. Verificado en la documentación de Microsoft: identidad por `oid`; el ID token v2 no trae `amr`, así que el MFA se exige con acceso condicional del GAD. |
+| 2026-09-25 | **Fase 3 implementada**: catálogo en BD (3 categorías, 10 oficios) con CRUD en `/admin/catalogo`, 27 parroquias (P-12, a validar), `worker_profiles` y `worker_services` con separación de datos públicos y privados, búsqueda FTS en español + trigramas (p95 134 ms con 5 000 trabajadores), páginas `/buscar` y `/trabajadores/[id]` y oficios desde BD, JSON-LD, sitemap, API pública `/api/v1/{categories,parishes,workers}`, accesibilidad automatizada con axe. CI corregido (`supabase start` con la API, E2E en el job de base de datos). Migración aplicada en la nube. |
+

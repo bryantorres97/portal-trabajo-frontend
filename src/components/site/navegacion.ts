@@ -2,6 +2,9 @@ import { HardHat, Home, Phone, ShieldCheck, Users, type LucideIcon } from "lucid
 
 export type ItemNavegacion = { href: string; label: string; icon: LucideIcon };
 
+/** Rutas que solo se marcan activas en coincidencia exacta (p. ej. /trabajadores ≠ /trabajadores/[id]). */
+const EXACTAS = new Set(["/", "/trabajadores"]);
+
 export const navPrincipal: ItemNavegacion[] = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/oficios", label: "Oficios", icon: HardHat },
@@ -16,5 +19,5 @@ export const navSecundaria: ItemNavegacion[] = [
 ];
 
 export function estaActivo(pathname: string, href: string) {
-  return href === "/" ? pathname === "/" : pathname === href || pathname.startsWith(`${href}/`);
+  return EXACTAS.has(href) ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
 }

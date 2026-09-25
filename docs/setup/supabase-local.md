@@ -36,9 +36,14 @@ Este proyecto usa migraciones escritas a mano en `supabase/migrations/`, no esqu
 - Las funciones auxiliares van en el schema `private` (no expuesto), con `set search_path = ''`.
 - Las tablas append-only (`audit_log`, historiales) usan el trigger `private.prevent_mutation()`.
 
+## Rendimiento y E2E con la base local
+
+- `supabase db query -f scripts/perf-busqueda.sql`: inserta 5 000 trabajadores sintéticos, mide la búsqueda y **revierte todo** (no deja datos). Imprime `PERF_OK` o `PERF_FALLO` con p50 y p95.
+- `pnpm test:e2e:local`: compila con las claves de `supabase status` y ejecuta Playwright contra la base local (`--serve` solo levanta el build en el puerto 3210).
+
 ## Seed
 
-`supabase/seed.sql` carga los roles y permisos propuestos (`docs/analysis/01-negocio.md` §3). Las categorías y oficios se siembran en la Fase 3, cuando exista la tabla `categories`.
+`supabase/seed.sql` carga los roles y permisos propuestos (`docs/analysis/01-negocio.md` §3). El catálogo (categorías, oficios) y las parroquias van en la **migración** de la Fase 3, porque también se necesitan en producción. El seed agrega **17 trabajadores ficticios** del prototipo (15 habilitados y 2 no habilitados), con UUID fijos `00000000-0000-4000-a000-0000000000NN`. Solo existen en local: nunca se cargan en la nube ni en producción.
 
 ## Asignar un rol interno a tu usuario de prueba
 

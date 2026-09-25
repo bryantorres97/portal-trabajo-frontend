@@ -103,8 +103,8 @@ Convenciones:
 
 | Recurso | Endpoints principales | Acceso |
 |---|---|---|
-| Catálogo | `GET /categories`, `GET /services` | Público |
-| Trabajadores (público) | `GET /workers?q=&category=&service=&sector=&available=&minRating=&sort=`, `GET /workers/{id}` | Público (solo `HABILITADO`) |
+| Catálogo | `GET /categories` (categorías con sus oficios), `GET /parishes` | Público |
+| Trabajadores (público) | `GET /workers?q=&categoria=&oficio=&parroquia=&disponible=1&experiencia=&calificacion=&orden=&pagina=` (los mismos parámetros que `/buscar`), `GET /workers/{id}` | Público (solo `HABILITADO`, sin datos privados) |
 | Reseñas públicas | `GET /workers/{id}/reviews` | Público |
 | Mi cuenta | `GET/PATCH /me`, `POST /me/consents`, `GET/PATCH /me/worker-profile`, `PUT /me/availability`, `POST /me/devices` (token FCM) | Autenticado |
 | Vinculación trabajador | `POST /me/worker-link` (código de activación) | Autenticado |
