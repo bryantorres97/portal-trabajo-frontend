@@ -7,17 +7,18 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 3 — Catálogo y búsqueda** (implementada; pendiente commit). Fase 2: validación manual pendiente. Fase 2B: planificada |
-| Siguiente fase | Fase 2B (acceso del personal con Entra ID) cuando haga falta, luego Fase 4 |
-| Rama de trabajo | `development` · último commit `b208b58` (Fase 0 + 1). Se commitea solo con confirmación del usuario |
-| Última actualización | 2026-09-24 |
+| Fase actual | **Fase 2B completada** (prueba manual OK con el tenant dev). Fase 3 completada (`8a3750b`). Fase 2: validación manual pendiente |
+| Siguiente fase | Fase 4 — Gestión de trabajadores |
+| Rama de trabajo | `development` · último commit: Fase 2B. Se commitea solo con confirmación del usuario |
+| Última actualización | 2026-09-25 |
 
 ## Siguiente paso concreto
 
 1. ~~Commit de Fase 0 + 1~~ ✅ `b208b58`.
 2. **Probar el login real con el pool dev** (B2). Todo está listo: `.env.local` completo, migraciones aplicadas en el proyecto Supabase dev en la nube (`Portal Empleo`), callback `http://localhost:3000/api/auth/callback` aceptado por Cognito. Solo falta que el usuario inicie sesión en el navegador (`pnpm dev` → `/cuenta`). Checklist en `docs/setup/cognito-dev.md`.
 3. Solicitar al GAD el App Client del portal (P-02). Preguntas abiertas: P-02, P-06, P-13, P-15, P-20 (P-21 decidida: Entra ID para el personal, ADR-012). Pedir al GAD el app registration de Entra (texto listo en `docs/setup/entra-dev.md` §4).
-4. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
+4. ~~Fase 2B: prueba manual y commit~~ ✅. Queda el pedido formal al GAD del app registration.
+5. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
 
 ## Bloqueos y dependencias externas
 
@@ -55,7 +56,7 @@ Detalle en `docs/phases/fase-01-fundacion.md`.
 ### Fases 2–11
 Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al iniciarse.
 - [x] Fase 2 — Usuarios y perfiles → `docs/phases/fase-02-usuarios-perfiles.md` (el código de activación pasa a la Fase 4) · validación manual pendiente
-- [ ] Fase 2B — Acceso del personal con Microsoft Entra ID → `docs/phases/fase-02b-acceso-personal-entra.md` (planificada)
+- [x] Fase 2B — Acceso del personal con Microsoft Entra ID → `docs/phases/fase-02b-acceso-personal-entra.md` · prueba manual OK
 - [x] Fase 3 — Catálogo y búsqueda → `docs/phases/fase-03-catalogo-busqueda.md` (incluye el seed de categorías desde `src/content/site.ts`)
 - [ ] Fase 4 — Gestión de trabajadores (incluye el código de activación del trabajador, movido desde la Fase 2)
 - [ ] Fase 5 — Chat
@@ -86,4 +87,5 @@ pnpm test:e2e                                           # requiere build previo
 | 2026-09-24 | **Respuestas del GAD** incorporadas: sin pool de staging (se usa el personal), personal con MFA de Microsoft 365 (nueva P-21), federación Google + Facebook, contacto solo por chat (ADR-010), calificación bidireccional con visibilidad restringida (ADR-011), sin separación de funciones, despliegue en Vercel región `cle1` (ADR-007, `vercel.json`). ADR-004 decidido: **sin Pre Token Generation Lambda**; Realtime usará tokens propios del servidor. |
 | 2026-09-24 | **P-21 decidida (opción b)**: el personal del GAD ingresa con Microsoft Entra ID (ADR-012). Nueva Fase 2B planificada, con guía `docs/setup/entra-dev.md` y el texto del pedido al GAD. Verificado en la documentación de Microsoft: identidad por `oid`; el ID token v2 no trae `amr`, así que el MFA se exige con acceso condicional del GAD. |
 | 2026-09-25 | **Fase 3 implementada**: catálogo en BD (3 categorías, 10 oficios) con CRUD en `/admin/catalogo`, 27 parroquias (P-12, a validar), `worker_profiles` y `worker_services` con separación de datos públicos y privados, búsqueda FTS en español + trigramas (p95 134 ms con 5 000 trabajadores), páginas `/buscar` y `/trabajadores/[id]` y oficios desde BD, JSON-LD, sitemap, API pública `/api/v1/{categories,parishes,workers}`, accesibilidad automatizada con axe. CI corregido (`supabase start` con la API, E2E en el job de base de datos). Migración aplicada en la nube. |
-
+| 2026-09-25 | Commit `8a3750b` (Fase 3). Trabajadores ficticios del seed cargados en Supabase dev de la nube (15 habilitados y 2 no habilitados), verificados con el servidor del usuario: búsqueda sin datos privados, 404 para los no habilitados. |
+| 2026-09-25 | **Fase 2B implementada**: tenant de Entra propio (`acolita-admin-dev`, usuarios nativos `admin.dev` y `personal.dev`, credenciales verificadas contra Microsoft). Ingreso OIDC + PKCE del personal en `/admin/ingresar`, rechazo de cuentas externas, sesiones con origen (`COGNITO`/`ENTRA`) y permisos según el origen, roles internos solo en cuentas institucionales, sin vinculación con cuentas ciudadanas, bootstrap atómico del primer `ADMIN_SISTEMA`, logout por proveedor. Se descartó `ADMIN_REQUIRE_ENTRA`. Tests: unit 95, integración 46, pgTAP 48, E2E 88. Migración aplicada en la nube. Puertos de Supabase local bloqueados por WinNAT: se resolvió con `net stop/start winnat`. **Prueba manual OK** (usuario): bootstrap de `admin.dev`, `personal.dev` sin roles y luego con rol asignado, logout por Microsoft, rechazo de cuenta externa. |

@@ -46,6 +46,28 @@ const cognitoSchema = z.object({
     ),
 });
 
+const listaUuids = z
+  .string()
+  .optional()
+  .transform((v) =>
+    v
+      ? v
+          .split(",")
+          .map((s) => s.trim().toLowerCase())
+          .filter(Boolean)
+      : [],
+  )
+  .pipe(z.array(z.guid("Cada OID debe ser un GUID")));
+
+/** Microsoft Entra ID para el personal del GAD (ADR-012). Ver docs/setup/entra-dev.md. */
+const entraSchema = z.object({
+  ENTRA_TENANT_ID: z.guid("ENTRA_TENANT_ID debe ser el GUID del tenant").transform((v) => v.toLowerCase()),
+  ENTRA_CLIENT_ID: z.guid("ENTRA_CLIENT_ID debe ser el Application (client) ID").transform((v) => v.toLowerCase()),
+  ENTRA_CLIENT_SECRET: z.string().min(1),
+  /** `oid` del personal que recibe ADMIN_SISTEMA en su ingreso si todavía no hay administradores. */
+  ENTRA_BOOTSTRAP_ADMIN_OIDS: listaUuids,
+});
+
 const sessionSchema = z.object({
   SESSION_SECRET: z.string().min(32, "SESSION_SECRET debe tener al menos 32 caracteres"),
 });
@@ -63,6 +85,7 @@ const appSchema = z.object({
 });
 
 export type CognitoEnv = z.infer<typeof cognitoSchema>;
+export type EntraEnv = z.infer<typeof entraSchema>;
 
 function parseGroup<T extends z.ZodType>(nombre: string, schema: T): z.infer<T> {
   const result = schema.safeParse(process.env);
@@ -80,10 +103,16 @@ function memo<T>(fn: () => T): () => T {
 
 export const getAppEnv = memo(() => parseGroup("aplicación", appSchema));
 export const getCognitoEnv = memo(() => parseGroup("Cognito", cognitoSchema));
+export const getEntraEnv = memo(() => parseGroup("Microsoft Entra ID", entraSchema));
 export const getSessionEnv = memo(() => parseGroup("sesión", sessionSchema));
 export const getSupabaseEnv = memo(() => parseGroup("Supabase", supabaseSchema));
 
 /** Indica si el login está configurado (para mostrar un aviso en lugar de fallar). */
 export function isAuthConfigured(): boolean {
   return cognitoSchema.safeParse(process.env).success && sessionSchema.safeParse(process.env).success;
+}
+
+/** Indica si el ingreso del personal con Microsoft Entra ID está configurado. */
+export function isStaffAuthConfigured(): boolean {
+  return entraSchema.safeParse(process.env).success && sessionSchema.safeParse(process.env).success;
 }

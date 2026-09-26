@@ -153,9 +153,16 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - **Los permisos internos solo se ejercen en sesiones abiertas con Entra ID.** Una sesión de Cognito nunca accede a `/admin` ni a APIs administrativas, aunque la cuenta tenga roles internos. `auth_sessions` registra el origen de la sesión.
   - Las cuentas del personal **no** reciben el rol `CLIENTE` en el alta just-in-time: entran sin roles hasta que un `ADMIN_SISTEMA` se los asigne. El primer `ADMIN_SISTEMA` se crea con un comando de *bootstrap* (lista de `oid` en una variable de entorno de un solo uso, o SQL).
   - Los roles internos siguen en Postgres (ADR-006). Opcional a futuro: mapear *app roles* de Entra.
+  - **Implementación (Fase 2B, 2026-09-25):**
+    - Los permisos efectivos dependen del origen de la sesión: en una sesión ENTRA solo cuentan los roles internos; en una de Cognito (cookie o Bearer), solo los ciudadanos. Así, todas las verificaciones por permiso existentes quedan protegidas sin cambios.
+    - Los roles internos solo se asignan a cuentas con identidad `ENTRA` (verificado en `fn_admin_grant_role`). Las cuentas del personal no se vinculan ni se fusionan con cuentas ciudadanas (`fn_link_identity`).
+    - El bootstrap (`ENTRA_BOOTSTRAP_ADMIN_OIDS`) se aplica en `fn_staff_login` solo mientras ninguna cuenta del personal tenga `ADMIN_SISTEMA` vigente, en la misma transacción que el alta y con auditoría (`ROLE_GRANTED`, `metadata.bootstrap`).
+    - El personal no acepta los términos ciudadanos (RN-18 aplica a sesiones de Cognito). Con sesión ENTRA, `/cuenta` redirige a `/admin`.
+    - Se descartó la variable `ADMIN_REQUIRE_ENTRA` prevista en el plan: con un tenant de desarrollo propio no hace falta un modo sin Entra, y quitarla elimina una forma de desactivar el control por error.
+    - Entra no tiene revocación de refresh tokens por token: al cerrar sesión se revoca la sesión local y se redirige al logout de Entra (`post_logout_redirect_uri` = `/admin/ingresar`, registrado como redirect URI).
 - **Ambientes:** en desarrollo, un tenant de Entra propio (gratuito) con un app registration de prueba. En producción, el app registration lo crea el equipo de TI del GAD en su tenant.
 - **Consecuencias:**
   - El personal usa su cuenta corporativa con MFA real. Si deja el GAD y TI deshabilita su cuenta, pierde el acceso al renovar la sesión.
   - La sesión del personal dura como máximo 12 h y se renueva con el refresh token de Entra.
-  - Hay que solicitar al GAD: app registration (client ID, tenant ID, secreto o certificado), redirect URI `https://<dominio>/api/auth/staff/callback`, logout URI y acceso condicional con MFA.
+  - Hay que solicitar al GAD: app registration (client ID, tenant ID, secreto o certificado), redirect URIs `https://<dominio>/api/auth/staff/callback` y `https://<dominio>/admin/ingresar` y acceso condicional con MFA.
 

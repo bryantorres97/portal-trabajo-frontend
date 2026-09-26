@@ -55,5 +55,7 @@ export function etiquetaRol(code: string): string {
 }
 
 export function etiquetaProveedor(provider: string): string {
-  return provider === "COGNITO" ? "Usuario y contraseña" : provider;
+  if (provider === "COGNITO") return "Usuario y contraseña";
+  if (provider === "ENTRA") return "Cuenta institucional (Microsoft)";
+  return provider;
 }

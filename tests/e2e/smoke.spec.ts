@@ -51,10 +51,10 @@ test.describe("portal público", () => {
 });
 
 test.describe("rutas privadas", () => {
-  test("/admin sin sesión redirige al flujo de login", async ({ request }) => {
+  test("/admin sin sesión redirige al ingreso del personal", async ({ request }) => {
     const res = await request.get("/admin", { maxRedirects: 0 });
     expect(res.status()).toBe(307);
-    expect(res.headers()["location"]).toContain("/api/auth/login?returnTo=%2Fadmin");
+    expect(res.headers()["location"]).toContain("/admin/ingresar?returnTo=%2Fadmin");
   });
 
   test("/cuenta sin sesión muestra la pantalla de ingreso", async ({ page }) => {

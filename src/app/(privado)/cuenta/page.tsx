@@ -38,6 +38,7 @@ const mensajesError: Record<string, string> = {
   cuenta_bloqueada: "Tu cuenta no está activa. Comunícate con el GAD Municipalidad de Ambato.",
   forbidden: "No tienes permisos para acceder a esa sección.",
   vinculo_sin_sesion: "Para vincular otra forma de ingreso primero debes iniciar sesión.",
+  vinculo_no_permitido: "Las cuentas institucionales del GAD no se vinculan con cuentas ciudadanas.",
 };
 
 const mensajesVinculo: Record<string, { tipo: "ok" | "aviso"; texto: string }> = {
@@ -60,6 +61,8 @@ export default async function CuentaPage({ searchParams }: PageProps<"/cuenta">)
   const avisoVinculo = typeof vinculo === "string" ? mensajesVinculo[vinculo] : undefined;
   const auth = await getCurrentAuth();
 
+  // El personal del GAD (sesión de Entra ID) no tiene cuenta ciudadana: su espacio es el panel.
+  if (auth?.source === "ENTRA") redirect("/admin");
   if (auth && (await getPendingConsents(auth.user.id)).length > 0) {
     redirect("/cuenta/consentimiento?returnTo=%2Fcuenta");
   }

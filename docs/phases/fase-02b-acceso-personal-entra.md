@@ -1,6 +1,6 @@
 # Fase 2B — Acceso del personal del GAD con Microsoft Entra ID (checklist)
 
-Decisión: **ADR-012** (P-21, opción b). **Estado: PLANIFICADA.** Necesita un app registration de desarrollo (ver `docs/setup/entra-dev.md`).
+Decisión: **ADR-012** (P-21, opción b). **Estado: COMPLETADA (2026-09-25)**, prueba manual OK. Tenant de desarrollo propio con la app `acolita-admin-dev` (ver `docs/setup/entra-dev.md`).
 
 ## Objetivo
 El personal del GAD ingresa a `/admin` con su cuenta de Microsoft 365, con el MFA corporativo, y los permisos internos solo funcionan en esas sesiones.
@@ -19,18 +19,24 @@ El personal del GAD ingresa a `/admin` con su cuenta de Microsoft 365, con el MF
 | Autorización | `requirePagePermission` y la API admin exigen `auth_source = 'ENTRA'`. Una sesión de Cognito con roles internos → 403 en `/admin` |
 | MFA | Lo impone el GAD con **acceso condicional** sobre la app (el ID token v2 no trae `amr`) |
 | Rutas | `/api/auth/staff/login`, `/api/auth/staff/callback`, `/admin/ingresar` (pantalla de ingreso del personal). El logout existente detecta el origen y redirige al logout de Entra |
-| Variables | `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET`, `ENTRA_BOOTSTRAP_ADMIN_OIDS` (opcional). `ADMIN_REQUIRE_ENTRA` (por defecto `true`; `false` solo en desarrollo sin tenant) |
+| Variables | `ENTRA_TENANT_ID`, `ENTRA_CLIENT_ID`, `ENTRA_CLIENT_SECRET`, `ENTRA_BOOTSTRAP_ADMIN_OIDS` (opcional). ~~`ADMIN_REQUIRE_ENTRA`~~ descartada (ver ADR-012) |
 | Verificación de JWT | `jose` con `createRemoteJWKSet` (aws-jwt-verify es solo para Cognito) |
 
 ## Checklist
-- [ ] Migración: `auth_sessions.auth_source` (`COGNITO` | `ENTRA`), ajuste de `fn_link_identity` (no fusionar cuentas de personal con cuentas ciudadanas)
-- [ ] `src/server/auth/entra.ts`: URLs, canje de código, refresh, verificación de ID token (tenant, invitados, nonce)
-- [ ] Refactor: el proveedor de la sesión se registra al crearla; `resolveSession` renueva con el proveedor correcto
-- [ ] Alta just-in-time del personal sin roles + bootstrap del primer admin (auditado: `STAFF_FIRST_LOGIN`, `ROLE_GRANTED` con `metadata.bootstrap`)
-- [ ] Rutas `/api/auth/staff/*` y página `/admin/ingresar`
-- [ ] `requirePagePermission` y la API admin exigen una sesión de Entra (403 en caso contrario)
-- [ ] Logout según el origen (Cognito o Entra)
-- [ ] CSP: `form-action` incluye `login.microsoftonline.com`
-- [ ] Tests: unit (validación de claims, tenant, invitados), integración (alta sin roles, bootstrap, sesión Cognito sin acceso admin), E2E (redirecciones)
-- [ ] Guías: `docs/setup/entra-dev.md`, `docs/setup/env.md`
+- [x] Migración `20260925180000_acceso_personal_entra.sql`: `auth_sessions.auth_source` (`COGNITO` | `ENTRA`), `fn_staff_login` (alta sin roles + bootstrap atómico y auditado), `fn_link_identity` sin cuentas del personal, `fn_admin_grant_role` solo para cuentas del personal
+- [x] `src/server/auth/entra.ts`: URLs, canje de código, refresh (verifica que siga siendo el mismo `oid`), verificación del ID token con `jose` (tenant, invitados, nonce)
+- [x] Refactor: la sesión guarda su origen y su identidad; `resolveSession` renueva con el proveedor correcto; la revocación de refresh tokens solo aplica a Cognito
+- [x] Permisos según el origen: `loadUser(id, { source })` (internos con Entra, ciudadanos con Cognito, también en Bearer)
+- [x] Rutas `/api/auth/staff/{login,callback}` y página `/admin/ingresar`; el proxy envía `/admin/*` sin sesión a `/admin/ingresar`
+- [x] `requirePagePermission` exige sesión de Entra (sesión ciudadana → aviso `cuenta_ciudadana`; personal sin roles → `sin_permisos`)
+- [x] Logout según el origen (Cognito o Entra, que vuelve a `/admin/ingresar`); botón de cierre en el panel
+- [x] CSP: `form-action` incluye `login.microsoftonline.com`
+- [x] `/cuenta` con sesión de Entra → `/admin`; vinculación desde una sesión de Entra → `vinculo_no_permitido`; `/admin/usuarios/[id]` solo ofrece roles internos a cuentas institucionales
+- [x] Tests: unit (URLs, claims, invitados, tenant, nonce, firma), integración (alta sin roles, bootstrap, permisos por origen, sesiones ENTRA, separación de cuentas), pgTAP (privilegios, alta, reglas de roles y vinculación), E2E (redirecciones, pantalla de ingreso, CSP, a11y)
+- [x] Guías: `docs/setup/entra-dev.md`, `docs/setup/env.md`, `.env.example`, ADR-012
+- [x] Prueba manual con el tenant de desarrollo (`docs/setup/entra-dev.md` §3b)
 - [ ] Pedido formal al GAD (texto listo en `docs/setup/entra-dev.md` §4)
+
+## Notas
+- Datos previos: si una cuenta ciudadana tenía roles internos (asignados antes de la Fase 2B), esos roles ya no tienen efecto. Para dar acceso, la persona ingresa en `/admin/ingresar` y se le asignan los roles a su cuenta institucional.
+- Entra no emite `email_verified`: el correo del personal se guarda como no verificado y nunca se usa para vincular cuentas.

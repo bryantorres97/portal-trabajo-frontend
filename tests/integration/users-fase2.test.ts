@@ -4,7 +4,13 @@ import { describe, expect, it } from "vitest";
 
 import { AuthError } from "@/server/auth/authorize";
 import { createSession, resolveSession } from "@/server/auth/session";
-import { loadUser, upsertUserFromLogin, type AppUser, type IdentityClaims } from "@/server/auth/users";
+import {
+  loadUser,
+  upsertStaffFromLogin,
+  upsertUserFromLogin,
+  type AppUser,
+  type IdentityClaims,
+} from "@/server/auth/users";
 import { getAdminDb } from "@/server/db/admin";
 import { DomainError } from "@/server/errors";
 import type { RequestContext } from "@/server/http/request-info";
@@ -27,6 +33,21 @@ async function nuevoUsuario(roles: string[] = [], parcial: Partial<IdentityClaim
   const { user } = await upsertUserFromLogin(id);
   for (const role_code of roles) await getAdminDb().from("user_roles").insert({ user_id: user.id, role_code });
   return { user: (await loadUser(user.id)) as AppUser, identity: id };
+}
+
+/** Cuenta del personal (Entra ID, ADR-012): la única que puede recibir roles internos. */
+async function nuevoPersonal() {
+  const { userId } = await upsertStaffFromLogin(
+    {
+      issuer: "https://login.microsoftonline.com/00000000-0000-4000-8000-000000000001/v2.0",
+      sub: randomUUID(),
+      provider: "ENTRA",
+      emailVerified: false,
+    },
+    { bootstrapAdmin: false },
+    ctx,
+  );
+  return (await loadUser(userId)) as AppUser;
 }
 
 async function auditoria(action: string, resourceId: string) {
@@ -97,7 +118,7 @@ describe("perfil de cliente", () => {
 describe("administración de roles", () => {
   it("un ADMIN_SISTEMA asigna y revoca roles internos con auditoría atómica", async () => {
     const { user: admin } = await nuevoUsuario(["ADMIN_SISTEMA"]);
-    const { user: objetivo } = await nuevoUsuario();
+    const objetivo = await nuevoPersonal();
 
     await grantRole(admin, { userId: objetivo.id, roleCode: "MODERADOR" }, ctx);
     expect((await loadUser(objetivo.id))?.roles).toContain("MODERADOR");

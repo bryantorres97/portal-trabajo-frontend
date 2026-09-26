@@ -5,22 +5,15 @@ import { logger } from "@/lib/logger";
 import { logAudit } from "@/server/audit/log";
 import { exchangeCode, revokeRefreshToken } from "@/server/auth/cognito";
 import { decryptPayload } from "@/server/auth/crypto";
-import { createSession, resolveSession } from "@/server/auth/session";
+import { createSession, destroySession, resolveSession } from "@/server/auth/session";
 import {
-  INTERNAL_SESSION_MAX_AGE_SECONDS,
   OAUTH_COOKIE,
   OAUTH_PURPOSE,
   SESSION_COOKIE,
   SESSION_MAX_AGE_SECONDS,
   cookieOptions,
 } from "@/server/auth/session-cookie";
-import {
-  identityFromIdToken,
-  isInternalUser,
-  loadUser,
-  upsertUserFromLogin,
-  type IdentityClaims,
-} from "@/server/auth/users";
+import { identityFromIdToken, loadUser, upsertUserFromLogin, type IdentityClaims } from "@/server/auth/users";
 import { verifyAccessToken, verifyIdToken } from "@/server/auth/verify";
 import { requestInfo, safeReturnTo, type RequestContext } from "@/server/http/request-info";
 import { linkIdentity } from "@/server/users/identities";
@@ -50,7 +43,7 @@ export async function GET(request: NextRequest) {
     ? await decryptPayload<OAuthState>(cookie, getSessionEnv().SESSION_SECRET, OAUTH_PURPOSE)
     : null;
 
-  if (!code || !state || !guardado || guardado.state !== state) {
+  if (!code || !state || !guardado || "flow" in guardado || guardado.state !== state) {
     logger.warn("auth.callback_invalid_state", { hasCode: !!code, hasCookie: !!cookie });
     return fallo(request, "login_invalido");
   }
@@ -80,8 +73,11 @@ export async function GET(request: NextRequest) {
       return fallo(request, "cuenta_bloqueada");
     }
 
-    const appUser = await loadUser(user.id);
-    const maxAge = appUser && isInternalUser(appUser) ? INTERNAL_SESSION_MAX_AGE_SECONDS : SESSION_MAX_AGE_SECONDS;
+    // Las sesiones de Cognito son siempre ciudadanas: los roles internos valen solo con Entra ID (ADR-012).
+    const appUser = await loadUser(user.id, { source: "COGNITO" });
+    const maxAge = SESSION_MAX_AGE_SECONDS;
+    // Una sesión previa en este navegador (p. ej. del personal) se cierra: una cookie, una sesión.
+    await destroySession(request.cookies.get(SESSION_COOKIE)?.value);
     const { cookieValue } = await createSession({ userId: user.id, tokens, maxAgeSeconds: maxAge, ...info });
 
     if (created)
@@ -126,6 +122,8 @@ async function vincular(
   if (refreshToken) await revokeRefreshToken(refreshToken);
   const session = await resolveSession(request.cookies.get(SESSION_COOKIE)?.value);
   if (!session) return fallo(request, "vinculo_sin_sesion");
+  // Las cuentas del personal no se vinculan con cuentas ciudadanas (ADR-012).
+  if (session.source !== "COGNITO") return fallo(request, "vinculo_no_permitido");
 
   const resultado = await linkIdentity(session.userId, identity, info);
   const response = NextResponse.redirect(new URL(`/cuenta?vinculo=${resultado}`, request.url));

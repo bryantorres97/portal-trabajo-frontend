@@ -1,6 +1,8 @@
 import "server-only";
 
+import type { AuthSource } from "@/server/auth/session";
 import { getAdminDb } from "@/server/db/admin";
+import { auditParams, type RequestContext } from "@/server/http/request-info";
 
 export type UserStatus = "ACTIVO" | "BLOQUEADO" | "ELIMINADO";
 
@@ -13,7 +15,10 @@ export type AppUser = {
   permissions: string[];
 };
 
-/** Identidad de Cognito verificada. `sub` NO es estable entre proveedores de login (ADR-008). */
+/**
+ * Identidad verificada. En Cognito, `sub` NO es estable entre proveedores de login (ADR-008);
+ * en Entra ID, `sub` guarda el `oid` del personal (ADR-012).
+ */
 export type IdentityClaims = {
   issuer: string;
   sub: string;
@@ -141,23 +146,36 @@ export async function findUserIdByIdentity(issuer: string, sub: string): Promise
   return data?.user_id ?? null;
 }
 
-/** Carga el usuario con sus roles vigentes y permisos efectivos. */
-export async function loadUser(id: string): Promise<AppUser | null> {
+/**
+ * Carga el usuario con sus roles vigentes y permisos efectivos.
+ * Con `source`, solo cuentan los roles que valen en ese tipo de sesión (ADR-012): los internos
+ * en sesiones de Entra ID y los ciudadanos en sesiones de Cognito. Sin `source` (vistas
+ * administrativas de otras cuentas) se devuelven todos.
+ */
+export async function loadUser(id: string, opts: { source?: AuthSource } = {}): Promise<AppUser | null> {
   const db = getAdminDb();
   const { data: user, error } = await db.from("users").select(USER_COLUMNS).eq("id", id).maybeSingle<UserRow>();
   if (error) throw error;
   if (!user) return null;
 
-  const { data: roles, error: errorRoles } = await db
+  const { data, error: errorRoles } = await db
     .from("user_roles")
-    .select("role_code, roles(role_permissions(permission_code))")
+    .select("role_code, roles(is_internal, role_permissions(permission_code))")
     .eq("user_id", user.id)
     .is("revoked_at", null)
-    .returns<{ role_code: string; roles: { role_permissions: { permission_code: string }[] } | null }[]>();
+    .returns<
+      {
+        role_code: string;
+        roles: { is_internal: boolean; role_permissions: { permission_code: string }[] } | null;
+      }[]
+    >();
   if (errorRoles) throw errorRoles;
 
+  const roles = (data ?? []).filter(
+    (r) => !opts.source || (r.roles?.is_internal ?? false) === (opts.source === "ENTRA"),
+  );
   const permisos = new Set<string>();
-  for (const r of roles ?? []) {
+  for (const r of roles) {
     for (const rp of r.roles?.role_permissions ?? []) permisos.add(rp.permission_code);
   }
 
@@ -166,11 +184,31 @@ export async function loadUser(id: string): Promise<AppUser | null> {
     email: user.email,
     displayName: user.display_name,
     status: user.status,
-    roles: (roles ?? []).map((r) => r.role_code).sort(),
+    roles: roles.map((r) => r.role_code).sort(),
     permissions: [...permisos].sort(),
   };
 }
 
-export function isInternalUser(user: Pick<AppUser, "roles">): boolean {
-  return user.roles.some((r) => r !== "CLIENTE" && r !== "TRABAJADOR");
+/**
+ * Ingreso del personal con Entra ID (ADR-012), atómico en `fn_staff_login`: alta just-in-time
+ * SIN roles (no reciben CLIENTE) y, si `bootstrapAdmin` y aún no hay administradores del
+ * personal, asignación auditada del primer ADMIN_SISTEMA.
+ */
+export async function upsertStaffFromLogin(
+  identity: IdentityClaims,
+  opts: { bootstrapAdmin: boolean },
+  ctx: RequestContext,
+): Promise<{ userId: string; created: boolean; bootstrapped: boolean; status: UserStatus }> {
+  const { data, error } = await getAdminDb()
+    .rpc("fn_staff_login", {
+      p_issuer: identity.issuer,
+      p_sub: identity.sub,
+      p_email: identity.email ?? null,
+      p_display_name: identity.displayName ?? null,
+      p_bootstrap_admin: opts.bootstrapAdmin,
+      ...auditParams(ctx),
+    })
+    .single<{ user_id: string; created: boolean; bootstrapped: boolean; status: UserStatus }>();
+  if (error) throw error;
+  return { userId: data.user_id, created: data.created, bootstrapped: data.bootstrapped, status: data.status };
 }

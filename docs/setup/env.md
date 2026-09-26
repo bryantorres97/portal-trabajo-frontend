@@ -18,6 +18,10 @@ La validación está en `src/lib/env.ts` (servidor, `server-only`) y `src/lib/en
 | `COGNITO_SCOPES` | Cognito | No | `openid email profile` | Idem | Idem | Idem (el pool del GAD no soporta `phone`) |
 | `COGNITO_IDENTITY_PROVIDERS` | Cognito | No | Vacío (o `Google` si el pool dev lo tiene) | Idem | Idem | `Google` (Facebook cuando el GAD lo confirme) |
 | `COGNITO_EXTRA_CLIENT_IDS` | Cognito | No | Vacío | Vacío | Client móvil (Fase 11) | Client móvil |
+| `ENTRA_TENANT_ID` | Entra ID | No | Tenant propio de prueba | Idem | Idem | Tenant del GAD |
+| `ENTRA_CLIENT_ID` | Entra ID | No | App `acolita-admin-dev` | Idem (otro redirect URI) | Idem | App registration del GAD |
+| `ENTRA_CLIENT_SECRET` | Entra ID | No | Secreto de la app de prueba | Secreto | Secreto | Secreto (o certificado) del GAD |
+| `ENTRA_BOOTSTRAP_ADMIN_OIDS` | Entra ID | No | `oid` de tu usuario de prueba | Opcional | Opcional | `oid` del primer administrador; se retira después |
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase | Sí | `http://127.0.0.1:54321` | Proyecto dev | Proyecto staging | Proyecto prod |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase | Sí | De `supabase start` | Publishable key | Idem | Idem |
 | `SUPABASE_SECRET_KEY` | Supabase | No | De `supabase start` | Secret key | Idem | Idem (acceso restringido) |
@@ -26,4 +30,5 @@ Reglas:
 - Solo las variables con prefijo `NEXT_PUBLIC_` llegan al navegador, y se incrustan **en tiempo de build**. Nunca se agregan secretos con ese prefijo.
 - Los secretos de development, staging y production viven en el gestor de secretos del proveedor de despliegue (ADR-007, [PENDIENTE]).
 - `COGNITO_DOMAIN` también se usa en `next.config.ts` (CSP `form-action`), así que debe estar definida en el momento del build.
+- `ENTRA_BOOTSTRAP_ADMIN_OIDS` solo tiene efecto mientras **ninguna** cuenta del personal sea `ADMIN_SISTEMA` (ADR-012). Aun así, conviene retirarla después del primer ingreso.
 - El client secret que aparece en `resources/cognito-data.md` **no se usa**: pertenece al pool institucional y debe rotarse (B3).

@@ -1,6 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, ClipboardList, GraduationCap, Flag, HardHat, Tags, Users, type LucideIcon } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  ClipboardList,
+  GraduationCap,
+  Flag,
+  HardHat,
+  LogOut,
+  Tags,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 import { PageHeader, Section } from "@/components/site/SiteShell";
 import { etiquetaRol } from "@/lib/formatos";
@@ -57,8 +68,9 @@ const modulos: Modulo[] = [
 ];
 
 /** Punto de entrada del panel GAD: muestra solo los módulos permitidos para el usuario. */
-export default async function AdminPage() {
+export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   const user = await requirePagePermission("admin.access", "/admin");
+  const { error } = await searchParams;
   const visibles = modulos.filter((m) => hasPermission(user, m.permiso));
 
   return (
@@ -66,8 +78,16 @@ export default async function AdminPage() {
       <PageHeader
         eyebrow="GAD Municipalidad de Ambato"
         titulo="Panel administrativo"
-        descripcion={`Tus roles: ${user.roles.map(etiquetaRol).join(", ")}.`}
+        descripcion={`${user.displayName ?? user.email ?? "Personal del GAD"} · ${user.roles.map(etiquetaRol).join(", ")}.`}
       />
+      {error === "forbidden" && (
+        <Section>
+          <p role="alert" className="flex gap-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
+            <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" aria-hidden />
+            <span>No tienes permisos para acceder a esa sección.</span>
+          </p>
+        </Section>
+      )}
       <Section>
         <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {visibles.map((m) => {
@@ -100,6 +120,14 @@ export default async function AdminPage() {
             );
           })}
         </ul>
+        <form action="/api/auth/logout" method="post" className="mt-6">
+          <button
+            type="submit"
+            className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold"
+          >
+            <LogOut className="h-4 w-4" aria-hidden /> Cerrar sesión
+          </button>
+        </form>
       </Section>
     </>
   );

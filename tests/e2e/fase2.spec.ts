@@ -13,13 +13,11 @@ test.describe("Fase 2 — rutas públicas y protección", () => {
     await expect(page).toHaveURL(/\/terminos$/);
   });
 
-  for (const ruta of ["/admin/usuarios", "/cuenta/consentimiento"]) {
-    test(`${ruta} sin sesión redirige al login`, async ({ request }) => {
-      const res = await request.get(ruta, { maxRedirects: 0 });
-      expect(res.status()).toBe(307);
-      expect(res.headers()["location"]).toContain("/api/auth/login?returnTo=");
-    });
-  }
+  test("/cuenta/consentimiento sin sesión redirige al login ciudadano", async ({ request }) => {
+    const res = await request.get("/cuenta/consentimiento", { maxRedirects: 0 });
+    expect(res.status()).toBe(307);
+    expect(res.headers()["location"]).toContain("/api/auth/login?returnTo=");
+  });
 });
 
 test.describe("API /api/v1/me", () => {

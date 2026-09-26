@@ -82,7 +82,13 @@ export default async function UsuarioDetallePage({ params }: PageProps<"/admin/u
                 );
               })}
             </ul>
-            {puedeRoles && detalle.status === "ACTIVO" && asignables.length > 0 && (
+            {puedeRoles && !detalle.isStaff && (
+              <p className="text-xs text-muted-foreground">
+                Es una cuenta ciudadana: los roles internos solo se asignan a cuentas institucionales (Microsoft). La
+                persona debe ingresar primero en /admin/ingresar con su cuenta del GAD.
+              </p>
+            )}
+            {puedeRoles && detalle.isStaff && detalle.status === "ACTIVO" && asignables.length > 0 && (
               <ActionForm action={asignarRol} submitLabel="Asignar rol" pendingLabel="Asignando…">
                 <input type="hidden" name="userId" value={detalle.id} />
                 <label htmlFor="roleCode" className="text-sm font-bold">

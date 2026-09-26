@@ -5,7 +5,16 @@ import { expect, test } from "@playwright/test";
  * Accesibilidad (WCAG 2.2 A/AA con axe-core) y SEO básico en las páginas públicas clave.
  * Criterio de la Fase 3: sin violaciones graves ni críticas.
  */
-const PAGINAS = ["/", "/oficios", "/oficios/plomeria", "/buscar", "/buscar?q=plomero", "/trabajadores", "/terminos"];
+const PAGINAS = [
+  "/",
+  "/oficios",
+  "/oficios/plomeria",
+  "/buscar",
+  "/buscar?q=plomero",
+  "/trabajadores",
+  "/terminos",
+  "/admin/ingresar",
+];
 
 for (const ruta of PAGINAS) {
   test(`a11y y SEO: ${ruta}`, async ({ page }) => {

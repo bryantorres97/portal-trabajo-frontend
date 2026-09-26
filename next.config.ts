@@ -19,8 +19,9 @@ const csp = [
   `connect-src 'self' ${supabaseUrl} ${supabaseWs}`.trim(),
   "object-src 'none'",
   "base-uri 'self'",
-  // Chrome aplica form-action también a redirecciones: el logout (POST → 303) termina en Cognito.
-  `form-action 'self'${cognitoDomain ? ` https://${cognitoDomain}` : ""}`,
+  // Chrome aplica form-action también a redirecciones: el logout (POST → 303) termina en Cognito
+  // o, para el personal del GAD, en Microsoft Entra ID (ADR-012).
+  `form-action 'self'${cognitoDomain ? ` https://${cognitoDomain}` : ""} https://login.microsoftonline.com`,
   "frame-ancestors 'none'",
   ...(isDev ? [] : ["upgrade-insecure-requests"]),
 ].join("; ");

@@ -2,20 +2,30 @@ import "server-only";
 
 import { getSessionEnv } from "@/lib/env";
 import { logger } from "@/lib/logger";
-import { refreshTokens, revokeRefreshToken, type TokenResponse } from "@/server/auth/cognito";
+import { refreshTokens, revokeRefreshToken } from "@/server/auth/cognito";
 import { decryptPayload, encryptPayload, randomToken, sha256Hex } from "@/server/auth/crypto";
+import { refreshStaffTokens } from "@/server/auth/entra";
 import { getAdminDb } from "@/server/db/admin";
 
 /**
  * Sesiones opacas del servidor (ADR-005). La cookie contiene un token aleatorio;
- * la base guarda su hash y los tokens de Cognito cifrados.
+ * la base guarda su hash y los tokens del proveedor cifrados.
+ * Origen: COGNITO (ciudadanos) o ENTRA (personal del GAD, ADR-012).
  */
+
+export type AuthSource = "COGNITO" | "ENTRA";
+
+/** Tokens del proveedor (misma forma en Cognito y Entra). */
+export type SessionTokens = { access_token: string; refresh_token?: string; expires_in: number; token_type?: string };
+
+export type SessionIdentity = { issuer: string; sub: string };
 
 const PROPOSITO_TOKENS = "session-tokens";
 /** Renovar el access token cuando falten menos de 5 minutos. */
 const MARGEN_RENOVACION_MS = 5 * 60 * 1000;
 
-type TokensCifrados = { at: string; rt?: string };
+/** `src`, `iss` y `sub` se agregaron en la Fase 2B: las sesiones anteriores son de Cognito. */
+type TokensCifrados = { at: string; rt?: string; src?: AuthSource; iss?: string; sub?: string };
 
 type SessionRow = {
   id: string;
@@ -24,13 +34,28 @@ type SessionRow = {
   access_expires_at: string;
   expires_at: string;
   revoked_at: string | null;
+  auth_source: AuthSource;
 };
+
+const SESSION_COLUMNS = "id, user_id, tokens_enc, access_expires_at, expires_at, revoked_at, auth_source";
 
 export type ActiveSession = {
   id: string;
   userId: string;
+  source: AuthSource;
   accessToken: string;
+  /** Identidad con la que se abrió la sesión (siempre presente en sesiones ENTRA). */
+  identity?: SessionIdentity;
 };
+
+function identidadDe(tokens: TokensCifrados): SessionIdentity | undefined {
+  return tokens.iss && tokens.sub ? { issuer: tokens.iss, sub: tokens.sub } : undefined;
+}
+
+/** Revoca el refresh token en el proveedor. Entra no tiene endpoint de revocación por token. */
+async function revocarEnProveedor(tokens: TokensCifrados | null): Promise<void> {
+  if (tokens?.rt && (tokens.src ?? "COGNITO") === "COGNITO") await revokeRefreshToken(tokens.rt);
+}
 
 async function cifrarTokens(tokens: TokensCifrados, segundos: number) {
   return encryptPayload(tokens, getSessionEnv().SESSION_SECRET, PROPOSITO_TOKENS, segundos);
@@ -42,11 +67,15 @@ async function descifrarTokens(jwe: string) {
 
 export async function createSession(params: {
   userId: string;
-  tokens: TokenResponse;
+  tokens: SessionTokens;
   maxAgeSeconds: number;
+  source?: AuthSource;
+  identity?: SessionIdentity;
   ip?: string | null;
   userAgent?: string | null;
 }): Promise<{ cookieValue: string }> {
+  const source = params.source ?? "COGNITO";
+  if (source === "ENTRA" && !params.identity) throw new Error("Una sesión de Entra requiere la identidad");
   const cookieValue = randomToken(32);
   const ahora = Date.now();
   const { error } = await getAdminDb()
@@ -54,8 +83,15 @@ export async function createSession(params: {
     .insert({
       token_hash: await sha256Hex(cookieValue),
       user_id: params.userId,
+      auth_source: source,
       tokens_enc: await cifrarTokens(
-        { at: params.tokens.access_token, rt: params.tokens.refresh_token },
+        {
+          at: params.tokens.access_token,
+          rt: params.tokens.refresh_token,
+          src: source,
+          iss: params.identity?.issuer,
+          sub: params.identity?.sub,
+        },
         params.maxAgeSeconds,
       ),
       access_expires_at: new Date(ahora + params.tokens.expires_in * 1000).toISOString(),
@@ -77,7 +113,7 @@ export async function resolveSession(cookieValue: string | undefined): Promise<A
   const db = getAdminDb();
   const { data: row, error } = await db
     .from("auth_sessions")
-    .select("id, user_id, tokens_enc, access_expires_at, expires_at, revoked_at")
+    .select(SESSION_COLUMNS)
     .eq("token_hash", await sha256Hex(cookieValue))
     .maybeSingle<SessionRow>();
   if (error) throw error;
@@ -85,25 +121,39 @@ export async function resolveSession(cookieValue: string | undefined): Promise<A
 
   const tokens = await descifrarTokens(row.tokens_enc);
   if (!tokens) return null;
+  const source = row.auth_source;
+  const identity = identidadDe(tokens);
+  if (source === "ENTRA" && !identity) return null;
+  const sesion = (accessToken: string): ActiveSession => ({
+    id: row.id,
+    userId: row.user_id,
+    source,
+    accessToken,
+    identity,
+  });
 
-  if (Date.parse(row.access_expires_at) - Date.now() > MARGEN_RENOVACION_MS) {
-    return { id: row.id, userId: row.user_id, accessToken: tokens.at };
-  }
+  if (Date.parse(row.access_expires_at) - Date.now() > MARGEN_RENOVACION_MS) return sesion(tokens.at);
 
   if (!tokens.rt) return null;
   try {
-    const nuevos = await refreshTokens(tokens.rt);
+    const nuevos =
+      source === "ENTRA" && identity
+        ? await refreshStaffTokens(tokens.rt, identity.sub)
+        : await refreshTokens(tokens.rt);
     const restanteSeg = Math.max(60, Math.floor((Date.parse(row.expires_at) - Date.now()) / 1000));
     const { error: errorUpdate } = await db
       .from("auth_sessions")
       .update({
-        tokens_enc: await cifrarTokens({ at: nuevos.access_token, rt: nuevos.refresh_token ?? tokens.rt }, restanteSeg),
+        tokens_enc: await cifrarTokens(
+          { ...tokens, at: nuevos.access_token, rt: nuevos.refresh_token ?? tokens.rt },
+          restanteSeg,
+        ),
         access_expires_at: new Date(Date.now() + nuevos.expires_in * 1000).toISOString(),
         last_seen_at: new Date().toISOString(),
       })
       .eq("id", row.id);
     if (errorUpdate) throw errorUpdate;
-    return { id: row.id, userId: row.user_id, accessToken: nuevos.access_token };
+    return sesion(nuevos.access_token);
   } catch (e) {
     logger.warn("auth.refresh_failed", { sessionId: row.id, error: e });
     await db.from("auth_sessions").update({ revoked_at: new Date().toISOString() }).eq("id", row.id);
@@ -111,21 +161,22 @@ export async function resolveSession(cookieValue: string | undefined): Promise<A
   }
 }
 
-/** Revoca la sesión local y el refresh token en Cognito. Devuelve el userId si existía. */
-export async function destroySession(cookieValue: string | undefined): Promise<string | null> {
+/** Revoca la sesión local y el refresh token en Cognito. Devuelve el usuario y el origen si existía. */
+export async function destroySession(
+  cookieValue: string | undefined,
+): Promise<{ userId: string; source: AuthSource } | null> {
   if (!cookieValue || cookieValue.length > 128) return null;
   const db = getAdminDb();
   const { data: row } = await db
     .from("auth_sessions")
-    .select("id, user_id, tokens_enc, access_expires_at, expires_at, revoked_at")
+    .select(SESSION_COLUMNS)
     .eq("token_hash", await sha256Hex(cookieValue))
     .maybeSingle<SessionRow>();
   if (!row || row.revoked_at) return null;
 
   await db.from("auth_sessions").update({ revoked_at: new Date().toISOString() }).eq("id", row.id);
-  const tokens = await descifrarTokens(row.tokens_enc);
-  if (tokens?.rt) await revokeRefreshToken(tokens.rt);
-  return row.user_id;
+  await revocarEnProveedor(await descifrarTokens(row.tokens_enc));
+  return { userId: row.user_id, source: row.auth_source };
 }
 
 export type SessionSummary = {
@@ -171,12 +222,7 @@ export async function listActiveSessions(userId: string, currentSessionId?: stri
 
 /** Revoca en Cognito los refresh tokens contenidos en sesiones cifradas (errores ignorados). */
 export async function revokeEncryptedTokens(tokensEnc: string[]): Promise<void> {
-  await Promise.all(
-    tokensEnc.map(async (jwe) => {
-      const tokens = await descifrarTokens(jwe);
-      if (tokens?.rt) await revokeRefreshToken(tokens.rt);
-    }),
-  );
+  await Promise.all(tokensEnc.map(async (jwe) => revocarEnProveedor(await descifrarTokens(jwe))));
 }
 
 /**

@@ -98,6 +98,8 @@ export async function getUserDetail(actor: AppUser, userId: string) {
   return {
     ...mapUser(data),
     blockedReason: data.blocked_reason ?? null,
+    /** Cuenta del personal (Entra ID): la única que puede recibir roles internos (ADR-012). */
+    isStaff: data.user_identities.some((i) => i.provider === "ENTRA"),
     identities: data.user_identities.map((i) => ({
       provider: i.provider,
       createdAt: i.created_at,

@@ -86,7 +86,7 @@ describe("sesiones opacas", () => {
       accessToken: "access-token-de-prueba",
     });
 
-    await expect(destroySession(cookieValue)).resolves.toBe(user.id);
+    await expect(destroySession(cookieValue)).resolves.toEqual({ userId: user.id, source: "COGNITO" });
     await expect(resolveSession(cookieValue)).resolves.toBeNull();
   });
 
