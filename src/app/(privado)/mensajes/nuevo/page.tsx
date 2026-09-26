@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 import { ShieldCheck } from "lucide-react";
 
-import { ActionForm, FieldError } from "@/components/forms/ActionForm";
 import { PageHeader, Section } from "@/components/site/SiteShell";
 import { Avatar, fotoTrabajador } from "@/components/site/WorkerCard";
 import { requireConsentedPageAuth } from "@/server/auth/current-user";
@@ -10,6 +9,7 @@ import { listConversations } from "@/server/chat/chat";
 import { getPublicWorker } from "@/server/search/workers";
 
 import { iniciarConversacion } from "./actions";
+import { NuevoMensajeForm } from "./NuevoMensajeForm";
 
 export const metadata: Metadata = { title: "Escribir a un trabajador" };
 
@@ -46,28 +46,7 @@ export default async function NuevaConversacionPage({ searchParams }: PageProps<
               <p className="text-sm text-muted-foreground">{w.services.map((s) => s.name).join(" · ")}</p>
             </div>
           </div>
-          <ActionForm action={iniciarConversacion} submitLabel="Enviar mensaje" pendingLabel="Enviando…">
-            {(state) => (
-              <>
-                <input type="hidden" name="workerId" value={w.id} />
-                <label htmlFor="body" className="text-sm font-bold">
-                  Tu mensaje
-                </label>
-                <textarea
-                  id="body"
-                  name="body"
-                  required
-                  rows={5}
-                  maxLength={2000}
-                  placeholder="Hola, necesito arreglar una fuga en el baño en Huachi Chico. ¿Podría esta semana?"
-                  aria-invalid={!!state.fieldErrors?.body}
-                  aria-describedby="body-error"
-                  className="mt-1 w-full rounded-xl border border-input bg-card px-4 py-3 text-base outline-none focus:border-primary focus:ring-2 focus:ring-ring/30"
-                />
-                <FieldError id="body-error" state={state} name="body" />
-              </>
-            )}
-          </ActionForm>
+          <NuevoMensajeForm action={iniciarConversacion} workerId={w.id} />
           <p className="flex gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="h-4 w-4 shrink-0 text-verde" aria-hidden />
             No compartas contraseñas ni datos bancarios. Acuerda precio y condiciones dentro de la plataforma.

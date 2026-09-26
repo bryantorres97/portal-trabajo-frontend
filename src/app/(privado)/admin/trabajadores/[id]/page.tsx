@@ -38,7 +38,7 @@ import {
   subirDocumento,
   subirFotoTrabajador,
 } from "../actions";
-import { CodigoEmitido } from "./CodigoEmitido";
+import { EmitirCodigoForm } from "./CodigoEmitido";
 
 export const metadata: Metadata = { title: "Ficha del trabajador · Panel GAD" };
 
@@ -560,21 +560,7 @@ function Cuenta({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
             Hay un código vigente hasta {formatearFechaHora(w.activationCode.expiresAt)}. Emitir uno nuevo lo anula.
           </p>
         )}
-        {puedeEmitir && (
-          <ActionForm
-            action={emitirCodigoActivacion}
-            submitLabel="Emitir código de activación"
-            pendingLabel="Emitiendo…"
-            variant="secondary"
-          >
-            {(state) => (
-              <>
-                <input type="hidden" name="workerId" value={w.id} />
-                {state.data?.code && <CodigoEmitido code={state.data.code} expiresAt={state.data.expiresAt} />}
-              </>
-            )}
-          </ActionForm>
-        )}
+        {puedeEmitir && <EmitirCodigoForm action={emitirCodigoActivacion} workerId={w.id} />}
       </div>
     </Section>
   );

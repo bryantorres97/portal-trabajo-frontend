@@ -3,7 +3,32 @@
 import { Check, Copy, Printer } from "lucide-react";
 import { useState } from "react";
 
+import { ActionForm } from "@/components/forms/ActionForm";
+import type { ActionState } from "@/lib/action-state";
 import { formatearFechaHora } from "@/lib/formatos";
+
+/**
+ * Formulario para emitir el código. Vive en el cliente porque muestra el código que devuelve la
+ * acción (una función como `children` no puede cruzar del servidor a un componente de cliente).
+ */
+export function EmitirCodigoForm({
+  action,
+  workerId,
+}: {
+  action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
+  workerId: string;
+}) {
+  return (
+    <ActionForm action={action} submitLabel="Emitir código de activación" pendingLabel="Emitiendo…" variant="secondary">
+      {(state) => (
+        <>
+          <input type="hidden" name="workerId" value={workerId} />
+          {state.data?.code && <CodigoEmitido code={state.data.code} expiresAt={state.data.expiresAt} />}
+        </>
+      )}
+    </ActionForm>
+  );
+}
 
 /** Muestra el código de activación recién emitido (solo esta vez) con opciones para copiarlo o imprimirlo. */
 export function CodigoEmitido({ code, expiresAt }: { code: string; expiresAt?: string }) {
