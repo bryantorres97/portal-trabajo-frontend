@@ -15,6 +15,7 @@ import { currentRequestContext, safeReturnTo } from "@/server/http/request-info"
 import { acceptCurrentConsents } from "@/server/users/consents";
 import { unlinkIdentity } from "@/server/users/identities";
 import { saveClientProfile } from "@/server/users/profile";
+import { markNotificationsRead } from "@/server/notifications/notifications";
 
 async function requireAuth() {
   const auth = await getCurrentAuth();
@@ -77,5 +78,14 @@ export async function desvincularIdentidad(_prev: ActionState, formData: FormDat
     await unlinkIdentity(user.id, identityId, identity, await currentRequestContext());
     refresh();
     return "Forma de ingreso eliminada.";
+  });
+}
+
+export async function marcarNotificacionesLeidas(_prev: ActionState, _formData: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const { user } = await requireAuth();
+    await markNotificationsRead(user);
+    refresh();
+    return "Listo.";
   });
 }

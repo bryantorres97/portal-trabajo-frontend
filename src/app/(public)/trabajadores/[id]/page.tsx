@@ -153,18 +153,17 @@ export default async function TrabajadorPage({ params }: PageProps<"/trabajadore
             <div className="space-y-4 tarjeta p-5 lg:sticky lg:top-24">
               <Disponibilidad disponible={w.isAvailable} />
               {w.availabilityNote && <p className="text-sm text-muted-foreground">{w.availabilityNote}</p>}
-              {/* Fase 5: inicia la conversación en el chat interno (el teléfono nunca se muestra, RN-19). */}
-              <button
-                type="button"
-                disabled
+              {/* Inicia la conversación en el chat interno: el teléfono nunca se muestra (RN-19, ADR-010). */}
+              <Link
+                href={`/mensajes/nuevo?trabajador=${w.id}`}
                 aria-describedby="contacto-nota"
-                className="flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-base font-bold text-primary-foreground opacity-60"
+                className="flex min-h-13 w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 text-base font-bold text-primary-foreground"
               >
                 <MessageCircle className="h-5 w-5" aria-hidden /> Escribir por el chat
-              </button>
+              </Link>
               <p id="contacto-nota" className="text-xs text-muted-foreground">
-                Muy pronto podrás escribirle directamente desde la plataforma. Por seguridad, el contacto se realiza
-                solo por el chat del portal.
+                Necesitas iniciar sesión. Por seguridad, el contacto se realiza solo por el chat del portal y la
+                conversación queda registrada.
               </p>
               <p className="flex gap-2 border-t border-border pt-4 text-xs text-muted-foreground">
                 <ShieldCheck className="h-4 w-4 shrink-0 text-verde" aria-hidden />

@@ -49,3 +49,6 @@ resources/
 # Playwright
 /test-results/
 /playwright-report/
+
+# Clave privada ES256 local para firmar JWT (Realtime, ADR-004). Se genera con: supabase gen signing-key
+supabase/signing_keys.json

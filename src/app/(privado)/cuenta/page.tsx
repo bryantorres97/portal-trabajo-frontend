@@ -8,7 +8,9 @@ import {
   LogIn,
   LogOut,
   MonitorSmartphone,
+  Bell,
   HardHat,
+  MessageCircle,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
@@ -24,8 +26,15 @@ import { listActiveSessions } from "@/server/auth/session";
 import { getPendingConsents } from "@/server/users/consents";
 import { listIdentities } from "@/server/users/identities";
 import { getClientProfile } from "@/server/users/profile";
+import { listNotifications } from "@/server/notifications/notifications";
 
-import { cerrarSesion, cerrarTodasLasSesiones, desvincularIdentidad, guardarPerfil } from "./actions";
+import {
+  cerrarSesion,
+  cerrarTodasLasSesiones,
+  desvincularIdentidad,
+  guardarPerfil,
+  marcarNotificacionesLeidas,
+} from "./actions";
 import { ProfileForm } from "./ProfileForm";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
@@ -141,10 +150,11 @@ function Ingreso() {
 
 async function Panel({ auth }: { auth: CurrentAuth }) {
   const { user } = auth;
-  const [perfil, identidades, sesiones] = await Promise.all([
+  const [perfil, identidades, sesiones, notificaciones] = await Promise.all([
     getClientProfile(user.id),
     listIdentities(user.id),
     listActiveSessions(user.id, auth.sessionId),
+    listNotifications(user, 10),
   ]);
   const proveedoresVinculables = enabledIdentityProviders().filter((p) => !identidades.some((i) => i.provider === p));
   const tieneNativo = identidades.some((i) => i.provider === "COGNITO");
@@ -253,6 +263,12 @@ async function Panel({ auth }: { auth: CurrentAuth }) {
             </div>
             <div className="flex flex-wrap gap-2">
               <Link
+                href="/mensajes"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden /> Mensajes
+              </Link>
+              <Link
                 href="/cuenta/trabajador"
                 className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold"
               >
@@ -276,6 +292,44 @@ async function Panel({ auth }: { auth: CurrentAuth }) {
                 </button>
               </form>
             </div>
+          </div>
+        </Section>
+
+        <Section titulo="Notificaciones">
+          <div className="tarjeta p-5">
+            {notificaciones.items.length === 0 ? (
+              <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Bell className="h-4 w-4" aria-hidden /> No tienes notificaciones.
+              </p>
+            ) : (
+              <ul className="divide-y divide-border">
+                {notificaciones.items.map((n) => (
+                  <li key={n.id} className="py-2.5">
+                    <Link href={n.link ?? "/cuenta"} className="block">
+                      <p className={n.readAt ? "text-sm font-semibold" : "text-sm font-extrabold"}>
+                        {!n.readAt && (
+                          <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-primary" aria-hidden />
+                        )}
+                        {n.title}
+                        {!n.readAt && <span className="sr-only"> (sin leer)</span>}
+                      </p>
+                      {n.body && <p className="truncate text-xs text-muted-foreground">{n.body}</p>}
+                      <p className="text-[11px] text-muted-foreground">{formatearFechaHora(n.createdAt)}</p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {notificaciones.unread > 0 && (
+              <ActionForm
+                action={marcarNotificacionesLeidas}
+                submitLabel="Marcar todas como leídas"
+                variant="secondary"
+                className="mt-3"
+              >
+                {null}
+              </ActionForm>
+            )}
           </div>
         </Section>
 

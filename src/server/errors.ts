@@ -29,6 +29,8 @@ export function fromPgError(error: PgError): DomainError | null {
       return new DomainError(404, mensaje, "not_found");
     case "23505": // unique_violation
       return new DomainError(409, mensaje, "conflict");
+    case "54000": // program_limit_exceeded (límites anti-abuso, RN-11)
+      return new DomainError(429, mensaje, "rate_limited");
     case "23514": // check_violation
     case "22P02": // invalid_text_representation (enum/uuid inválido)
       return new DomainError(422, mensaje, "invalid");

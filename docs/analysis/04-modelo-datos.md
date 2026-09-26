@@ -84,6 +84,8 @@ Evolución futura (no en el MVP): `training_modules`, `assessments`, `attempts`,
 
 ### Chat
 
+> **Implementado en la Fase 5** (`20260926144442_chat_notificaciones`) con un cambio: **no hay `conversation_participants`**. Como siempre hay exactamente dos partes, `conversations` guarda por parte el último leído y el bloqueo (`client_/worker_last_read_id`, `client_/worker_blocked_at`), y el trabajador participa con `worker_profiles.user_id`. También se crearon `notifications`, `device_tokens`, `notification_outbox` y una versión mínima de `reports` y `report_reasons`. Detalle en `docs/phases/fase-05-chat.md`.
+
 | Tabla | Campos importantes | Notas |
 |---|---|---|
 | `conversations` | `id`, `client_user_id`, `worker_id`, `status` (`ACTIVA`, `BLOQUEADA`, `CERRADA`), `last_message_at`, `created_at` | Unique `(client_user_id, worker_id)`: una conversación por par |

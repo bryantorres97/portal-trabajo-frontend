@@ -25,6 +25,9 @@ La validación está en `src/lib/env.ts` (servidor, `server-only`) y `src/lib/en
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase | Sí | `http://127.0.0.1:54321` | Proyecto dev | Proyecto staging | Proyecto prod |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase | Sí | De `supabase start` | Publishable key | Idem | Idem |
 | `SUPABASE_SECRET_KEY` | Supabase | No | De `supabase start` | Secret key | Idem | Idem (acceso restringido) |
+| `REALTIME_JWT_PRIVATE_KEY` | Realtime | No | Objeto de `supabase/signing_keys.json` (`pnpm db:keys`) | Clave propia importada en el proyecto (`docs/setup/realtime.md`) | Idem | Idem |
+| `FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`, `FCM_PRIVATE_KEY` | Push (opcional) | No | Vacío | Proyecto Firebase de pruebas | Idem | Proyecto Firebase del GAD [PENDIENTE] |
+| `CRON_SECRET` | Tareas programadas | No | Opcional | Aleatorio (≥ 32) | Idem | Idem |
 
 Reglas:
 - Solo las variables con prefijo `NEXT_PUBLIC_` llegan al navegador, y se incrustan **en tiempo de build**. Nunca se agregan secretos con ese prefijo.

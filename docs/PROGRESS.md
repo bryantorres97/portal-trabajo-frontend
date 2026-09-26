@@ -7,9 +7,9 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 4 implementada** (commit de Fase 4, migración aplicada en la nube; validación manual pendiente). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
-| Siguiente fase | Fase 5 — Chat |
-| Rama de trabajo | `development` · último commit: Fase 4. Se commitea solo con confirmación del usuario |
+| Fase actual | **Fase 5 completada técnicamente** (commit, migración en la nube y Realtime en la nube verificados); validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
+| Siguiente fase | Fase 6 — Contrataciones |
+| Rama de trabajo | `development` · último commit: Fase 5. Se commitea solo con confirmación del usuario |
 | Última actualización | 2026-09-26 |
 
 ## Siguiente paso concreto
@@ -18,8 +18,9 @@
 2. **Probar el login real con el pool dev** (B2). Todo está listo: `.env.local` completo, migraciones aplicadas en el proyecto Supabase dev en la nube (`Portal Empleo`), callback `http://localhost:3000/api/auth/callback` aceptado por Cognito. Solo falta que el usuario inicie sesión en el navegador (`pnpm dev` → `/cuenta`). Checklist en `docs/setup/cognito-dev.md`.
 3. Solicitar al GAD el App Client del portal (P-02). Preguntas abiertas: P-02, P-06, P-13, P-15, P-20 (P-21 decidida: Entra ID para el personal, ADR-012). Pedir al GAD el app registration de Entra (texto listo en `docs/setup/entra-dev.md` §4).
 4. ~~Fase 2B: prueba manual y commit~~ ✅. Queda el pedido formal al GAD del app registration.
-5. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
-6. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
+5. **Fase 5**: validar manualmente (`docs/phases/fase-05-chat.md`), con un trabajador vinculado de la Fase 4. Push: falta el proyecto Firebase.
+6. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
+7. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
 
 ## Bloqueos y dependencias externas
 
@@ -60,7 +61,7 @@ Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al 
 - [x] Fase 2B — Acceso del personal con Microsoft Entra ID → `docs/phases/fase-02b-acceso-personal-entra.md` · prueba manual OK
 - [x] Fase 3 — Catálogo y búsqueda → `docs/phases/fase-03-catalogo-busqueda.md` (incluye el seed de categorías desde `src/content/site.ts`)
 - [x] Fase 4 — Gestión de trabajadores → `docs/phases/fase-04-gestion-trabajadores.md` (incluye el código de activación) · validación manual pendiente
-- [ ] Fase 5 — Chat
+- [x] Fase 5 — Chat → `docs/phases/fase-05-chat.md` · validación manual pendiente
 - [ ] Fase 6 — Contrataciones
 - [ ] Fase 7 — Calificaciones
 - [ ] Fase 8 — Denuncias y moderación
@@ -71,10 +72,11 @@ Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al 
 ## Comandos de verificación
 
 ```bash
-pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build
-pnpm db:start && pnpm test:db && pnpm test:integration   # requiere Docker
-pnpm test:e2e                                           # requiere build previo
+pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build   # en la máquina de desarrollo
+supabase db push --dry-run && supabase db push                                # esquema → Supabase dev (nube), con confirmación
 ```
+
+pgTAP, integración y E2E con datos corren en el **CI** (base efímera). Desde 2026-09-26 no se usa Supabase local en la máquina de desarrollo (ADR-013).
 
 ## Bitácora de sesiones
 
@@ -91,3 +93,5 @@ pnpm test:e2e                                           # requiere build previo
 | 2026-09-25 | Commit `8a3750b` (Fase 3). Trabajadores ficticios del seed cargados en Supabase dev de la nube (15 habilitados y 2 no habilitados), verificados con el servidor del usuario: búsqueda sin datos privados, 404 para los no habilitados. |
 | 2026-09-25 | **Fase 2B implementada**: tenant de Entra propio (`acolita-admin-dev`, usuarios nativos `admin.dev` y `personal.dev`, credenciales verificadas contra Microsoft). Ingreso OIDC + PKCE del personal en `/admin/ingresar`, rechazo de cuentas externas, sesiones con origen (`COGNITO`/`ENTRA`) y permisos según el origen, roles internos solo en cuentas institucionales, sin vinculación con cuentas ciudadanas, bootstrap atómico del primer `ADMIN_SISTEMA`, logout por proveedor. Se descartó `ADMIN_REQUIRE_ENTRA`. Tests: unit 95, integración 46, pgTAP 48, E2E 88. Migración aplicada en la nube. Puertos de Supabase local bloqueados por WinNAT: se resolvió con `net stop/start winnat`. **Prueba manual OK** (usuario): bootstrap de `admin.dev`, `personal.dev` sin roles y luego con rol asignado, logout por Microsoft, rechazo de cuenta externa. |
 | 2026-09-26 | **Fase 4 implementada**: alta presencial con asistente y detección de duplicados, máquina de estados en TS y en SQL (historial append-only, reglas de habilitación en la base), documentos en bucket privado `worker-files` (firma binaria, URL firmada de 5 min, acceso auditado), capacitación (curso `GENERAL`, inscripciones y resultados con avance automático del estado), código de activación (HMAC, un solo uso, 5 intentos/15 min), `/cuenta/trabajador` con edición limitada y moderación de foto y descripción, fotos públicas servidas por el servidor. Tests: unit 219, integración 61, pgTAP 89, E2E 108. CI levanta Storage. Migración aplicada en la nube (primer intento revertido por `pg_trgm`, corregido). |
+| 2026-09-26 | **Fase 5 implementada**: chat cliente ↔ trabajador (conversación 1:1 con lectura y bloqueo por parte, mensajes inmutables, envío idempotente, límites 20/min y 10 conversaciones/día), Realtime privado con JWT ES256 propio (ADR-004 verificado con Realtime real: p95 < 1 s), degradación a consulta periódica, notificaciones in-app (una por conversación), outbox y despachador FCM (desactivado sin credenciales), denuncia de mensajes (enganche de la Fase 8). Tests: unit 253, integración 74, pgTAP 126, E2E 122. CI genera la clave local y levanta Realtime. |
+| 2026-09-26 | Decisión del usuario: **solo Supabase en la nube** (ADR-013). Commit de la Fase 5 y migración `chat_notificaciones` aplicada en la nube (advisors sin observaciones). Clave ES256 importada por el usuario en Supabase dev y `REALTIME_JWT_PRIVATE_KEY` agregada a `.env.local`; verificado contra Realtime de la nube: canal propio `SUBSCRIBED`, ajeno `Unauthorized`, otra clave `JwtSignatureError`. |

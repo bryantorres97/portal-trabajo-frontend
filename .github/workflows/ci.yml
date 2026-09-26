@@ -53,8 +53,11 @@ jobs:
       - uses: supabase/setup-cli@v1
         with:
           version: 2.116.0
-      # La API (PostgREST) es necesaria para integración y E2E; se omiten servicios que no se usan.
-      - run: supabase start -x realtime,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+      # Clave ES256 local para los JWT de Realtime (ADR-004): config.toml la referencia.
+      - name: Generar la clave de firma local
+        run: supabase gen signing-key --algorithm ES256 | grep '^{' | jq -s '.' > supabase/signing_keys.json
+      # API (PostgREST), Storage y Realtime se usan en integración y E2E; se omite el resto.
+      - run: supabase start -x imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
       - name: Aplicar migraciones y seed sobre una base limpia
         run: supabase db reset --local
       - run: supabase db lint --local --fail-on error

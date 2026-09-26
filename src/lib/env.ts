@@ -77,6 +77,43 @@ const supabaseSchema = z.object({
   SUPABASE_SECRET_KEY: z.string().min(1),
 });
 
+/**
+ * Clave privada ES256 (JWK en JSON, con `kid`) con la que el servidor firma los JWT de Realtime
+ * (ADR-004). Local: `supabase/signing_keys.json`; nube: la misma clave importada en Supabase
+ * (Settings → JWT Keys). Ver docs/setup/realtime.md.
+ */
+const realtimeSchema = z.object({
+  REALTIME_JWT_PRIVATE_KEY: z
+    .string()
+    .min(1)
+    .transform((v, ctx) => {
+      try {
+        const jwk = JSON.parse(v) as Record<string, unknown>;
+        if (jwk.kty !== "EC" || jwk.crv !== "P-256" || typeof jwk.d !== "string" || typeof jwk.kid !== "string") {
+          throw new Error("formato");
+        }
+        return jwk as { kty: "EC"; crv: "P-256"; d: string; x: string; y: string; kid: string };
+      } catch {
+        ctx.addIssue({ code: "custom", message: "Debe ser un JWK privado ES256 (P-256) en JSON, con kid" });
+        return z.NEVER;
+      }
+    }),
+});
+
+/** Firebase Cloud Messaging (push). Opcional: sin estas variables no se envían notificaciones push. */
+const fcmSchema = z.object({
+  FCM_PROJECT_ID: z.string().min(1),
+  FCM_CLIENT_EMAIL: z.email(),
+  FCM_PRIVATE_KEY: z
+    .string()
+    .min(1)
+    // Las plataformas de despliegue suelen guardar los saltos de línea del PEM como "\n" literales.
+    .transform((v) => v.replace(/\\n/g, "\n")),
+});
+
+/** Secreto de los endpoints internos programados (despachador de notificaciones). */
+const cronSchema = z.object({ CRON_SECRET: z.string().min(32, "CRON_SECRET debe tener al menos 32 caracteres") });
+
 const appSchema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   APP_ENV: z.enum(["local", "development", "staging", "production"]).default("local"),
@@ -106,6 +143,18 @@ export const getCognitoEnv = memo(() => parseGroup("Cognito", cognitoSchema));
 export const getEntraEnv = memo(() => parseGroup("Microsoft Entra ID", entraSchema));
 export const getSessionEnv = memo(() => parseGroup("sesión", sessionSchema));
 export const getSupabaseEnv = memo(() => parseGroup("Supabase", supabaseSchema));
+export const getRealtimeEnv = memo(() => parseGroup("Realtime", realtimeSchema));
+export const getFcmEnv = memo(() => parseGroup("Firebase Cloud Messaging", fcmSchema));
+export const getCronEnv = memo(() => parseGroup("tareas programadas", cronSchema));
+
+/** Indica si el tiempo real del chat está configurado (sin él, el chat funciona recargando). */
+export function isRealtimeConfigured(): boolean {
+  return realtimeSchema.safeParse(process.env).success;
+}
+
+export function isFcmConfigured(): boolean {
+  return fcmSchema.safeParse(process.env).success;
+}
 
 /** Indica si el login está configurado (para mostrar un aviso en lugar de fallar). */
 export function isAuthConfigured(): boolean {

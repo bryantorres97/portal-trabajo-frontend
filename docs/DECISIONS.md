@@ -56,6 +56,11 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - **No se modifica el pool de Cognito** (ni el personal ni el del GAD). El tier del pool deja de importar.
   - Hay que ajustar `private.current_user_id()` en la Fase 5 para aceptar el `iss` propio (`sub` = `users.id`).
   - Desde abril de 2026 Supabase **no expone automáticamente** las tablas nuevas a la Data API, lo que encaja con el acceso solo desde el servidor (ADR-001).
+- **Implementación (Fase 5, 2026-09-26):**
+  - Clave **ES256**. Local: `supabase/signing_keys.json` + `signing_keys_path` en `config.toml`. Nube: importar la clave en Settings → JWT Keys (`docs/setup/realtime.md`).
+  - Token: `iss = acolita`, `sub = users.id`, `aud`/`role = authenticated`, 10 minutos.
+  - En lugar de ajustar `private.current_user_id()`, la política de `realtime.messages` usa una función propia (`private.can_read_realtime_topic`) que solo acepta `iss = acolita`. Las tablas de negocio siguen sin políticas para `authenticated`.
+  - Verificado con Realtime real en local: topic permitido → `SUBSCRIBED`; ajeno → `Unauthorized`; otra clave → `JwtSignatureError`.
 
 ## ADR-005 — Sesión web con cookie httpOnly cifrada y OIDC authorization code + PKCE
 
@@ -165,4 +170,16 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - El personal usa su cuenta corporativa con MFA real. Si deja el GAD y TI deshabilita su cuenta, pierde el acceso al renovar la sesión.
   - La sesión del personal dura como máximo 12 h y se renueva con el refresh token de Entra.
   - Hay que solicitar al GAD: app registration (client ID, tenant ID, secreto o certificado), redirect URIs `https://<dominio>/api/auth/staff/callback` y `https://<dominio>/admin/ingresar` y acceso condicional con MFA.
+
+## ADR-013 — Desarrollo solo contra Supabase dev en la nube
+
+- **Estado:** ACEPTADA (usuario, 2026-09-26)
+- **Contexto:** Supabase local (Docker) exigía mantener otro entorno en la máquina de desarrollo (puertos bloqueados por WinNAT, claves y datos distintos a los de la nube).
+- **Decisión:**
+  - El desarrollo y las pruebas manuales usan el proyecto **Supabase dev en la nube** (`Portal Empleo`). `.env.local` apunta a él.
+  - Los cambios de esquema se aplican con `supabase db push`: primero `--dry-run` y siempre con confirmación del usuario.
+  - Las pruebas que necesitan base de datos (pgTAP, integración, E2E con datos) **siguen en el CI** de GitHub, con una base efímera que se crea en cada ejecución. No se corren contra la nube: pgTAP no está disponible allí y los datos de prueba ensuciarían el ambiente dev.
+- **Consecuencias:**
+  - En la máquina de desarrollo solo se ejecutan lint, formato, tipos, pruebas unitarias y build.
+  - Las migraciones deben probarse en el CI antes de aplicarlas en la nube; un error en la nube se revierte solo (cada migración es una transacción), como ocurrió con `pg_trgm` en la Fase 4.
 
