@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { BadgeCheck, Clock, ExternalLink, KeyRound } from "lucide-react";
+import { BadgeCheck, Clock, ExternalLink, KeyRound, MessageCircle } from "lucide-react";
 
 import { EstadoTrabajador } from "@/components/admin/EstadoTrabajador";
 import { ActionForm } from "@/components/forms/ActionForm";
@@ -106,6 +106,12 @@ function Panel({ w }: { w: OwnWorker }) {
                 Tu perfil todavía no es público. El GAD te avisará cuando completes el proceso de habilitación.
               </p>
             )}
+            <Link
+              href="/mensajes"
+              className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground"
+            >
+              <MessageCircle className="h-4 w-4" aria-hidden /> Ver mis mensajes
+            </Link>
             <p className="text-muted-foreground">
               Oficios: {w.services.join(", ")}
               {w.parish ? ` · ${w.parish}` : ""}

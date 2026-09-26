@@ -109,4 +109,34 @@ describe("ChatThread", () => {
     render(<ChatThread {...base} workerLinked={false} />);
     expect(screen.getByText(/aún no activa su cuenta/)).toBeTruthy();
   });
+
+  it("las respuestas sugeridas completan la caja sin enviar (el usuario decide)", () => {
+    render(<ChatThread {...base} initialMessages={[base.initialMessages[0]]} />);
+    fireEvent.click(screen.getByRole("button", { name: "¿Tiene disponibilidad esta semana?" }));
+    expect((screen.getByLabelText("Escribe un mensaje") as HTMLTextAreaElement).value).toBe(
+      "¿Tiene disponibilidad esta semana?",
+    );
+    expect(llamadas.some((l) => l.url.endsWith("/messages") && l.init?.method === "POST")).toBe(false);
+  });
+
+  it("no ofrece sugerencias cuando ya escribiste", () => {
+    render(<ChatThread {...base} />);
+    expect(screen.queryByRole("group", { name: "Respuestas sugeridas" })).toBeNull();
+  });
+
+  it("marca desde dónde empiezan los mensajes nuevos", () => {
+    render(<ChatThread {...base} unreadAtOpen={1} />);
+    expect(screen.getByText("Mensajes nuevos")).toBeTruthy();
+  });
+
+  it("bloquear pide confirmación y explica qué pasa", async () => {
+    render(<ChatThread {...base} />);
+    const menu = screen.getByLabelText("Más opciones");
+    menu.focus();
+    fireEvent.keyDown(menu, { key: "ArrowDown" });
+    const opcion = await screen.findByText("Bloquear conversación");
+    fireEvent.click(opcion);
+    expect(await screen.findByText("¿Bloquear esta conversación?")).toBeTruthy();
+    expect(llamadas.some((l) => l.url.endsWith("/block"))).toBe(false);
+  });
 });

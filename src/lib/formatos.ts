@@ -70,3 +70,46 @@ export function etiquetaProveedor(provider: string): string {
   if (provider === "ENTRA") return "Cuenta institucional (Microsoft)";
   return provider;
 }
+
+const TZ = "America/Guayaquil";
+const horaCorta = new Intl.DateTimeFormat("es-EC", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: TZ });
+const diaSemana = new Intl.DateTimeFormat("es-EC", { weekday: "long", timeZone: TZ });
+const diaMes = new Intl.DateTimeFormat("es-EC", { day: "numeric", month: "short", timeZone: TZ });
+const diaMesAnio = new Intl.DateTimeFormat("es-EC", { day: "numeric", month: "short", year: "numeric", timeZone: TZ });
+const fechaLarga = new Intl.DateTimeFormat("es-EC", { weekday: "long", day: "numeric", month: "long", timeZone: TZ });
+const claveDia = new Intl.DateTimeFormat("en-CA", { year: "numeric", month: "2-digit", day: "2-digit", timeZone: TZ });
+
+/** Días de calendario (en Ecuador) entre la fecha y hoy: 0 = hoy, 1 = ayer. */
+function diasAtras(iso: string, ahora: Date): number {
+  const a = Date.parse(`${claveDia.format(ahora)}T00:00:00Z`);
+  const b = Date.parse(`${claveDia.format(new Date(iso))}T00:00:00Z`);
+  return Math.round((a - b) / 86_400_000);
+}
+
+export function formatearHora(iso: string): string {
+  return horaCorta.format(new Date(iso));
+}
+
+/** Como en las apps de mensajería: «14:05», «Ayer», «lunes», «12 sept.», «12 sept. 2025». */
+export function formatearMomento(iso: string | null | undefined, ahora = new Date()): string {
+  if (!iso) return "";
+  const d = diasAtras(iso, ahora);
+  if (d <= 0) return formatearHora(iso);
+  if (d === 1) return "Ayer";
+  if (d < 7) return diaSemana.format(new Date(iso));
+  const fecha = new Date(iso);
+  return fecha.getUTCFullYear() === ahora.getUTCFullYear() ? diaMes.format(fecha) : diaMesAnio.format(fecha);
+}
+
+/** Separador de día dentro de una conversación: «Hoy», «Ayer» o «lunes, 21 de septiembre». */
+export function etiquetaDia(iso: string, ahora = new Date()): string {
+  const d = diasAtras(iso, ahora);
+  if (d <= 0) return "Hoy";
+  if (d === 1) return "Ayer";
+  const texto = fechaLarga.format(new Date(iso));
+  return texto.charAt(0).toUpperCase() + texto.slice(1);
+}
+
+export function mismoDia(a: string, b: string): boolean {
+  return claveDia.format(new Date(a)) === claveDia.format(new Date(b));
+}

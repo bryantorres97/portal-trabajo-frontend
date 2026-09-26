@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, UserRound } from "lucide-react";
+import { Menu, MessageCircle, UserRound } from "lucide-react";
 import { useState } from "react";
 
+import { ContadorNoLeidos, useMensajes } from "@/components/chat/MensajesProvider";
 import { Logo } from "@/components/site/Logo";
 import { estaActivo, navPrincipal, navSecundaria } from "@/components/site/navegacion";
 import { Sheet, SheetContent, SheetDescription, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -15,7 +16,12 @@ const coloresMenu = ["verde", "azul", "magenta", "naranja", "amarillo"] as const
 export function SiteHeader() {
   const pathname = usePathname();
   const [abierto, setAbierto] = useState(false);
+  const { resumen } = useMensajes();
   const todos = [...navPrincipal, ...navSecundaria];
+  // Acceso directo a Mensajes: visible sin sesión (lleva al ingreso) y para ciudadanos; no para el personal.
+  const verMensajes = !resumen?.signedIn || resumen.chat;
+  const noLeidos = resumen?.unreadMessages ?? 0;
+  const enMensajes = estaActivo(pathname, "/mensajes");
 
   return (
     <header className="sticky top-0 z-40 border-b border-border bg-background/95 backdrop-blur">
@@ -39,6 +45,21 @@ export function SiteHeader() {
               </Link>
             ))}
           </nav>
+          {verMensajes && (
+            <Link
+              href="/mensajes"
+              aria-current={enMensajes ? "page" : undefined}
+              aria-label={noLeidos > 0 ? `Mensajes, ${noLeidos} sin leer` : "Mensajes"}
+              className={cn(
+                "relative ml-1 inline-flex h-11 min-w-11 items-center justify-center gap-2 rounded-xl border border-border px-3 text-sm font-bold text-foreground transition-colors hover:bg-secondary",
+                enMensajes && "border-primary/40 bg-primary/10 text-primary",
+              )}
+            >
+              <MessageCircle className="h-5 w-5" aria-hidden />
+              <span className="hidden sm:inline">Mensajes</span>
+              <ContadorNoLeidos valor={noLeidos} className="absolute -top-1.5 -right-1.5" />
+            </Link>
+          )}
           <Link
             href="/cuenta"
             className="ml-1 hidden items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-bold text-primary-foreground transition-colors hover:bg-primary/90 sm:inline-flex"

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { MensajesProvider } from "@/components/chat/MensajesProvider";
 import { BottomNav } from "@/components/site/BottomNav";
 import { LogoInstitucional } from "@/components/site/Logo";
 import { SiteHeader } from "@/components/site/SiteHeader";
@@ -8,47 +9,49 @@ import { institucion } from "@/content/site";
 
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0">
-      <a
-        href="#contenido"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
-      >
-        Saltar al contenido
-      </a>
-      <div className="h-1.5 w-full barra-marca" />
-      <SiteHeader />
+    <MensajesProvider>
+      <div className="min-h-screen bg-background pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0">
+        <a
+          href="#contenido"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+        >
+          Saltar al contenido
+        </a>
+        <div className="h-1.5 w-full barra-marca" />
+        <SiteHeader />
 
-      <main id="contenido" className="mx-auto max-w-6xl">
-        {children}
-      </main>
+        <main id="contenido" className="mx-auto max-w-6xl">
+          {children}
+        </main>
 
-      <footer className="mx-auto max-w-6xl px-4 pt-12 pb-10">
-        <div className="tarjeta p-5">
-          <LogoInstitucional />
-          <p className="mt-3 text-sm font-semibold text-foreground">{institucion.direccion}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Acolita.App es la plataforma municipal de intermediación laboral del {institucion.gad}. No constituye
-            relación de dependencia laboral entre las partes ni con el {institucion.gad}.
-          </p>
-          <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-            <Link href="/contacto" className="font-semibold text-primary">
-              Contacto
-            </Link>
-            <Link href="/privacidad" className="font-semibold text-primary">
-              Privacidad y derechos del titular
-            </Link>
-            <Link href="/terminos" className="font-semibold text-primary">
-              Términos y condiciones
-            </Link>
+        <footer className="mx-auto max-w-6xl px-4 pt-12 pb-10">
+          <div className="tarjeta p-5">
+            <LogoInstitucional />
+            <p className="mt-3 text-sm font-semibold text-foreground">{institucion.direccion}</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Acolita.App es la plataforma municipal de intermediación laboral del {institucion.gad}. No constituye
+              relación de dependencia laboral entre las partes ni con el {institucion.gad}.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+              <Link href="/contacto" className="font-semibold text-primary">
+                Contacto
+              </Link>
+              <Link href="/privacidad" className="font-semibold text-primary">
+                Privacidad y derechos del titular
+              </Link>
+              <Link href="/terminos" className="font-semibold text-primary">
+                Términos y condiciones
+              </Link>
+            </div>
+            <p className="mt-4 text-xs text-muted-foreground">
+              © {new Date().getFullYear()} {institucion.gad}. Tarifas referenciales, no vinculantes.
+            </p>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">
-            © {new Date().getFullYear()} {institucion.gad}. Tarifas referenciales, no vinculantes.
-          </p>
-        </div>
-      </footer>
+        </footer>
 
-      <BottomNav />
-    </div>
+        <BottomNav />
+      </div>
+    </MensajesProvider>
   );
 }
 

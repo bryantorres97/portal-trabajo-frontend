@@ -1,4 +1,14 @@
-import { HardHat, Home, Phone, ShieldCheck, Users, type LucideIcon } from "lucide-react";
+import {
+  HardHat,
+  Home,
+  MessageCircle,
+  Phone,
+  Search,
+  ShieldCheck,
+  UserRound,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 export type ItemNavegacion = { href: string; label: string; icon: LucideIcon };
 
@@ -11,6 +21,18 @@ export const navPrincipal: ItemNavegacion[] = [
   { href: "/como-funciona", label: "Cómo funciona", icon: ShieldCheck },
   { href: "/trabajadores", label: "Trabajadores", icon: Users },
   { href: "/contacto", label: "Contacto", icon: Phone },
+];
+
+/**
+ * Barra inferior del móvil: lo que la persona hace a diario (buscar, conversar, su cuenta).
+ * Las páginas informativas quedan en el menú.
+ */
+export const navInferior: ItemNavegacion[] = [
+  { href: "/", label: "Inicio", icon: Home },
+  { href: "/buscar", label: "Buscar", icon: Search },
+  { href: "/oficios", label: "Oficios", icon: HardHat },
+  { href: "/mensajes", label: "Mensajes", icon: MessageCircle },
+  { href: "/cuenta", label: "Mi cuenta", icon: UserRound },
 ];
 
 export const navSecundaria: ItemNavegacion[] = [
