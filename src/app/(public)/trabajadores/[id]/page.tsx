@@ -7,7 +7,7 @@ import { ArrowLeft, BadgeCheck, Briefcase, CalendarCheck, MapPin, MessageCircle,
 import { Estrellas } from "@/components/site/Estrellas";
 import { JsonLd } from "@/components/site/JsonLd";
 import { Section } from "@/components/site/SiteShell";
-import { Avatar, Disponibilidad } from "@/components/site/WorkerCard";
+import { Avatar, Disponibilidad, fotoTrabajador } from "@/components/site/WorkerCard";
 import { formatearTarifa } from "@/lib/busqueda";
 import { publicEnv } from "@/lib/env.public";
 import { getPublicWorker } from "@/server/search/workers";
@@ -58,7 +58,11 @@ export default async function TrabajadorPage({ params }: PageProps<"/trabajadore
 
       <header className="px-4 pt-6 pb-4">
         <div className="flex items-start gap-4">
-          <Avatar nombre={w.displayName} className="h-20 w-20 text-2xl" />
+          <Avatar
+            nombre={w.displayName}
+            foto={w.hasPhoto ? fotoTrabajador(w.id) : null}
+            className="h-20 w-20 text-2xl"
+          />
           <div className="min-w-0">
             <h1 className="text-3xl leading-tight font-extrabold">{w.displayName}</h1>
             {w.specialty && <p className="mt-1 text-base text-muted-foreground">{w.specialty}</p>}

@@ -6,6 +6,17 @@ const fechaHora = new Intl.DateTimeFormat("es-EC", {
   timeZone: "America/Guayaquil",
 });
 
+const fechaCalendario = new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeZone: "UTC" });
+const fechaLocal = new Intl.DateTimeFormat("es-EC", { dateStyle: "medium", timeZone: "America/Guayaquil" });
+
+/** Fecha de calendario `YYYY-MM-DD` (sin zona horaria) o marca de tiempo ISO. */
+export function formatearFecha(valor: string | null | undefined): string {
+  if (!valor) return "—";
+  return /^\d{4}-\d{2}-\d{2}$/.test(valor)
+    ? fechaCalendario.format(new Date(`${valor}T12:00:00Z`))
+    : fechaLocal.format(new Date(valor));
+}
+
 export function formatearFechaHora(iso: string | null | undefined): string {
   return iso ? fechaHora.format(new Date(iso)) : "—";
 }

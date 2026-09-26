@@ -27,6 +27,7 @@ const titulos: Record<number, string> = {
   409: "Conflicto",
   415: "Tipo de contenido no soportado",
   422: "Datos inválidos",
+  429: "Demasiadas solicitudes",
 };
 
 export function toProblem(error: unknown) {

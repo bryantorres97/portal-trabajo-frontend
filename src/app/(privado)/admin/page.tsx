@@ -20,7 +20,15 @@ import { requirePagePermission } from "@/server/auth/current-user";
 
 export const metadata: Metadata = { title: "Panel administrativo" };
 
-type Modulo = { titulo: string; detalle: string; icon: LucideIcon; permiso: string; href?: string; fase?: string };
+type Modulo = {
+  titulo: string;
+  detalle: string;
+  icon: LucideIcon;
+  /** Basta con uno de los permisos. */
+  permiso: string | string[];
+  href?: string;
+  fase?: string;
+};
 
 const modulos: Modulo[] = [
   {
@@ -42,14 +50,14 @@ const modulos: Modulo[] = [
     detalle: "Registro presencial, documentos y habilitación.",
     icon: HardHat,
     permiso: "worker.read",
-    fase: "Fase 4",
+    href: "/admin/trabajadores",
   },
   {
     titulo: "Capacitación",
     detalle: "Cursos, inscripciones y resultados.",
     icon: GraduationCap,
-    permiso: "training.record",
-    fase: "Fase 4",
+    permiso: ["training.record", "training.manage"],
+    href: "/admin/capacitacion",
   },
   {
     titulo: "Denuncias",
@@ -71,7 +79,7 @@ const modulos: Modulo[] = [
 export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   const user = await requirePagePermission("admin.access", "/admin");
   const { error } = await searchParams;
-  const visibles = modulos.filter((m) => hasPermission(user, m.permiso));
+  const visibles = modulos.filter((m) => [m.permiso].flat().some((p) => hasPermission(user, p)));
 
   return (
     <>

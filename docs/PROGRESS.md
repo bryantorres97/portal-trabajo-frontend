@@ -7,10 +7,10 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 2B completada** (prueba manual OK con el tenant dev). Fase 3 completada (`8a3750b`). Fase 2: validación manual pendiente |
-| Siguiente fase | Fase 4 — Gestión de trabajadores |
-| Rama de trabajo | `development` · último commit: Fase 2B. Se commitea solo con confirmación del usuario |
-| Última actualización | 2026-09-25 |
+| Fase actual | **Fase 4 implementada** (commit de Fase 4, migración aplicada en la nube; validación manual pendiente). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
+| Siguiente fase | Fase 5 — Chat |
+| Rama de trabajo | `development` · último commit: Fase 4. Se commitea solo con confirmación del usuario |
+| Última actualización | 2026-09-26 |
 
 ## Siguiente paso concreto
 
@@ -18,7 +18,8 @@
 2. **Probar el login real con el pool dev** (B2). Todo está listo: `.env.local` completo, migraciones aplicadas en el proyecto Supabase dev en la nube (`Portal Empleo`), callback `http://localhost:3000/api/auth/callback` aceptado por Cognito. Solo falta que el usuario inicie sesión en el navegador (`pnpm dev` → `/cuenta`). Checklist en `docs/setup/cognito-dev.md`.
 3. Solicitar al GAD el App Client del portal (P-02). Preguntas abiertas: P-02, P-06, P-13, P-15, P-20 (P-21 decidida: Entra ID para el personal, ADR-012). Pedir al GAD el app registration de Entra (texto listo en `docs/setup/entra-dev.md` §4).
 4. ~~Fase 2B: prueba manual y commit~~ ✅. Queda el pedido formal al GAD del app registration.
-5. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
+5. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
+6. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
 
 ## Bloqueos y dependencias externas
 
@@ -58,7 +59,7 @@ Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al 
 - [x] Fase 2 — Usuarios y perfiles → `docs/phases/fase-02-usuarios-perfiles.md` (el código de activación pasa a la Fase 4) · validación manual pendiente
 - [x] Fase 2B — Acceso del personal con Microsoft Entra ID → `docs/phases/fase-02b-acceso-personal-entra.md` · prueba manual OK
 - [x] Fase 3 — Catálogo y búsqueda → `docs/phases/fase-03-catalogo-busqueda.md` (incluye el seed de categorías desde `src/content/site.ts`)
-- [ ] Fase 4 — Gestión de trabajadores (incluye el código de activación del trabajador, movido desde la Fase 2)
+- [x] Fase 4 — Gestión de trabajadores → `docs/phases/fase-04-gestion-trabajadores.md` (incluye el código de activación) · validación manual pendiente
 - [ ] Fase 5 — Chat
 - [ ] Fase 6 — Contrataciones
 - [ ] Fase 7 — Calificaciones
@@ -89,3 +90,4 @@ pnpm test:e2e                                           # requiere build previo
 | 2026-09-25 | **Fase 3 implementada**: catálogo en BD (3 categorías, 10 oficios) con CRUD en `/admin/catalogo`, 27 parroquias (P-12, a validar), `worker_profiles` y `worker_services` con separación de datos públicos y privados, búsqueda FTS en español + trigramas (p95 134 ms con 5 000 trabajadores), páginas `/buscar` y `/trabajadores/[id]` y oficios desde BD, JSON-LD, sitemap, API pública `/api/v1/{categories,parishes,workers}`, accesibilidad automatizada con axe. CI corregido (`supabase start` con la API, E2E en el job de base de datos). Migración aplicada en la nube. |
 | 2026-09-25 | Commit `8a3750b` (Fase 3). Trabajadores ficticios del seed cargados en Supabase dev de la nube (15 habilitados y 2 no habilitados), verificados con el servidor del usuario: búsqueda sin datos privados, 404 para los no habilitados. |
 | 2026-09-25 | **Fase 2B implementada**: tenant de Entra propio (`acolita-admin-dev`, usuarios nativos `admin.dev` y `personal.dev`, credenciales verificadas contra Microsoft). Ingreso OIDC + PKCE del personal en `/admin/ingresar`, rechazo de cuentas externas, sesiones con origen (`COGNITO`/`ENTRA`) y permisos según el origen, roles internos solo en cuentas institucionales, sin vinculación con cuentas ciudadanas, bootstrap atómico del primer `ADMIN_SISTEMA`, logout por proveedor. Se descartó `ADMIN_REQUIRE_ENTRA`. Tests: unit 95, integración 46, pgTAP 48, E2E 88. Migración aplicada en la nube. Puertos de Supabase local bloqueados por WinNAT: se resolvió con `net stop/start winnat`. **Prueba manual OK** (usuario): bootstrap de `admin.dev`, `personal.dev` sin roles y luego con rol asignado, logout por Microsoft, rechazo de cuenta externa. |
+| 2026-09-26 | **Fase 4 implementada**: alta presencial con asistente y detección de duplicados, máquina de estados en TS y en SQL (historial append-only, reglas de habilitación en la base), documentos en bucket privado `worker-files` (firma binaria, URL firmada de 5 min, acceso auditado), capacitación (curso `GENERAL`, inscripciones y resultados con avance automático del estado), código de activación (HMAC, un solo uso, 5 intentos/15 min), `/cuenta/trabajador` con edición limitada y moderación de foto y descripción, fotos públicas servidas por el servidor. Tests: unit 219, integración 61, pgTAP 89, E2E 108. CI levanta Storage. Migración aplicada en la nube (primer intento revertido por `pg_trgm`, corregido). |

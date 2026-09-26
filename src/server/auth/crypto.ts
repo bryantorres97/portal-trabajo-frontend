@@ -78,3 +78,16 @@ export async function decryptPayload<T extends JWTPayload>(
     return null;
   }
 }
+
+/** HMAC-SHA256 (hex) con una clave derivada por propósito de SESSION_SECRET. */
+export async function hmacHex(valor: string, secret: string, proposito: string): Promise<string> {
+  const clave = await crypto.subtle.importKey(
+    "raw",
+    new Uint8Array(await derivarClave(secret, proposito)),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const firma = await crypto.subtle.sign("HMAC", clave, new TextEncoder().encode(valor));
+  return Buffer.from(firma).toString("hex");
+}

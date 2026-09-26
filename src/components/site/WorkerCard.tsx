@@ -5,8 +5,22 @@ import { Estrellas } from "@/components/site/Estrellas";
 import { iniciales } from "@/lib/busqueda";
 import { cn } from "@/lib/utils";
 
-/** Avatar con iniciales (las fotos llegan con la Fase 4, moderadas; ADR-009: no se generan imágenes). */
-export function Avatar({ nombre, className }: { nombre: string; className?: string }) {
+/** URL de la foto pública aprobada (la sirve el servidor desde el bucket privado). */
+export function fotoTrabajador(id: string): string {
+  return `/api/v1/workers/${id}/photo`;
+}
+
+/**
+ * Foto aprobada del trabajador o, si no tiene, avatar con iniciales (ADR-009: no se generan
+ * imágenes). Es decorativa: el nombre siempre está escrito al lado.
+ */
+export function Avatar({ nombre, foto, className }: { nombre: string; foto?: string | null; className?: string }) {
+  if (foto) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- imagen servida por el propio portal
+      <img src={foto} alt="" aria-hidden className={cn("shrink-0 rounded-2xl object-cover", className)} />
+    );
+  }
   return (
     <span
       aria-hidden
@@ -44,6 +58,7 @@ export type WorkerCardData = {
   ratingAvg: number;
   ratingCount: number;
   services: { slug: string; name: string }[];
+  hasPhoto?: boolean;
 };
 
 export function WorkerCard({ worker, headingLevel = 3 }: { worker: WorkerCardData; headingLevel?: 2 | 3 }) {
@@ -51,7 +66,11 @@ export function WorkerCard({ worker, headingLevel = 3 }: { worker: WorkerCardDat
   return (
     <article className="relative flex h-full flex-col gap-3 tarjeta p-4 transition-shadow focus-within:ring-2 focus-within:ring-ring hover:shadow-md">
       <div className="flex items-start gap-3">
-        <Avatar nombre={worker.displayName} className="h-14 w-14 text-lg" />
+        <Avatar
+          nombre={worker.displayName}
+          foto={worker.hasPhoto ? fotoTrabajador(worker.id) : null}
+          className="h-14 w-14 text-lg"
+        />
         <div className="min-w-0 flex-1">
           <Titulo className="text-base leading-tight font-bold">
             <Link href={`/trabajadores/${worker.id}`} className="after:absolute after:inset-0 focus:outline-none">

@@ -154,3 +154,18 @@ from (values
 ) as v(worker_id, service_slug, is_primary)
 join public.services s on s.slug = v.service_slug
 on conflict do nothing;
+
+-- Fase 4: historial inicial y capacitación aprobada de los trabajadores ficticios habilitados
+-- (para que en desarrollo se puedan suspender y reactivar respetando las reglas de habilitación).
+insert into public.worker_status_history (worker_id, from_status, to_status, reason, created_at)
+select w.id, null, w.status, 'Estado inicial (seed de desarrollo)', w.created_at
+from public.worker_profiles w
+where w.id::text like '00000000-0000-4000-a000-%'
+  and not exists (select 1 from public.worker_status_history h where h.worker_id = w.id);
+
+insert into public.training_enrollments (worker_id, training_id, status, started_at, finished_at, result_note)
+select w.id, t.id, 'APROBADO', w.created_at, w.created_at, 'Aprobada (seed de desarrollo)'
+from public.worker_profiles w
+cross join public.trainings t
+where t.code = 'GENERAL' and w.status = 'HABILITADO' and w.id::text like '00000000-0000-4000-a000-%'
+  and not exists (select 1 from public.training_enrollments e where e.worker_id = w.id and e.training_id = t.id);

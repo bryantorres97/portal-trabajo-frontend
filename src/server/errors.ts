@@ -4,7 +4,7 @@
  */
 export class DomainError extends Error {
   constructor(
-    readonly status: 400 | 403 | 404 | 409 | 422,
+    readonly status: 400 | 403 | 404 | 409 | 422 | 429,
     message: string,
     readonly code: string = "domain_error",
   ) {

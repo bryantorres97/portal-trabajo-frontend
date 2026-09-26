@@ -71,6 +71,8 @@ Se muestran los campos clave, no todos.
 
 ### Documentos y capacitación
 
+> **Implementado en la Fase 4** (`20260926035024_gestion_trabajadores`): además, `worker_status_history`, `worker_activation_codes` (solo el HMAC del código) y las columnas de moderación de foto y descripción en `worker_profiles`. `trainings` agrega `required`; la evidencia de una inscripción es `evidence_document_id` (un documento del trabajador) en lugar de `evidence_path`. `registration_points` queda pendiente. Detalle en `docs/phases/fase-04-gestion-trabajadores.md`.
+
 | Tabla | Campos importantes | Notas |
 |---|---|---|
 | `document_types` | `code` (`ANTECEDENTES_PENALES`, `CERT_CAPACITACION`, `CERT_OFICIO`, `OTRO`), `name`, `required`, `has_expiry` | Configurable [PENDIENTE] lista definitiva |

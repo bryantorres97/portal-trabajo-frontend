@@ -54,7 +54,7 @@ jobs:
         with:
           version: 2.116.0
       # La API (PostgREST) es necesaria para integración y E2E; se omiten servicios que no se usan.
-      - run: supabase start -x realtime,storage-api,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+      - run: supabase start -x realtime,imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
       - name: Aplicar migraciones y seed sobre una base limpia
         run: supabase db reset --local
       - run: supabase db lint --local --fail-on error

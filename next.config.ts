@@ -37,6 +37,10 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  experimental: {
+    // Documentos y fotos de hasta 4 MB (+ margen multipart). Vercel admite ~4,5 MB por request.
+    serverActions: { bodySizeLimit: "4.5mb" },
+  },
   images: {
     formats: ["image/avif", "image/webp"],
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],

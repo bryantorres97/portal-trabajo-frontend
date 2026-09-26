@@ -8,6 +8,7 @@ import {
   LogIn,
   LogOut,
   MonitorSmartphone,
+  HardHat,
   ShieldCheck,
   UserRound,
 } from "lucide-react";
@@ -251,6 +252,13 @@ async function Panel({ auth }: { auth: CurrentAuth }) {
               </ul>
             </div>
             <div className="flex flex-wrap gap-2">
+              <Link
+                href="/cuenta/trabajador"
+                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold"
+              >
+                <HardHat className="h-4 w-4" aria-hidden />
+                {user.roles.includes("TRABAJADOR") ? "Mi perfil de trabajador" : "Soy trabajador"}
+              </Link>
               {hasPermission(user, "admin.access") && (
                 <Link
                   href="/admin"

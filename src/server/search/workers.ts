@@ -21,6 +21,8 @@ export type WorkerCard = {
   ratingCount: number;
   contractsCompleted: number;
   services: { slug: string; name: string }[];
+  /** Tiene foto aprobada (se sirve en /api/v1/workers/{id}/photo). */
+  hasPhoto: boolean;
 };
 
 export type WorkerServiceDetail = {
@@ -54,6 +56,7 @@ type SearchRow = {
   rating_count: number;
   contracts_completed: number;
   services: { slug: string; name: string }[];
+  has_photo: boolean;
   total_count: number;
 };
 
@@ -88,6 +91,7 @@ export async function searchWorkers(f: Filtros): Promise<SearchResult> {
       ratingCount: r.rating_count,
       contractsCompleted: r.contracts_completed,
       services: r.services,
+      hasPhoto: r.has_photo,
     })),
     total,
     page,
@@ -135,6 +139,7 @@ export async function getPublicWorker(id: string): Promise<PublicWorker | null> 
     ratingCount: r.rating_count,
     contractsCompleted: r.contracts_completed,
     enabledAt: r.enabled_at,
+    hasPhoto: r.has_photo,
     services: r.services.map((s) => ({ ...s, priceMin: num(s.priceMin), priceMax: num(s.priceMax) })),
   };
 }
