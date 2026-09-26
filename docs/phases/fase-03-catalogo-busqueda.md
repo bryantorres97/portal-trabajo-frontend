@@ -1,6 +1,6 @@
 # Fase 3 — Catálogo y búsqueda (checklist)
 
-Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEMENTADA (2026-09-25).** Pendiente: commit con confirmación del usuario.
+Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEMENTADA (2026-09-25).** Commit `8a3750b`.
 
 ## Decisiones de diseño
 
@@ -53,7 +53,7 @@ Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEM
 - Rendimiento (`scripts/perf-busqueda.sql`, 5 020 trabajadores): **p50 55 ms · p95 134 ms · máx. 136 ms** (umbral 300 ms). En CI el paso falla si `PERF_FALLO`.
 - Pruebas: unit 80 · integración 34 · pgTAP 36 · E2E 72 (escritorio y móvil, incluye axe).
 - Contraste: el verde de marca no alcanzaba AA como texto (3,4:1). Se agregó el token `verde-fuerte` (≥ 4,5:1) para texto; el verde de marca queda para íconos y fondos.
-- Migración aplicada en Supabase dev (nube): catálogo y parroquias sí; **trabajadores ficticios no** (solo en el seed local).
+- Migración aplicada en Supabase dev (nube). Los 17 trabajadores ficticios del seed también se cargaron en la nube dev a pedido del usuario (nunca en producción).
 
 ## Notas
 - `pnpm test:e2e:local` compila y corre los E2E contra Supabase **local** (datos del seed). `--serve` levanta el build en http://localhost:3210 para revisión manual.

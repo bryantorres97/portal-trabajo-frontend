@@ -43,7 +43,7 @@ Este proyecto usa migraciones escritas a mano en `supabase/migrations/`, no esqu
 
 ## Seed
 
-`supabase/seed.sql` carga los roles y permisos propuestos (`docs/analysis/01-negocio.md` §3). El catálogo (categorías, oficios) y las parroquias van en la **migración** de la Fase 3, porque también se necesitan en producción. El seed agrega **17 trabajadores ficticios** del prototipo (15 habilitados y 2 no habilitados), con UUID fijos `00000000-0000-4000-a000-0000000000NN`. Solo existen en local: nunca se cargan en la nube ni en producción.
+`supabase/seed.sql` carga los roles y permisos propuestos (`docs/analysis/01-negocio.md` §3). El catálogo (categorías, oficios) y las parroquias van en la **migración** de la Fase 3, porque también se necesitan en producción. El seed agrega **17 trabajadores ficticios** del prototipo (15 habilitados y 2 no habilitados), con UUID fijos `00000000-0000-4000-a000-0000000000NN`. Están en local y, a pedido del usuario (2026-09-25), también en el proyecto **dev** de la nube, cargados con el mismo bloque del seed (idempotente). **Nunca** en staging ni en producción.
 
 ## Asignar un rol interno a tu usuario de prueba
 
