@@ -67,10 +67,10 @@ export const modulosPanel: ModuloPanel[] = [
   },
   {
     titulo: "Denuncias",
-    detalle: "Bandeja de casos y moderación.",
+    detalle: "Bandeja de casos, evidencia y sanciones.",
     icon: Flag,
     permisos: ["report.read"],
-    fase: "Fase 8",
+    href: "/admin/denuncias",
   },
   {
     titulo: "Auditoría y reportes",

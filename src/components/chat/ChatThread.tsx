@@ -26,6 +26,7 @@ import { useRealtimeChannel } from "@/components/chat/useRealtimeChannel";
 import { BarraContratos, TarjetaSistema, type ContratoChat } from "@/components/contracts/ContratoEnChat";
 import type { OpcionesFormulario } from "@/components/contracts/FormularioCondiciones";
 import { ProponerCondiciones } from "@/components/contracts/ProponerCondiciones";
+import { DenunciarDialogo, type MotivoDenuncia } from "@/components/reports/DenunciarDialogo";
 import { ReputacionCompacta } from "@/components/reviews/ReputacionCliente";
 import { Avatar } from "@/components/site/WorkerCard";
 import {
@@ -92,6 +93,8 @@ type Props = {
   puedeProponer?: boolean;
   /** Calificaciones que recibió el cliente: solo para el trabajador (RN-20). */
   reputacionCliente?: ClientReputation | null;
+  /** Motivos para denunciar la conversación y (solo el trabajador) al cliente. */
+  motivosDenuncia?: { CONVERSATION: MotivoDenuncia[]; CLIENT?: MotivoDenuncia[] };
 };
 
 const MAX = 2000;
@@ -142,6 +145,7 @@ export function ChatThread(p: Props) {
   const [confirmarBloqueo, setConfirmarBloqueo] = useState(false);
   const [nuevosAbajo, setNuevosAbajo] = useState(0);
   const [proponiendo, setProponiendo] = useState(false);
+  const [denunciar, setDenunciar] = useState<"CONVERSATION" | "CLIENT" | null>(null);
   const [divisor] = useState(() => primerNoLeido(p.initialMessages.map(desdeServidor), p.unreadAtOpen ?? 0));
   const listaRef = useRef<HTMLOListElement>(null);
   const cajaRef = useRef<HTMLTextAreaElement>(null);
@@ -434,6 +438,19 @@ export function ChatThread(p: Props) {
               </DropdownMenuItem>
             )}
             {p.profileHref && <DropdownMenuSeparator />}
+            {p.motivosDenuncia && (
+              <>
+                <DropdownMenuItem className="min-h-11 text-base" onSelect={() => setDenunciar("CONVERSATION")}>
+                  <Flag className="mr-2 h-4 w-4" aria-hidden /> Denunciar conversación
+                </DropdownMenuItem>
+                {p.myRole === "TRABAJADOR" && p.motivosDenuncia.CLIENT && (
+                  <DropdownMenuItem className="min-h-11 text-base" onSelect={() => setDenunciar("CLIENT")}>
+                    <Flag className="mr-2 h-4 w-4" aria-hidden /> Denunciar al cliente
+                  </DropdownMenuItem>
+                )}
+                <DropdownMenuSeparator />
+              </>
+            )}
             {p.blockedByMe ? (
               <DropdownMenuItem className="min-h-11 text-base" onSelect={() => void cambiarBloqueo(false)}>
                 <Ban className="mr-2 h-4 w-4" aria-hidden /> Desbloquear conversación
@@ -712,6 +729,23 @@ export function ChatThread(p: Props) {
           opciones={p.opcionesContrato}
           abierto={proponiendo}
           onAbiertoChange={setProponiendo}
+        />
+      )}
+
+      {p.motivosDenuncia && denunciar && (
+        <DenunciarDialogo
+          targetType={denunciar}
+          targetId={p.conversationId}
+          motivos={(denunciar === "CLIENT" ? p.motivosDenuncia.CLIENT : p.motivosDenuncia.CONVERSATION) ?? []}
+          titulo={denunciar === "CLIENT" ? `Denunciar a ${p.counterpartName}` : "Denunciar conversación"}
+          descripcion={
+            denunciar === "CLIENT"
+              ? "Cuéntanos qué pasó con este cliente. Para un mensaje puntual, usa «Denunciar mensaje»."
+              : "El personal del GAD podrá revisar esta conversación para atender tu denuncia."
+          }
+          abierto
+          onAbiertoChange={(a) => !a && setDenunciar(null)}
+          volverA={`/mensajes/${p.conversationId}`}
         />
       )}
 

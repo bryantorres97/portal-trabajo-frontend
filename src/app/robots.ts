@@ -7,7 +7,11 @@ export default function robots(): MetadataRoute.Robots {
   const indexable = process.env.APP_ENV === "production";
   return {
     rules: indexable
-      ? { userAgent: "*", allow: "/", disallow: ["/cuenta", "/mensajes", "/contrataciones", "/admin", "/api/"] }
+      ? {
+          userAgent: "*",
+          allow: "/",
+          disallow: ["/cuenta", "/mensajes", "/contrataciones", "/denuncias", "/admin", "/api/"],
+        }
       : { userAgent: "*", disallow: "/" },
     sitemap: indexable ? `${publicEnv.NEXT_PUBLIC_APP_URL}/sitemap.xml` : undefined,
   };

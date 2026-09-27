@@ -3,6 +3,7 @@ import {
   Bell,
   ChevronRight,
   FileSignature,
+  Flag,
   HardHat,
   KeyRound,
   LogOut,
@@ -134,6 +135,12 @@ export function PanelCuenta({ d }: { d: DatosPanelCuenta }) {
           icono={<Search className="h-6 w-6" aria-hidden />}
           titulo="Buscar trabajadores"
           detalle="Habilitados por el GAD"
+        />
+        <Acceso
+          href="/denuncias"
+          icono={<Flag className="h-6 w-6" aria-hidden />}
+          titulo="Mis denuncias"
+          detalle="Seguimiento de lo que reportaste"
         />
         <Acceso
           href="/cuenta/trabajador"

@@ -10,6 +10,9 @@ import { DomainError } from "@/server/errors";
  */
 export const WORKER_BUCKET = "worker-files";
 
+/** Bucket PRIVADO `report-evidence` (archivos que adjunta quien denuncia, Fase 8). */
+export const EVIDENCE_BUCKET = "report-evidence";
+
 /** Vigencia de las URLs firmadas de documentos (04-modelo-datos.md §7). */
 export const SIGNED_URL_SECONDS = 300;
 
@@ -36,20 +39,20 @@ export async function readUpload(
   };
 }
 
-export async function uploadObject(path: string, file: ValidatedFile): Promise<void> {
+export async function uploadObject(path: string, file: ValidatedFile, bucket = WORKER_BUCKET): Promise<void> {
   const { error } = await getAdminDb()
-    .storage.from(WORKER_BUCKET)
+    .storage.from(bucket)
     .upload(path, file.bytes, { contentType: file.kind, upsert: false, cacheControl: "private, max-age=0" });
   if (error) throw Object.assign(new Error(`No se pudo guardar el archivo: ${error.message}`), { cause: error });
 }
 
 /** Borra un objeto recién subido cuando falla el registro en la base (evita huérfanos). */
-export async function removeObject(path: string): Promise<void> {
-  await getAdminDb().storage.from(WORKER_BUCKET).remove([path]);
+export async function removeObject(path: string, bucket = WORKER_BUCKET): Promise<void> {
+  await getAdminDb().storage.from(bucket).remove([path]);
 }
 
-export async function signedUrl(path: string, seconds = SIGNED_URL_SECONDS): Promise<string> {
-  const { data, error } = await getAdminDb().storage.from(WORKER_BUCKET).createSignedUrl(path, seconds);
+export async function signedUrl(path: string, seconds = SIGNED_URL_SECONDS, bucket = WORKER_BUCKET): Promise<string> {
+  const { data, error } = await getAdminDb().storage.from(bucket).createSignedUrl(path, seconds);
   if (error || !data) throw Object.assign(new Error("No se pudo firmar la URL"), { cause: error });
   return data.signedUrl;
 }

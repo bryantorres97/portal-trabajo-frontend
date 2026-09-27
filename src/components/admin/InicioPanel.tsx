@@ -5,6 +5,7 @@ import {
   ChevronRight,
   FileSearch,
   FileWarning,
+  Flag,
   GraduationCap,
   ImageUp,
   Plus,
@@ -21,6 +22,7 @@ import { etiquetaRol } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 import type { AppUser } from "@/server/auth/users";
 import type { WorkerStatus } from "@/server/domain/workers/state-machine";
+import type { ReportsSummary } from "@/server/reports/admin";
 import type { ResumenTrabajadores } from "@/server/workers/admin";
 
 type Pendiente = {
@@ -87,6 +89,29 @@ function pendientes(r: ResumenTrabajadores): Pendiente[] {
   ];
 }
 
+function pendientesDenuncias(d: ReportsSummary): Pendiente[] {
+  return [
+    {
+      titulo: "Denuncias por atender",
+      detalle: `${d.altaPrioridad ? `${d.altaPrioridad} de prioridad alta` : "Ninguna de prioridad alta"}${
+        d.sinAsignar ? ` · ${d.sinAsignar} sin asignar` : ""
+      }.`,
+      icon: Flag,
+      cantidad: d.porAtender,
+      href: "/admin/denuncias",
+      permiso: "report.read",
+    },
+    {
+      titulo: "Denuncias con plazo vencido",
+      detalle: "Pasaron el tiempo de atención según su prioridad.",
+      icon: Flag,
+      cantidad: d.vencidas,
+      href: "/admin/denuncias?ver=vencidas",
+      permiso: "report.read",
+    },
+  ];
+}
+
 /** Etapas del proceso de habilitación, para la barra de distribución. */
 const etapas: { etiqueta: string; estados: WorkerStatus[]; color: string; href?: string }[] = [
   {
@@ -121,15 +146,20 @@ const etapas: { etiqueta: string; estados: WorkerStatus[]; color: string; href?:
 export function InicioPanel({
   user,
   resumen,
+  denuncias = null,
   error,
 }: {
   user: Pick<AppUser, "displayName" | "roles" | "permissions">;
   resumen: ResumenTrabajadores | null;
+  /** Resumen de denuncias (solo con report.read). */
+  denuncias?: ReportsSummary | null;
   error?: string;
 }) {
   const puede = (p: string) => user.permissions.includes(p);
   const veTrabajadores = puede("worker.read");
-  const cola = resumen ? pendientes(resumen).filter((p) => puede(p.permiso)) : [];
+  const cola = [...(resumen ? pendientes(resumen) : []), ...(denuncias ? pendientesDenuncias(denuncias) : [])].filter(
+    (p) => puede(p.permiso),
+  );
   const nombre = (user.displayName ?? "").split(/\s+/)[0] || null;
   const accesos = modulosVisibles(user.permissions).filter((m) => m.href && m.href !== "/admin");
 

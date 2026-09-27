@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ArrowLeft, BadgeCheck, Briefcase, CalendarCheck, MapPin, MessageCircle, ShieldCheck } from "lucide-react";
 
+import { DenunciarPerfil } from "@/components/reports/DenunciarDialogo";
 import { ResenasPublicas } from "@/components/reviews/ResenasPublicas";
 import { Estrellas } from "@/components/site/Estrellas";
 import { JsonLd } from "@/components/site/JsonLd";
@@ -12,6 +13,7 @@ import { boton } from "@/components/ui/boton";
 import { formatearTarifa } from "@/lib/busqueda";
 import { publicEnv } from "@/lib/env.public";
 import { cn } from "@/lib/utils";
+import { listReportReasons } from "@/server/reports/reports";
 import { listPublicWorkerReviews, listReviewReportReasons } from "@/server/reviews/reviews";
 import { getPublicWorker } from "@/server/search/workers";
 
@@ -34,7 +36,11 @@ export default async function TrabajadorPage({ params }: PageProps<"/trabajadore
   const { id } = await params;
   const w = await getPublicWorker(id);
   if (!w) notFound();
-  const [resenas, motivos] = await Promise.all([listPublicWorkerReviews(w.id), listReviewReportReasons()]);
+  const [resenas, motivos, motivosPerfil] = await Promise.all([
+    listPublicWorkerReviews(w.id),
+    listReviewReportReasons(),
+    listReportReasons("WORKER"),
+  ]);
 
   return (
     <>
@@ -217,6 +223,7 @@ export default async function TrabajadorPage({ params }: PageProps<"/trabajadore
                 Registrado, capacitado y habilitado por el Municipio.
               </span>
             </p>
+            <DenunciarPerfil workerId={w.id} nombre={w.displayName} motivos={motivosPerfil} />
           </div>
         </aside>
       </div>
