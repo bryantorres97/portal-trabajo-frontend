@@ -1,5 +1,6 @@
 import {
   BarChart3,
+  BellRing,
   ClipboardList,
   FileSpreadsheet,
   FileText,
@@ -102,6 +103,13 @@ export const modulosPanel: ModuloPanel[] = [
     icon: FileText,
     permisos: ["content.manage"],
     href: "/admin/contenido",
+  },
+  {
+    titulo: "Notificaciones",
+    detalle: "Avisos push a todos, por grupo o a personas elegidas.",
+    icon: BellRing,
+    permisos: ["notifications.broadcast"],
+    href: "/admin/notificaciones",
   },
 ];
 

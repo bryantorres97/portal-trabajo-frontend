@@ -15,7 +15,7 @@ import { currentRequestContext, safeReturnTo } from "@/server/http/request-info"
 import { acceptCurrentConsents } from "@/server/users/consents";
 import { unlinkIdentity } from "@/server/users/identities";
 import { saveClientProfile } from "@/server/users/profile";
-import { markNotificationsRead } from "@/server/notifications/notifications";
+import { markNotificationsRead, setNotificationPreferences } from "@/server/notifications/notifications";
 
 async function requireAuth() {
   const auth = await getCurrentAuth();
@@ -87,5 +87,18 @@ export async function marcarNotificacionesLeidas(_prev: ActionState, _formData: 
     await markNotificationsRead(user);
     refresh();
     return "Listo.";
+  });
+}
+
+export async function guardarPreferenciasAvisos(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  return runAction(async () => {
+    const { user } = await requireAuth();
+    const { pushAnnouncements } = await setNotificationPreferences(user, {
+      pushAnnouncements: formData.get("pushAnnouncements") === "on",
+    });
+    refresh();
+    return pushAnnouncements
+      ? "Recibirás los avisos del GAD en tus dispositivos."
+      : "Ya no recibirás los avisos del GAD por push. Los verás en esta página.";
   });
 }

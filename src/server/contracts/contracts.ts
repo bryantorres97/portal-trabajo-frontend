@@ -23,6 +23,7 @@ import {
 } from "@/server/domain/contracts/state-machine";
 import { DomainError, throwPg } from "@/server/errors";
 import { auditParams, type RequestContext } from "@/server/http/request-info";
+import { scheduleDispatch } from "@/server/notifications/dispatcher";
 
 /**
  * Contrataciones (Fase 6). Toda operación pasa por funciones SQL `fn_contract_*` que bloquean la
@@ -282,6 +283,7 @@ export async function proposeContract(user: AppUser, input: unknown, ctx: Reques
     ...auditParams(ctx),
   });
   if (error) throwPg(error);
+  scheduleDispatch();
   return data as string;
 }
 
@@ -297,6 +299,7 @@ export async function counterContract(user: AppUser, contractId: string, input: 
     ...auditParams(ctx),
   });
   if (error) throwPg(error);
+  scheduleDispatch();
   return Number(data);
 }
 
@@ -316,6 +319,7 @@ export async function acceptContract(
     ...auditParams(ctx),
   });
   if (error) throwPg(error);
+  scheduleDispatch();
   return data as ContractStatus;
 }
 
@@ -338,6 +342,7 @@ export async function declineContract(
     ...auditParams(ctx),
   });
   if (error) throwPg(error);
+  scheduleDispatch();
   return data as ContractStatus;
 }
 
@@ -356,6 +361,7 @@ export async function cancelContract(
     ...auditParams(ctx),
   });
   if (error) throwPg(error);
+  scheduleDispatch();
   return data as ContractStatus;
 }
 
@@ -375,6 +381,7 @@ export async function progressContract(
     ...auditParams(ctx),
   });
   if (error) throwPg(error);
+  scheduleDispatch();
   return data as ContractStatus;
 }
 

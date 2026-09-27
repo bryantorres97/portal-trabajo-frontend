@@ -43,7 +43,8 @@ insert into public.permissions (code, description) values
   ('audit.read',               'Consultar la auditoría'),
   ('metrics.read',             'Consultar métricas y reportes'),
   ('data.export',              'Exportar información'),
-  ('content.manage',           'Administrar preguntas frecuentes y documentos legales')
+  ('content.manage',           'Administrar preguntas frecuentes y documentos legales'),
+  ('notifications.broadcast',  'Enviar avisos push a todos, por segmento o a destinatarios elegidos')
 on conflict (code) do nothing;
 
 insert into public.role_permissions (role_code, permission_code)
@@ -52,7 +53,7 @@ from (values
   ('ADMIN_SISTEMA', 'admin.access'), ('ADMIN_SISTEMA', 'user.read'), ('ADMIN_SISTEMA', 'user.block'),
   ('ADMIN_SISTEMA', 'role.manage'), ('ADMIN_SISTEMA', 'catalog.manage'), ('ADMIN_SISTEMA', 'worker.read'),
   ('ADMIN_SISTEMA', 'training.manage'), ('ADMIN_SISTEMA', 'audit.read'), ('ADMIN_SISTEMA', 'metrics.read'),
-  ('ADMIN_SISTEMA', 'data.export'), ('ADMIN_SISTEMA', 'content.manage'),
+  ('ADMIN_SISTEMA', 'data.export'), ('ADMIN_SISTEMA', 'content.manage'), ('ADMIN_SISTEMA', 'notifications.broadcast'),
 
   ('ADMIN_TRABAJADORES', 'admin.access'), ('ADMIN_TRABAJADORES', 'worker.create'), ('ADMIN_TRABAJADORES', 'worker.read'),
   ('ADMIN_TRABAJADORES', 'worker.read.private'), ('ADMIN_TRABAJADORES', 'worker.update'), ('ADMIN_TRABAJADORES', 'worker.enable'),

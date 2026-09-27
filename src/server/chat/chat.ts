@@ -14,6 +14,7 @@ import {
 } from "@/server/domain/chat/schemas";
 import { DomainError, throwPg } from "@/server/errors";
 import { auditParams, type RequestContext } from "@/server/http/request-info";
+import { scheduleDispatch } from "@/server/notifications/dispatcher";
 
 /**
  * Chat cliente ↔ trabajador (Fase 5). Toda operación pasa por funciones SQL que verifican que el
@@ -171,6 +172,7 @@ export async function startConversation(user: AppUser, input: unknown, ctx: Requ
     })
     .single<{ conversation_id: string; message_id: number | string; created: boolean }>();
   if (error) throwPg(error);
+  scheduleDispatch();
   return { conversationId: data.conversation_id, messageId: Number(data.message_id), created: data.created };
 }
 
@@ -184,6 +186,7 @@ export async function sendMessage(user: AppUser, conversationId: string, input: 
     p_client_message_id: d.clientMessageId ?? null,
   });
   if (error) throwPg(error);
+  scheduleDispatch();
   return Number(data);
 }
 

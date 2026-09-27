@@ -56,7 +56,7 @@ Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEM
 ## Nube (Supabase dev)
 - [x] Migración aplicada (advisors sin observaciones).
 - [x] Clave ES256 importada en el proyecto (kid `1cae2b7c…`) y `REALTIME_JWT_PRIVATE_KEY` en `.env.local`. Verificado contra Realtime de la nube: canal propio `SUBSCRIBED`, ajeno `Unauthorized`, otra clave `JwtSignatureError`.
-- [ ] Push: crear el proyecto Firebase y configurar `FCM_*`; falta el registro del token en el navegador (service worker).
+- [x] Push: proyecto Firebase de pruebas configurado y registro en el navegador (service worker) → Fase 9B (`fase-09b-notificaciones-push.md`).
 
 ## Validación manual
 1. Cliente A abre el perfil de un trabajador habilitado y vinculado (Fase 4) → «Escribir por el chat» → envía el primer mensaje.

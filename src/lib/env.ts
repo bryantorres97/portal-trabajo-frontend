@@ -111,6 +111,39 @@ const fcmSchema = z.object({
     .transform((v) => v.replace(/\\n/g, "\n")),
 });
 
+/**
+ * Push en el navegador (app web de Firebase). Son valores públicos: el servidor los entrega a la
+ * página que activa las notificaciones. Sin la clave VAPID, Firebase usa su clave por defecto.
+ */
+const webPushSchema = z.object({
+  NEXT_PUBLIC_FIREBASE_API_KEY: z.string().min(1),
+  NEXT_PUBLIC_FIREBASE_PROJECT_ID: z.string().min(1),
+  NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: z.string().min(1),
+  NEXT_PUBLIC_FIREBASE_APP_ID: z.string().min(1),
+  NEXT_PUBLIC_FIREBASE_VAPID_KEY: z.string().min(1).optional(),
+});
+
+export type WebPushConfig = {
+  apiKey: string;
+  projectId: string;
+  messagingSenderId: string;
+  appId: string;
+  vapidKey?: string;
+};
+
+/** Configuración del push web, o null si falta (la interfaz lo muestra como no disponible). */
+export function getWebPushConfig(): WebPushConfig | null {
+  const r = webPushSchema.safeParse(process.env);
+  if (!r.success || !isFcmConfigured()) return null;
+  return {
+    apiKey: r.data.NEXT_PUBLIC_FIREBASE_API_KEY,
+    projectId: r.data.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
+    messagingSenderId: r.data.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
+    appId: r.data.NEXT_PUBLIC_FIREBASE_APP_ID,
+    ...(r.data.NEXT_PUBLIC_FIREBASE_VAPID_KEY ? { vapidKey: r.data.NEXT_PUBLIC_FIREBASE_VAPID_KEY } : {}),
+  };
+}
+
 /** Secreto de los endpoints internos programados (despachador de notificaciones). */
 const cronSchema = z.object({ CRON_SECRET: z.string().min(32, "CRON_SECRET debe tener al menos 32 caracteres") });
 

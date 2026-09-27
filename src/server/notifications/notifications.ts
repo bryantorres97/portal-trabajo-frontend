@@ -1,13 +1,19 @@
 import "server-only";
 
-import { isFcmConfigured } from "@/lib/env";
+import { getSessionEnv, isFcmConfigured } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import { requireUser } from "@/server/auth/authorize";
+import { hmacHex } from "@/server/auth/crypto";
 import type { AppUser } from "@/server/auth/users";
 import { getAdminDb } from "@/server/db/admin";
 import { deviceSchema, markNotificationsSchema } from "@/server/domain/chat/schemas";
-import { throwPg } from "@/server/errors";
-import { sendPush, type PushMessage } from "@/server/notifications/fcm";
+import {
+  bajaDispositivoSchema,
+  dispositivoAnonimoSchema,
+  preferenciasSchema,
+} from "@/server/domain/notifications/schemas";
+import { DomainError, throwPg } from "@/server/errors";
+import { isValidPushToken, sendPush, type PushMessage } from "@/server/notifications/fcm";
 
 /**
  * Notificaciones: in-app (tabla `notifications`, se crean en la misma transacción que el evento)
@@ -74,21 +80,82 @@ export async function markNotificationsRead(user: AppUser, input: unknown = {}) 
   return Number(data);
 }
 
-export async function registerDevice(user: AppUser, input: unknown) {
+/**
+ * Registra el token FCM del dispositivo del usuario. En la web se liga a la sesión: al cerrarla,
+ * el navegador deja de recibir push (la app móvil, con Bearer, no tiene sesión del portal).
+ */
+export async function registerDevice(user: AppUser, input: unknown, sessionId: string | null = null) {
   requireUser(user);
   const d = deviceSchema.parse(input);
   const { error } = await getAdminDb().rpc("fn_register_device", {
     p_user_id: user.id,
     p_platform: d.platform,
     p_token: d.token,
+    p_session_id: sessionId,
   });
   if (error) throwPg(error);
 }
 
-export async function unregisterDevice(user: AppUser, token: string) {
+export async function unregisterDevice(user: AppUser, input: unknown) {
   requireUser(user);
-  const { error } = await getAdminDb().rpc("fn_unregister_device", { p_user_id: user.id, p_token: token });
+  const d = bajaDispositivoSchema.parse(input);
+  const { error } = await getAdminDb().rpc("fn_unregister_device", {
+    p_user_id: user.id,
+    p_token: d.token,
+    p_keep_anonymous: d.keepAnonymous,
+  });
   if (error) throwPg(error);
+}
+
+/**
+ * App móvil sin sesión: registra el dispositivo como anónimo (solo recibe los avisos del GAD para
+ * «todos los dispositivos»). FCM confirma que el token es de este proyecto; máximo 30 por IP y hora.
+ */
+export async function registerAnonymousDevice(input: unknown, ip: string | null, validar = isValidPushToken) {
+  const d = dispositivoAnonimoSchema.parse(input);
+  if (!isFcmConfigured()) throw new DomainError(422, "Las notificaciones push no están configuradas en este ambiente.");
+  if (!(await validar(d.token)))
+    throw new DomainError(422, "El token no es un token válido de Firebase para esta app.");
+  const ipHash = await hmacHex(ip ?? "sin-ip", getSessionEnv().SESSION_SECRET, "device-ip");
+  const { data, error } = await getAdminDb().rpc("fn_register_anonymous_device", {
+    p_platform: d.platform,
+    p_token: d.token,
+    p_ip_hash: ipHash,
+  });
+  if (error) throwPg(error);
+  if (data === "RATE_LIMITED") {
+    throw new DomainError(
+      429,
+      "Demasiados dispositivos registrados desde esta red. Inténtalo más tarde.",
+      "rate_limited",
+    );
+  }
+}
+
+export async function getNotificationPreferences(user: AppUser): Promise<{ pushAnnouncements: boolean }> {
+  requireUser(user);
+  const { data, error } = await getAdminDb()
+    .from("users")
+    .select("push_announcements")
+    .eq("id", user.id)
+    .single<{ push_announcements: boolean }>();
+  if (error) throw error;
+  return { pushAnnouncements: data.push_announcements };
+}
+
+/** Avisos del GAD por push (los del chat y las contrataciones no dependen de esta preferencia). */
+export async function setNotificationPreferences(
+  user: AppUser,
+  input: unknown,
+): Promise<{ pushAnnouncements: boolean }> {
+  requireUser(user);
+  const d = preferenciasSchema.parse(input);
+  const { error } = await getAdminDb()
+    .from("users")
+    .update({ push_announcements: d.pushAnnouncements })
+    .eq("id", user.id);
+  if (error) throw error;
+  return d;
 }
 
 type OutboxRow = {
@@ -106,8 +173,8 @@ type OutboxRow = {
 export async function dispatchOutbox(
   limit = 50,
   send = sendPush,
-): Promise<{ sent: number; failed: number; skipped: boolean }> {
-  if (!isFcmConfigured()) return { sent: 0, failed: 0, skipped: true };
+): Promise<{ claimed: number; sent: number; failed: number; skipped: boolean }> {
+  if (!isFcmConfigured()) return { claimed: 0, sent: 0, failed: 0, skipped: true };
   const db = getAdminDb();
   const { data, error } = await db.rpc("fn_claim_outbox", { p_limit: limit });
   if (error) throw error;
@@ -146,5 +213,5 @@ export async function dispatchOutbox(
     if (resultado === "ENVIADA") sent++;
     else if (resultado === "REINTENTAR") failed++;
   }
-  return { sent, failed, skipped: false };
+  return { claimed: (data ?? []).length, sent, failed, skipped: false };
 }

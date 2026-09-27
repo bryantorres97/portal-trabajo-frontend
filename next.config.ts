@@ -16,7 +16,9 @@ const csp = [
   // Multimedia provisional desde Unsplash (ADR-009); se reemplaza por material oficial del GAD.
   "img-src 'self' blob: data: https://images.unsplash.com",
   "font-src 'self'",
-  `connect-src 'self' ${supabaseUrl} ${supabaseWs}`.trim(),
+  // Push web: el SDK de Firebase registra el navegador en FCM (docs/phases/fase-09b-notificaciones-push.md).
+  `connect-src 'self' ${supabaseUrl} ${supabaseWs} https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com`.trim(),
+  "worker-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
   // Chrome aplica form-action también a redirecciones: el logout (POST → 303) termina en Cognito
@@ -46,7 +48,17 @@ const nextConfig: NextConfig = {
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
   },
   async headers() {
-    return [{ source: "/:path*", headers: securityHeaders }];
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      {
+        // Service worker de las notificaciones push: siempre la versión más reciente.
+        source: "/sw-notificaciones.js",
+        headers: [
+          { key: "Cache-Control", value: "no-cache, no-store, must-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+    ];
   },
 };
 

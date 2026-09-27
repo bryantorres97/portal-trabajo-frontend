@@ -254,7 +254,7 @@ describe("notificaciones", () => {
     const conPush = await getAdminDb().from("notification_outbox").select("status").eq("recipient_id", t.user.id);
     expect(conPush.data).toEqual([{ status: "PENDIENTE" }]);
     // Sin credenciales de FCM el despachador no toma nada.
-    expect(await dispatchOutbox()).toEqual({ sent: 0, failed: 0, skipped: true });
+    expect(await dispatchOutbox()).toEqual({ claimed: 0, sent: 0, failed: 0, skipped: true });
   });
 
   it("el personal del GAD no inicia conversaciones", async () => {

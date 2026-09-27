@@ -197,3 +197,17 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - La disputa crea una denuncia `CONTRACT` (bandeja de la Fase 8); quien la abrió puede retirarla y la contratación vuelve a su estado anterior. El GAD la resuelve con `report.manage` (`fn_admin_resolve_contract_dispute`; la interfaz llega en la Fase 8).
   - Plazos en `app_settings`: 7 días para responder una propuesta y 7 días para confirmar la finalización (luego se confirma sola). Se aplican al leer y con pg_cron cada 15 minutos.
 - **Consecuencias:** menos pasos para el usuario y un modelo más simple; el historial (`contract_events`) y las versiones permiten reconstruir cada acuerdo.
+
+## ADR-015 — Avisos push del GAD: entrega por dispositivo, segmentos y despacho
+
+- **Estado:** ACEPTADA (2026-09-27), salvo el mecanismo del cron: **PENDIENTE** hasta que el GAD confirme si habrá plan Pro de Vercel (bloqueo B6). Pedido del usuario: enviar a todos los dispositivos, a los usuarios, solo a clientes, solo a trabajadores o a dispositivos elegidos.
+- **Contexto:** FCM HTTP v1 envía un mensaje por token (ya no hay envío por lotes). Los temas de FCM evitan recorrer los tokens, pero obligan a mantener suscripciones sincronizadas con los roles y no dan resultado por dispositivo.
+- **Decisión:**
+  - Una campaña (`push_campaigns`) fija su audiencia **al iniciar** y crea una entrega por dispositivo (`push_deliveries`) con reintentos (3) y estado propio; sin temas de FCM.
+  - Segmentos: `TODOS` (incluye la app sin sesión), `USUARIOS` (con dueño), `CLIENTES` (rol CLIENTE **sin** TRABAJADOR), `TRABAJADORES`, `SELECCION` (personas y/o dispositivos elegidos). Nunca cuentas bloqueadas ni personal del GAD. Filtro por plataforma.
+  - Preferencia `users.push_announcements`: apaga los avisos del GAD por push, no los del chat ni de contrataciones. En la bandeja del portal los avisos (opcionales) se ven siempre.
+  - Dispositivos anónimos (`device_tokens.user_id` NULL) solo desde la app móvil: FCM valida el token (`validate_only`) y hay un límite de 30 por IP y hora (se guarda un HMAC de la IP, no la IP).
+  - Los tokens web se ligan a la sesión: al cerrarla o vencer, el navegador deja de recibir push.
+  - Despacho: al responder (`after()`) tras cada acción que genera push y con Vercel Cron cada minuto (`/api/internal/outbox`) para reintentos y avisos programados. **Requiere el plan Pro de Vercel** (Hobby solo admite tareas diarias); la alternativa es pg_cron + pg_net llamando al mismo endpoint.
+  - Permiso nuevo `notifications.broadcast` (ADMIN_SISTEMA); crear y cancelar se auditan. Máximo 20 avisos por hora por funcionario.
+- **Consecuencias:** conteos exactos (entregados, fallidos, descartados) y tokens inválidos desactivados; con cientos de miles de dispositivos habrá que evaluar temas de FCM o más concurrencia.

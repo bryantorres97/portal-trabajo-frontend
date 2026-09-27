@@ -3,14 +3,14 @@ import { redirect } from "next/navigation";
 import { AlertTriangle, BadgeCheck, CheckCircle2, LogIn, MessageCircle, ShieldCheck } from "lucide-react";
 
 import { boton } from "@/components/ui/boton";
-import { isAuthConfigured } from "@/lib/env";
+import { getWebPushConfig, isAuthConfigured } from "@/lib/env";
 import { cn } from "@/lib/utils";
 import { hasPermission } from "@/server/auth/authorize";
 import { enabledIdentityProviders } from "@/server/auth/cognito";
 import { getCurrentAuth, type CurrentAuth } from "@/server/auth/current-user";
 import { listActiveSessions } from "@/server/auth/session";
 import { listContracts } from "@/server/contracts/contracts";
-import { listNotifications } from "@/server/notifications/notifications";
+import { getNotificationPreferences, listNotifications } from "@/server/notifications/notifications";
 import { getPendingConsents } from "@/server/users/consents";
 import { listIdentities } from "@/server/users/identities";
 import { getClientProfile } from "@/server/users/profile";
@@ -138,13 +138,14 @@ function Ingreso() {
 
 async function Panel({ auth }: { auth: CurrentAuth }) {
   const { user } = auth;
-  const [perfil, identidades, sesiones, notificaciones, trabajador, contratos] = await Promise.all([
+  const [perfil, identidades, sesiones, notificaciones, trabajador, contratos, preferencias] = await Promise.all([
     getClientProfile(user.id),
     listIdentities(user.id),
     listActiveSessions(user.id, auth.sessionId),
     listNotifications(user, 10),
     getOwnWorker(user.id),
     listContracts(user, { scope: "activas" }),
+    getNotificationPreferences(user),
   ]);
   const proveedoresVinculables = enabledIdentityProviders().filter((p) => !identidades.some((i) => i.provider === p));
   const tieneNativo = identidades.some((i) => i.provider === "COGNITO");
@@ -164,6 +165,7 @@ async function Panel({ auth }: { auth: CurrentAuth }) {
         perfilCompleto: !!perfil,
         trabajador: trabajador ? { status: trabajador.status, displayName: trabajador.displayName } : null,
         notificaciones,
+        avisos: { pushAnnouncements: preferencias.pushAnnouncements, webPush: getWebPushConfig() },
         contrataciones: {
           activas: contratos.length,
           porResponder: contratos.filter((c) => c.needsMyAction).length,

@@ -26,7 +26,9 @@ La validación está en `src/lib/env.ts` (servidor, `server-only`) y `src/lib/en
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Supabase | Sí | De `supabase start` | Publishable key | Idem | Idem |
 | `SUPABASE_SECRET_KEY` | Supabase | No | De `supabase start` | Secret key | Idem | Idem (acceso restringido) |
 | `REALTIME_JWT_PRIVATE_KEY` | Realtime | No | Objeto de `supabase/signing_keys.json` (`pnpm db:keys`) | Clave propia importada en el proyecto (`docs/setup/realtime.md`) | Idem | Idem |
-| `FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`, `FCM_PRIVATE_KEY` | Push (opcional) | No | Vacío | Proyecto Firebase de pruebas | Idem | Proyecto Firebase del GAD [PENDIENTE] |
+| `FCM_PROJECT_ID`, `FCM_CLIENT_EMAIL`, `FCM_PRIVATE_KEY` | Push (opcional) | No | Cuenta de servicio del proyecto de pruebas (`docs/setup/firebase-dev.md`) | Proyecto Firebase de pruebas | Idem | Proyecto Firebase del GAD [PENDIENTE] |
+| `NEXT_PUBLIC_FIREBASE_API_KEY`, `…_PROJECT_ID`, `…_MESSAGING_SENDER_ID`, `…_APP_ID` | Push web (opcional) | Sí (públicas) | App web del proyecto de pruebas | Idem | Idem | App web del proyecto del GAD |
+| `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | Push web (opcional) | Sí (pública) | Vacío (Firebase usa su clave por defecto) | Par de claves propio | Idem | Idem |
 | `CRON_SECRET` | Tareas programadas | No | Opcional | Aleatorio (≥ 32) | Idem | Idem |
 
 Reglas:

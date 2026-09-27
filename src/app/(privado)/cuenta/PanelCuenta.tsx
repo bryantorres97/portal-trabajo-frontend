@@ -1,6 +1,7 @@
 import Link from "next/link";
 import {
   Bell,
+  BellRing,
   ChevronRight,
   FileSignature,
   Flag,
@@ -17,8 +18,10 @@ import type { ReactNode } from "react";
 import { AccesoMensajes } from "@/components/chat/AccesoMensajes";
 import { EstadoTrabajador } from "@/components/admin/EstadoTrabajador";
 import { ActionForm } from "@/components/forms/ActionForm";
+import { PushNavegador } from "@/components/notificaciones/PushNavegador";
 import { Avatar } from "@/components/site/WorkerCard";
 import { boton } from "@/components/ui/boton";
+import type { WebPushConfig } from "@/lib/env";
 import { describirDispositivo, etiquetaProveedor, formatearFechaHora, formatearMomento } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 import type { WorkerStatus } from "@/server/domain/workers/state-machine";
@@ -28,6 +31,7 @@ import {
   cerrarTodasLasSesiones,
   desvincularIdentidad,
   guardarPerfil,
+  guardarPreferenciasAvisos,
   marcarNotificacionesLeidas,
 } from "./actions";
 import { ProfileForm } from "./ProfileForm";
@@ -41,6 +45,7 @@ export type DatosPanelCuenta = {
   perfilCompleto: boolean;
   trabajador: { status: WorkerStatus; displayName: string } | null;
   contrataciones: { activas: number; porResponder: number };
+  avisos: { pushAnnouncements: boolean; webPush: WebPushConfig | null };
   notificaciones: {
     unread: number;
     items: {
@@ -210,6 +215,37 @@ export function PanelCuenta({ d }: { d: DatosPanelCuenta }) {
         </div>
 
         <div className="space-y-6">
+          <Bloque
+            id="avisos-push"
+            titulo="Avisos en tus dispositivos"
+            icono={<BellRing className="h-5 w-5" aria-hidden />}
+          >
+            <PushNavegador config={d.avisos.webPush} />
+            <ActionForm
+              action={guardarPreferenciasAvisos}
+              submitLabel="Guardar preferencia"
+              variant="secondary"
+              tamano="sm"
+              className="mt-5 space-y-3 border-t border-border/70 pt-5"
+            >
+              <label className="flex items-start gap-3 text-sm">
+                <input
+                  type="checkbox"
+                  name="pushAnnouncements"
+                  defaultChecked={d.avisos.pushAnnouncements}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-primary"
+                />
+                <span>
+                  <span className="block font-bold">Recibir avisos del GAD</span>
+                  <span className="text-muted-foreground">
+                    Ferias, capacitaciones y cambios en la atención. Los avisos de tus mensajes y contrataciones llegan
+                    siempre.
+                  </span>
+                </span>
+              </label>
+            </ActionForm>
+          </Bloque>
+
           <Bloque id="formas-ingreso" titulo="Formas de ingreso" icono={<KeyRound className="h-5 w-5" aria-hidden />}>
             <p className="text-sm text-muted-foreground">
               Si entras de distintas maneras (usuario y contraseña, Google…), vincúlalas para usar siempre esta cuenta.

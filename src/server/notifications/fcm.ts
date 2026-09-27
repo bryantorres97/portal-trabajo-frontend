@@ -40,16 +40,29 @@ async function accessToken(fetcher: typeof fetch): Promise<string> {
 
 /** Cuerpo del mensaje FCM v1 (exportado para pruebas). */
 export function buildFcmMessage(token: string, m: PushMessage) {
-  const url = new URL(m.link, getAppEnv().NEXT_PUBLIC_APP_URL).toString();
+  const url = new URL(m.link, getAppEnv().NEXT_PUBLIC_APP_URL);
   return {
     message: {
       token,
       notification: { title: m.title, body: m.body },
       data: { link: m.link, ...(m.data ?? {}) },
-      webpush: { fcm_options: { link: url }, notification: { icon: "/icon.png" } },
+      // FCM exige HTTPS en fcm_options.link (en local el service worker abre data.link).
+      webpush: {
+        ...(url.protocol === "https:" ? { fcm_options: { link: url.toString() } } : {}),
+        notification: { icon: "/icon.png" },
+      },
       android: { priority: "HIGH" as const },
     },
   };
+}
+
+/**
+ * ¿El token ya no sirve? 404/UNREGISTERED, o INVALID_ARGUMENT que se refiere al token. Un
+ * INVALID_ARGUMENT por el contenido del mensaje no debe desactivar el dispositivo.
+ */
+export function isInvalidTokenResponse(status: number, texto: string): boolean {
+  if (status === 404 || /UNREGISTERED/.test(texto)) return true;
+  return status === 400 && /INVALID_ARGUMENT/.test(texto) && /registration token/i.test(texto);
 }
 
 export async function sendPush(token: string, m: PushMessage, fetcher: typeof fetch = fetch): Promise<PushResult> {
@@ -62,6 +75,26 @@ export async function sendPush(token: string, m: PushMessage, fetcher: typeof fe
   if (res.ok) return { ok: true, invalidToken: false };
   const texto = await res.text().catch(() => "");
   // Token dado de baja o inválido: se desactiva para no reintentar.
-  const invalido = res.status === 404 || /UNREGISTERED|INVALID_ARGUMENT/.test(texto);
-  return { ok: false, invalidToken: invalido, error: `FCM ${res.status}: ${texto.slice(0, 200)}` };
+  return {
+    ok: false,
+    invalidToken: isInvalidTokenResponse(res.status, texto),
+    error: `FCM ${res.status}: ${texto.slice(0, 200)}`,
+  };
+}
+
+/**
+ * Comprueba con FCM (validate_only, no llega nada al dispositivo) que el token pertenece a este
+ * proyecto. Se usa antes de aceptar dispositivos anónimos de la app móvil.
+ */
+export async function isValidPushToken(token: string, fetcher: typeof fetch = fetch): Promise<boolean> {
+  const env = getFcmEnv();
+  const res = await fetcher(`https://fcm.googleapis.com/v1/projects/${env.FCM_PROJECT_ID}/messages:send`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${await accessToken(fetcher)}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ validate_only: true, message: { token, data: { event: "VALIDACION" } } }),
+  });
+  if (res.ok) return true;
+  const texto = await res.text().catch(() => "");
+  if (isInvalidTokenResponse(res.status, texto)) return false;
+  throw new Error(`FCM ${res.status}: ${texto.slice(0, 200)}`);
 }

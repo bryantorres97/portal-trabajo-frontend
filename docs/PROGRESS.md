@@ -7,10 +7,10 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 9 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 8 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 7 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
+| Fase actual | **Fase 9B (notificaciones push) implementada** (commit y migración en la nube; validación manual pendiente). **Fase 9 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 8 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 7 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
 | Siguiente fase | Fase 10 — Calidad y producción |
-| Rama de trabajo | `development` · último commit: Fase 9. Se commitea solo con confirmación del usuario |
-| Última actualización | 2026-09-26 |
+| Rama de trabajo | `development` · último commit: Fase 9B (notificaciones push). Se commitea solo con confirmación del usuario |
+| Última actualización | 2026-09-27 |
 
 ## Siguiente paso concreto
 
@@ -18,13 +18,14 @@
 2. **Probar el login real con el pool dev** (B2). Todo está listo: `.env.local` completo, migraciones aplicadas en el proyecto Supabase dev en la nube (`Portal Empleo`), callback `http://localhost:3000/api/auth/callback` aceptado por Cognito. Solo falta que el usuario inicie sesión en el navegador (`pnpm dev` → `/cuenta`). Checklist en `docs/setup/cognito-dev.md`.
 3. Solicitar al GAD el App Client del portal (P-02). Preguntas abiertas: P-02, P-06, P-13, P-15, P-20 (P-21 decidida: Entra ID para el personal, ADR-012). Pedir al GAD el app registration de Entra (texto listo en `docs/setup/entra-dev.md` §4).
 4. ~~Fase 2B: prueba manual y commit~~ ✅. Queda el pedido formal al GAD del app registration.
-5. **Fase 9**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-09-panel-administrativo.md`).
-6. **Fase 8**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-08-denuncias-moderacion.md`). Preguntar al GAD P-14 (sanciones, plazos y a quién se escala): hoy se usan valores recomendados.
-7. **Fase 7**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-07-calificaciones.md`).
-8. **Fase 6**: commit y migración en la nube ✅. Validación manual en curso: propuesta, contrapropuesta y aceptación OK; faltan ejecución (inicio, fin, confirmación), retiro, rechazo, cancelación y disputa (`docs/phases/fase-06-contrataciones.md`). El repositorio no tiene remoto: las pruebas de integración y E2E con base no se han ejecutado en un CI.
-9. **Fase 5**: validar manualmente (`docs/phases/fase-05-chat.md`), con un trabajador vinculado de la Fase 4. Push: falta el proyecto Firebase.
-10. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
-11. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
+5. **Fase 9B — notificaciones push**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-09b-notificaciones-push.md`). Plan de Vercel pendiente de respuesta del GAD (B6). Falta la clave VAPID propia (opcional).
+6. **Fase 9**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-09-panel-administrativo.md`).
+7. **Fase 8**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-08-denuncias-moderacion.md`). Preguntar al GAD P-14 (sanciones, plazos y a quién se escala): hoy se usan valores recomendados.
+8. **Fase 7**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-07-calificaciones.md`).
+9. **Fase 6**: commit y migración en la nube ✅. Validación manual en curso: propuesta, contrapropuesta y aceptación OK; faltan ejecución (inicio, fin, confirmación), retiro, rechazo, cancelación y disputa (`docs/phases/fase-06-contrataciones.md`). El repositorio no tiene remoto: las pruebas de integración y E2E con base no se han ejecutado en un CI.
+10. **Fase 5**: validar manualmente (`docs/phases/fase-05-chat.md`), con un trabajador vinculado de la Fase 4. Push: proyecto Firebase de pruebas listo (Fase 9B).
+11. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
+12. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
 
 ## Bloqueos y dependencias externas
 
@@ -34,6 +35,7 @@
 | B2 | Prueba del login real con el pool dev (pool us-east-1 + Supabase dev en la nube listos) | Usuario | Solo falta iniciar sesión en el navegador. El flujo está cubierto por tests y la redirección a Cognito está verificada |
 | B3 | Rotar el client secret de otra aplicación que aparece en `resources/cognito-data.md` | GAD | Riesgo de seguridad sobre el pool productivo (el portal no lo usa) |
 | B5 | App Client propio del portal en el pool de ciudadanos del GAD (P-02) | GAD | Necesario para staging y producción, no para desarrollo |
+| B6 | Plan de Vercel para el cron por minuto de `/api/internal/outbox` (ADR-015): Pro, o pasar a pg_cron + pg_net | Usuario / GAD (consulta en curso) | En Hobby el despliegue falla con el cron actual de `vercel.json`; sin cron no hay avisos programados ni reintentos |
 | B4 | Preguntas de negocio pendientes (`docs/analysis/09-riesgos-preguntas.md`) | GAD | Pueden cambiar reglas en las Fases 4–8 |
 
 ## Checklist por fase
@@ -70,6 +72,7 @@ Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al 
 - [x] Fase 7 — Calificaciones → `docs/phases/fase-07-calificaciones.md` · migración en la nube · validación manual pendiente
 - [x] Fase 8 — Denuncias y moderación → `docs/phases/fase-08-denuncias-moderacion.md` · migración en la nube · validación manual pendiente
 - [x] Fase 9 — Panel administrativo → `docs/phases/fase-09-panel-administrativo.md` · migración en la nube · validación manual pendiente
+- [x] Fase 9B — Notificaciones push (FCM, avisos del GAD por segmento) → `docs/phases/fase-09b-notificaciones-push.md` (ADR-015) · migración en la nube · validación manual pendiente
 - [ ] Fase 10 — Calidad y producción
 - [ ] Fase 11 — Aplicación móvil (arquitectura)
 
@@ -111,3 +114,5 @@ pgTAP, integración y E2E con datos corren en el **CI** (base efímera). Para va
 | 2026-09-27 | Migración `panel_metricas_contenido` aplicada en la nube con confirmación del usuario (advisors sin observaciones; `/preguntas-frecuentes` y `/privacidad` desde la base). Commit de la Fase 9. |
 | 2026-09-27 | A pedido del usuario, las 10 fotos de oficios se reemplazan por fotos de Unsplash (1200×900, con créditos) y la migración `fotos_oficios_unsplash` actualiza las rutas del catálogo (validada en la nube con transacción revertida). |
 | 2026-09-27 | Migración `fotos_oficios_unsplash` aplicada en la nube con confirmación del usuario: las 10 rutas del catálogo apuntan a las fotos nuevas (verificado en `/`, `/oficios` y el detalle); se retiran las fotos anteriores. |
+| 2026-09-27 | Proyecto Firebase de pruebas (`acolita-3fa4a`) creado por el usuario; cuenta de servicio verificada contra FCM (`validate_only`) y `CRON_SECRET` agregado. **Fase 9B implementada** (ADR-015): avisos del GAD a todos los dispositivos, usuarios, solo clientes, solo trabajadores o personas y dispositivos elegidos, con plataformas, programación, cancelación, bandeja opcional, auditoría y permiso `notifications.broadcast`; entregas por dispositivo con reintentos; dispositivos anónimos de la app; preferencia de avisos; push en el navegador (service worker propio) ligado a la sesión; despacho con `after()` y Vercel Cron. Corregido: el despachador desactivaba dispositivos ante cualquier INVALID_ARGUMENT y el enlace http de local invalidaba el mensaje. Validación en la nube con transacción revertida: 46/46 (Fases 5, 6 y 8 sin regresiones). Unit 448. |
+| 2026-09-27 | Migración `notificaciones_push` aplicada en la nube con confirmación del usuario (advisors sin observaciones, `notifications.broadcast` asignado). Verificado en el servidor local: despachador protegido por `CRON_SECRET`, validación de tokens anónimos contra FCM, CSP. |
