@@ -125,7 +125,7 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - No se generan imágenes.
   - Mientras el GAD no entregue material oficial, las imágenes nuevas se toman de Unsplash (`images.unsplash.com`, permitido en `next.config.ts` y en la CSP).
   - Los logotipos son de texto (`src/components/site/Logo.tsx`) hasta recibir los oficiales (B1).
-  - Las fotos de oficios que ya vienen del prototipo (`public/images/oficios`) se mantienen como provisionales.
+  - ~~Las fotos de oficios que ya vienen del prototipo (`public/images/oficios`) se mantienen como provisionales.~~ **Actualizado (usuario, 2026-09-27):** las 10 fotos de oficios se reemplazaron por imágenes de Unsplash descargadas en `public/images/oficios/*-unsplash.jpg` (1200×900), con créditos en `public/images/oficios/CREDITOS.md` y la migración `fotos_oficios_unsplash` que actualiza las rutas del catálogo. El logo del GAD no se cambia (es institucional).
   - Las fotos de personas del prototipo (ficticias) **no** se versionan.
 - **Consecuencias:** Toda imagen provisional queda identificada en código con un comentario `// Provisional (ADR-009)` o en el propio contenido, para reemplazarla fácilmente.
 
