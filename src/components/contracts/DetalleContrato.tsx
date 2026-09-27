@@ -26,6 +26,8 @@ import { useRealtimeChannel } from "@/components/chat/useRealtimeChannel";
 import { EstadoContrato } from "@/components/contracts/EstadoContrato";
 import type { OpcionesFormulario } from "@/components/contracts/FormularioCondiciones";
 import { ProponerCondiciones } from "@/components/contracts/ProponerCondiciones";
+import { TarjetaReputacion } from "@/components/reviews/ReputacionCliente";
+import { SeccionCalificacion } from "@/components/reviews/SeccionCalificacion";
 import { boton } from "@/components/ui/boton";
 import { ayuda, campo, etiqueta } from "@/components/ui/campo";
 import {
@@ -46,6 +48,7 @@ import { formatearFecha, formatearFechaHora } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 import type { ContractDetail, ContractVersion } from "@/server/contracts/contracts";
 import { ETIQUETAS_EVENTO, formatearPrecio, type ContractAction } from "@/server/domain/contracts/state-machine";
+import type { ClientReputation, ContractReviews } from "@/server/reviews/reviews";
 
 type Dialogo = "aceptar" | "rechazar" | "retirar" | "cancelar" | "disputa" | "retirar-disputa" | null;
 type Formulario = "contrapropuesta" | "modificacion" | "editar" | null;
@@ -76,10 +79,16 @@ export function DetalleContrato({
   c,
   opciones,
   motivos,
+  calificaciones,
+  reputacion,
 }: {
   c: ContractDetail;
   opciones: OpcionesFormulario;
   motivos: { code: string; label: string }[];
+  /** Solo en contrataciones finalizadas. */
+  calificaciones?: ContractReviews | null;
+  /** Reputación del cliente: solo para el trabajador (RN-20). */
+  reputacion?: ClientReputation | null;
 }) {
   const router = useRouter();
   const [dialogo, setDialogo] = useState<Dialogo>(null);
@@ -122,7 +131,7 @@ export function DetalleContrato({
     return true;
   }
 
-  const siguiente = queSigue(c);
+  const siguiente = queSigue(c, !!calificaciones?.canCreate);
 
   return (
     <div className="px-4 pt-6 pb-10 sm:px-6 lg:pt-10">
@@ -290,6 +299,9 @@ export function DetalleContrato({
 
       <div className="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
         <div className="space-y-6">
+          {c.status === "FINALIZADA" && calificaciones && (
+            <SeccionCalificacion contractId={c.id} miRol={c.myRole} otra={otra} r={calificaciones} />
+          )}
           {pendiente && (
             <TarjetaVersion
               v={pendiente}
@@ -309,6 +321,7 @@ export function DetalleContrato({
         </div>
 
         <aside className="space-y-6">
+          {reputacion && <TarjetaReputacion r={reputacion} nombre={otra} />}
           <section aria-labelledby="historial" className="panel p-5">
             <h2 id="historial" className="flex items-center gap-2 text-lg font-extrabold">
               <History className="h-5 w-5 text-primary" aria-hidden /> Historial
@@ -528,7 +541,10 @@ function estadoVersion(v: ContractVersion, c: ContractDetail): string {
   return v.id === c.current.id ? "Sin acuerdo" : "Reemplazada";
 }
 
-function queSigue(c: ContractDetail): { titulo: string; texto: string; icono: ReactNode; destacado: boolean } {
+function queSigue(
+  c: ContractDetail,
+  puedeCalificar: boolean,
+): { titulo: string; texto: string; icono: ReactNode; destacado: boolean } {
   const otra = c.counterpartName;
   const p = c.pending;
   const icono = (n: ReactNode) => n;
@@ -604,10 +620,14 @@ function queSigue(c: ContractDetail): { titulo: string; texto: string; icono: Re
       };
     case "FINALIZADA":
       return {
-        titulo: "Contratación finalizada",
-        texto: `Terminó el ${formatearFecha(c.completedAt)}${c.autoConfirmed ? " (confirmada automáticamente)" : ""}. Gracias por usar el portal.`,
+        titulo: puedeCalificar ? `¿Cómo te fue con ${otra}?` : "Contratación finalizada",
+        texto: `Terminó el ${formatearFecha(c.completedAt)}${c.autoConfirmed ? " (confirmada automáticamente)" : ""}.${
+          puedeCalificar
+            ? " Deja tu calificación más abajo: ayuda a otras personas a decidir."
+            : " Gracias por usar el portal."
+        }`,
         icono: <CheckCircle2 className="h-5 w-5" aria-hidden />,
-        destacado: false,
+        destacado: puedeCalificar,
       };
     case "CANCELADA":
       return {

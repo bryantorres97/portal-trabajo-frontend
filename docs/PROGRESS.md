@@ -7,9 +7,9 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
-| Siguiente fase | Fase 7 — Calificaciones |
-| Rama de trabajo | `development` · último commit: Fase 6. Se commitea solo con confirmación del usuario |
+| Fase actual | **Fase 7 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
+| Siguiente fase | Fase 8 — Denuncias y moderación |
+| Rama de trabajo | `development` · último commit: Fase 7. Se commitea solo con confirmación del usuario |
 | Última actualización | 2026-09-26 |
 
 ## Siguiente paso concreto
@@ -18,10 +18,11 @@
 2. **Probar el login real con el pool dev** (B2). Todo está listo: `.env.local` completo, migraciones aplicadas en el proyecto Supabase dev en la nube (`Portal Empleo`), callback `http://localhost:3000/api/auth/callback` aceptado por Cognito. Solo falta que el usuario inicie sesión en el navegador (`pnpm dev` → `/cuenta`). Checklist en `docs/setup/cognito-dev.md`.
 3. Solicitar al GAD el App Client del portal (P-02). Preguntas abiertas: P-02, P-06, P-13, P-15, P-20 (P-21 decidida: Entra ID para el personal, ADR-012). Pedir al GAD el app registration de Entra (texto listo en `docs/setup/entra-dev.md` §4).
 4. ~~Fase 2B: prueba manual y commit~~ ✅. Queda el pedido formal al GAD del app registration.
-5. **Fase 6**: commit y migración en la nube ✅. Validación manual en curso: propuesta, contrapropuesta y aceptación OK; faltan ejecución (inicio, fin, confirmación), retiro, rechazo, cancelación y disputa (`docs/phases/fase-06-contrataciones.md`). El repositorio no tiene remoto: las pruebas de integración y E2E con base no se han ejecutado en un CI.
-6. **Fase 5**: validar manualmente (`docs/phases/fase-05-chat.md`), con un trabajador vinculado de la Fase 4. Push: falta el proyecto Firebase.
-7. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
-8. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
+5. **Fase 7**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-07-calificaciones.md`).
+6. **Fase 6**: commit y migración en la nube ✅. Validación manual en curso: propuesta, contrapropuesta y aceptación OK; faltan ejecución (inicio, fin, confirmación), retiro, rechazo, cancelación y disputa (`docs/phases/fase-06-contrataciones.md`). El repositorio no tiene remoto: las pruebas de integración y E2E con base no se han ejecutado en un CI.
+7. **Fase 5**: validar manualmente (`docs/phases/fase-05-chat.md`), con un trabajador vinculado de la Fase 4. Push: falta el proyecto Firebase.
+8. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
+9. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
 
 ## Bloqueos y dependencias externas
 
@@ -64,7 +65,7 @@ Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al 
 - [x] Fase 4 — Gestión de trabajadores → `docs/phases/fase-04-gestion-trabajadores.md` (incluye el código de activación) · validación manual pendiente
 - [x] Fase 5 — Chat → `docs/phases/fase-05-chat.md` · validación manual pendiente
 - [x] Fase 6 — Contrataciones → `docs/phases/fase-06-contrataciones.md` (ADR-014) · migración en la nube · validación manual pendiente
-- [ ] Fase 7 — Calificaciones
+- [x] Fase 7 — Calificaciones → `docs/phases/fase-07-calificaciones.md` · migración en la nube · validación manual pendiente
 - [ ] Fase 8 — Denuncias y moderación
 - [ ] Fase 9 — Panel administrativo
 - [ ] Fase 10 — Calidad y producción
@@ -100,3 +101,5 @@ pgTAP, integración y E2E con datos corren en el **CI** (base efímera). Para va
 | 2026-09-26 | **Fase 6 implementada**: contrataciones con versiones inmutables y hash SHA-256, aceptación bilateral de la misma versión (la propuesta cuenta como aceptación de quien la envía, ADR-014), 409 ante versión obsoleta, modificaciones sin perder lo acordado, inicio, fin y confirmación (automática a los 7 días), cancelación con motivo, expiración a los 7 días (al leer y con pg_cron), disputa como denuncia `CONTRACT`, tarjetas en el chat, `/contrataciones` y notificaciones. Nuevo `scripts/validar-nube.mjs`: migración + pgTAP en la nube dentro de una transacción revertida (Fase 6 73/73, Fase 5 37/37). Unit 362. |
 | 2026-09-26 | Error en `/cuenta` y en las conversaciones (`fn_list_contracts` no existía): el código de la Fase 6 corría sin su migración. Con la confirmación del usuario se aplicó `contrataciones` en la nube (advisors sin observaciones, pg_cron creado, caché de PostgREST recargada). |
 | 2026-09-26 | **P-07 respondida por el GAD**: la plataforma no maneja pagos; el precio es solo una referencia (RN-17 confirmada). Validación manual de la Fase 6 (usuario): propuesta, contrapropuesta y aceptación OK. |
+| 2026-09-26 | **Fase 7 implementada**: calificación 1–5 con comentario ≤200 palabras (web, API y base), en ambos sentidos (ADR-011), solo con contratación finalizada y una por parte, edición durante 7 días, promedio desnormalizado, reseñas en el perfil público, reputación del cliente solo para su trabajador (RN-20), denuncia de reseñas, moderación en `/admin/resenas` e invitación a calificar al finalizar. Validación en la nube con transacción revertida: Fase 7 47/47 (Fases 5 y 6 sin regresiones). Unit 379. |
+| 2026-09-27 | Migración `calificaciones` aplicada en la nube con confirmación del usuario (advisors sin observaciones, caché de PostgREST recargada, perfil público 200). |

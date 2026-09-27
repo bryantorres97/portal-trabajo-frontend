@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { CalendarDays, ChevronRight } from "lucide-react";
+import { CalendarDays, ChevronRight, Star } from "lucide-react";
 
 import { EstadoContrato } from "@/components/contracts/EstadoContrato";
 import { formatearFecha, formatearMomento } from "@/lib/formatos";
@@ -17,7 +17,7 @@ export function ListaContratos({ items }: { items: ContractSummary[] }) {
             href={`/contrataciones/${c.id}`}
             className={cn(
               "group flex items-center gap-4 panel rounded-3xl p-4 transition-[transform,box-shadow] hover:-translate-y-0.5 hover:shadow-[var(--shadow-elevada)] sm:p-5",
-              c.needsMyAction && "ring-2 ring-primary/50",
+              (c.needsMyAction || c.reviewPending) && "ring-2 ring-primary/50",
             )}
           >
             <div className="min-w-0 flex-1">
@@ -26,6 +26,11 @@ export function ListaContratos({ items }: { items: ContractSummary[] }) {
                 {c.needsMyAction && (
                   <span className="rounded-full bg-primary px-2.5 py-0.5 text-xs font-bold text-primary-foreground">
                     Te toca a ti
+                  </span>
+                )}
+                {c.reviewPending && (
+                  <span className="inline-flex items-center gap-1 rounded-full bg-amarillo/30 px-2.5 py-0.5 text-xs font-bold">
+                    <Star className="h-3 w-3 fill-current" aria-hidden /> Califica
                   </span>
                 )}
                 {c.pendingModification && !c.needsMyAction && (

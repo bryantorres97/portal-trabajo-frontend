@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { connection } from "next/server";
 import { ArrowLeft, BadgeCheck, Briefcase, CalendarCheck, MapPin, MessageCircle, ShieldCheck } from "lucide-react";
 
+import { ResenasPublicas } from "@/components/reviews/ResenasPublicas";
 import { Estrellas } from "@/components/site/Estrellas";
 import { JsonLd } from "@/components/site/JsonLd";
 import { Avatar, Disponibilidad, fotoTrabajador } from "@/components/site/WorkerCard";
@@ -11,6 +12,7 @@ import { boton } from "@/components/ui/boton";
 import { formatearTarifa } from "@/lib/busqueda";
 import { publicEnv } from "@/lib/env.public";
 import { cn } from "@/lib/utils";
+import { listPublicWorkerReviews, listReviewReportReasons } from "@/server/reviews/reviews";
 import { getPublicWorker } from "@/server/search/workers";
 
 export async function generateMetadata({ params }: PageProps<"/trabajadores/[id]">): Promise<Metadata> {
@@ -32,6 +34,7 @@ export default async function TrabajadorPage({ params }: PageProps<"/trabajadore
   const { id } = await params;
   const w = await getPublicWorker(id);
   if (!w) notFound();
+  const [resenas, motivos] = await Promise.all([listPublicWorkerReviews(w.id), listReviewReportReasons()]);
 
   return (
     <>
@@ -49,6 +52,17 @@ export default async function TrabajadorPage({ params }: PageProps<"/trabajadore
             addressCountry: "EC",
           },
           url: `${publicEnv.NEXT_PUBLIC_APP_URL}/trabajadores/${w.id}`,
+          ...(w.ratingCount > 0 && resenas.total > 0
+            ? {
+                aggregateRating: {
+                  "@type": "AggregateRating",
+                  ratingValue: w.ratingAvg,
+                  reviewCount: w.ratingCount,
+                  bestRating: 5,
+                  worstRating: 1,
+                },
+              }
+            : {}),
         }}
       />
       <div className="px-4 pt-6 sm:px-6">
@@ -161,7 +175,21 @@ export default async function TrabajadorPage({ params }: PageProps<"/trabajadore
             </p>
           </section>
 
-          {/* Fase 7: reseñas de clientes con contratación finalizada. */}
+          <section aria-labelledby="titulo-resenas" id="resenas" className="scroll-mt-24">
+            <h2 id="titulo-resenas" className="text-2xl font-extrabold">
+              Reseñas de clientes{resenas.total > 0 ? ` (${resenas.total})` : ""}
+            </h2>
+            <p className="mt-1 mb-4 text-sm text-muted-foreground">
+              Solo opinan clientes que lo contrataron por la plataforma y terminaron el trabajo.
+            </p>
+            <ResenasPublicas
+              workerId={w.id}
+              inicial={resenas.items}
+              total={resenas.total}
+              hayMasInicial={resenas.hasMore}
+              motivos={motivos}
+            />
+          </section>
         </div>
 
         <aside aria-label="Contacto">

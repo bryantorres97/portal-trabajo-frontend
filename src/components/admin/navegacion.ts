@@ -1,4 +1,14 @@
-import { ClipboardList, Flag, GraduationCap, HardHat, LayoutGrid, Tags, Users, type LucideIcon } from "lucide-react";
+import {
+  ClipboardList,
+  Flag,
+  GraduationCap,
+  HardHat,
+  LayoutGrid,
+  MessageSquareQuote,
+  Tags,
+  Users,
+  type LucideIcon,
+} from "lucide-react";
 
 export type ModuloPanel = {
   titulo: string;
@@ -47,6 +57,13 @@ export const modulosPanel: ModuloPanel[] = [
     icon: Users,
     permisos: ["user.read"],
     href: "/admin/usuarios",
+  },
+  {
+    titulo: "Reseñas",
+    detalle: "Calificaciones denunciadas: ocultar o restaurar.",
+    icon: MessageSquareQuote,
+    permisos: ["moderation.act"],
+    href: "/admin/resenas",
   },
   {
     titulo: "Denuncias",

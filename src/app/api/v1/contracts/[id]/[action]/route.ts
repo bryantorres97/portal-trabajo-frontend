@@ -17,9 +17,11 @@ import {
   disputeSchema,
 } from "@/server/domain/contracts/schemas";
 import { DomainError } from "@/server/errors";
+import { reviewSchema } from "@/server/domain/reviews/schemas";
 import { assertSameOrigin, problem, readJson, toProblem } from "@/server/http/api";
 import { apiChatUser } from "@/server/http/api-auth";
 import { requestInfo } from "@/server/http/request-info";
+import { getContractReviews, saveReview } from "@/server/reviews/reviews";
 
 type Ctx = RouteContext<"/api/v1/contracts/[id]/[action]">;
 
@@ -34,7 +36,20 @@ type Ctx = RouteContext<"/api/v1/contracts/[id]/[action]">;
  * | POST …/start · …/complete · …/confirm | — | inicio (trabajador), fin (trabajador), confirmación (cliente) |
  * | POST …/dispute  | `{ reasonCode, description }` | abrir disputa (crea una denuncia para el GAD) |
  * | DELETE …/dispute | — | retirar la disputa que abrí |
+ * | POST …/review   | `{ rating, comment? }` | calificar a la otra parte (finalizada) o editar dentro de 7 días |
+ * | GET …/review    | — | mi calificación y la recibida (si puedo verla, RN-20) |
  */
+export async function GET(_request: Request, ctx: Ctx) {
+  try {
+    const user = await apiChatUser();
+    const { id, action } = await ctx.params;
+    if (action !== "review") throw new DomainError(404, "Acción no encontrada");
+    return NextResponse.json(await getContractReviews(user, id), { headers: { "Cache-Control": "no-store" } });
+  } catch (error) {
+    return toProblem(error);
+  }
+}
+
 export async function POST(request: Request, ctx: Ctx) {
   try {
     assertSameOrigin(request);
@@ -76,6 +91,10 @@ export async function POST(request: Request, ctx: Ctx) {
       case "dispute": {
         const reportId = await disputeContract(user, id, await readJson(request, disputeSchema), info);
         return NextResponse.json({ reportId }, { status: 201, headers: { "Cache-Control": "no-store" } });
+      }
+      case "review": {
+        const reviewId = await saveReview(user, id, await readJson(request, reviewSchema), info);
+        return NextResponse.json({ id: reviewId }, { headers: { "Cache-Control": "no-store" } });
       }
       default:
         throw new DomainError(404, "Acción no encontrada");

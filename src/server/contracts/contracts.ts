@@ -49,6 +49,8 @@ export type ContractSummary = {
   confirmDueAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Finalizada y aún sin mi calificación (dentro del plazo). */
+  reviewPending: boolean;
 };
 
 export type ContractVersion = {
@@ -140,6 +142,7 @@ type SummaryRow = {
   confirm_due_at: string | null;
   created_at: string;
   updated_at: string;
+  review_pending: boolean;
 };
 
 const uuid = (id: string, mensaje = "Contratación no encontrada") => {
@@ -167,6 +170,7 @@ function mapSummary(r: SummaryRow): ContractSummary {
     confirmDueAt: r.confirm_due_at,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
+    reviewPending: r.review_pending,
   };
 }
 

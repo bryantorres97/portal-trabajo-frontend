@@ -252,7 +252,9 @@ describe("arquitectura", () => {
   it("solo el módulo de contrataciones consulta sus tablas y funciones", () => {
     const src = path.join(raiz, "src");
     const lectores = archivos(src).filter((f) =>
-      /fn_(list|get)_contracts?|fn_contract_|from\("contract(s|_terms|_events)"\)/.test(readFileSync(f, "utf8")),
+      /fn_(list|get)_contracts?|fn_contract_(?!reviews)|from\("contract(s|_terms|_events)"\)/.test(
+        readFileSync(f, "utf8"),
+      ),
     );
     expect(lectores.map((f) => path.relative(src, f).replaceAll("\\", "/"))).toEqual(["server/contracts/contracts.ts"]);
   });

@@ -26,6 +26,7 @@ import { useRealtimeChannel } from "@/components/chat/useRealtimeChannel";
 import { BarraContratos, TarjetaSistema, type ContratoChat } from "@/components/contracts/ContratoEnChat";
 import type { OpcionesFormulario } from "@/components/contracts/FormularioCondiciones";
 import { ProponerCondiciones } from "@/components/contracts/ProponerCondiciones";
+import { ReputacionCompacta } from "@/components/reviews/ReputacionCliente";
 import { Avatar } from "@/components/site/WorkerCard";
 import {
   Dialog,
@@ -44,6 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { etiquetaDia, formatearHora, mismoDia } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
+import type { ClientReputation } from "@/server/reviews/reviews";
 
 export type MensajeInicial = {
   id: number;
@@ -88,6 +90,8 @@ type Props = {
   opcionesContrato?: OpcionesFormulario | null;
   /** Se puede enviar una propuesta nueva (no hay otra abierta y el trabajador activó su cuenta). */
   puedeProponer?: boolean;
+  /** Calificaciones que recibió el cliente: solo para el trabajador (RN-20). */
+  reputacionCliente?: ClientReputation | null;
 };
 
 const MAX = 2000;
@@ -385,7 +389,13 @@ export function ChatThread(p: Props) {
             {p.myRole === "CLIENTE" && p.workerLinked && (
               <BadgeCheck className="h-3.5 w-3.5 shrink-0 text-verde-fuerte" aria-hidden />
             )}
-            <span className="truncate">{subtitulo}</span>
+            <span className="truncate">
+              {p.myRole === "TRABAJADOR" && p.reputacionCliente ? (
+                <ReputacionCompacta r={p.reputacionCliente} />
+              ) : (
+                subtitulo
+              )}
+            </span>
             {conexion === "sin-conexion" && <span className="shrink-0">· reconectando…</span>}
           </p>
         </div>

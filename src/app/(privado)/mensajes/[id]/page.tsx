@@ -6,6 +6,7 @@ import { fotoTrabajador } from "@/components/site/WorkerCard";
 import { requireConsentedPageAuth } from "@/server/auth/current-user";
 import { getConversation, listMessageReportReasons, listMessages } from "@/server/chat/chat";
 import { getContractFormOptions, listContracts } from "@/server/contracts/contracts";
+import { getClientReputation } from "@/server/reviews/reviews";
 import { DomainError } from "@/server/errors";
 
 export const metadata: Metadata = { title: "Conversación" };
@@ -25,9 +26,11 @@ export default async function ConversacionPage({ params }: PageProps<"/mensajes/
     listMessageReportReasons(),
   ]);
   const esCliente = c.myRole === "CLIENTE";
-  const [contratos, opcionesContrato] = await Promise.all([
+  const [contratos, opcionesContrato, reputacionCliente] = await Promise.all([
     listContracts(auth.user, { scope: "activas" }, c.id),
     c.workerLinked ? getContractFormOptions(auth.user, c.id) : null,
+    // RN-20: solo el trabajador ve cómo calificaron otros trabajadores a este cliente.
+    esCliente ? null : getClientReputation(auth.user, c.id),
   ]);
 
   return (
@@ -52,6 +55,7 @@ export default async function ConversacionPage({ params }: PageProps<"/mensajes/
       contratos={contratos}
       opcionesContrato={opcionesContrato}
       puedeProponer={c.workerLinked && !contratos.some((k) => k.status === "PROPUESTA_ENVIADA")}
+      reputacionCliente={reputacionCliente}
     />
   );
 }
