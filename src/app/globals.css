@@ -107,6 +107,10 @@
     var(--amarillo) 100%
   );
   --shadow-tarjeta: 0 1px 2px oklch(0.24 0.03 265 / 6%), 0 12px 28px -18px oklch(0.24 0.03 265 / 22%);
+  --shadow-suave: 0 1px 2px oklch(0.24 0.03 265 / 5%), 0 4px 14px -6px oklch(0.24 0.03 265 / 12%);
+  --shadow-elevada: 0 2px 4px oklch(0.24 0.03 265 / 6%), 0 24px 48px -20px oklch(0.24 0.03 265 / 28%);
+  /* Superficie secundaria: bandas y paneles sobre el fondo cálido. */
+  --superficie: oklch(0.965 0.012 85);
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -163,18 +167,56 @@
     border-color: var(--color-border);
   }
 
+  html {
+    scroll-padding-top: 5.5rem;
+    scrollbar-color: oklch(0.8 0.02 265) transparent;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     -webkit-tap-highlight-color: transparent;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background-color: oklch(0.52 0.16 252 / 22%);
+    color: var(--color-foreground);
   }
 
   h1,
   h2,
   h3 {
     font-family: var(--font-display);
-    letter-spacing: -0.02em;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Foco visible y consistente para teclado en todo el portal. */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-muted-foreground);
+    opacity: 1;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -188,9 +230,34 @@
   background-image: var(--gradient-marca);
 }
 
+@utility superficie {
+  background-color: var(--superficie);
+}
+
+@layer components {
+  .contenedor {
+    margin-inline: auto;
+    width: 100%;
+    max-width: 72rem;
+    padding-inline: 1rem;
+  }
+  @media (width >= 40rem) {
+    .contenedor {
+      padding-inline: 1.5rem;
+    }
+  }
+}
+
+/* Panel blanco sin borde marcado, para agrupar contenido sin "cajas" pesadas. */
+@utility panel {
+  background-color: var(--color-card);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-suave);
+}
+
 @utility tarjeta {
   background-color: var(--color-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-tarjeta);
+  border: 1px solid oklch(0.9 0.012 90 / 70%);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-suave);
 }

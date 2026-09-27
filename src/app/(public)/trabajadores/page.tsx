@@ -20,7 +20,6 @@ export default function TrabajadoresPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Trabajadores de oficio"
         titulo="Tu oficio, con respaldo municipal"
         descripcion="Regístrate gratis en Acolita.App y muestra a toda la ciudad que fuiste capacitado y habilitado por el Municipio de Ambato."
       />

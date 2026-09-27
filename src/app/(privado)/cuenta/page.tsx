@@ -80,7 +80,6 @@ export default async function CuentaPage({ searchParams }: PageProps<"/cuenta">)
   return (
     <>
       <PageHeader
-        eyebrow="Mi cuenta"
         titulo={auth ? `Hola${auth.user.displayName ? `, ${auth.user.displayName}` : ""}` : "Ingresa a Acolita.App"}
         descripcion={
           auth

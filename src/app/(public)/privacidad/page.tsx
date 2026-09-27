@@ -51,7 +51,6 @@ export default function PrivacidadPage() {
   return (
     <>
       <PageHeader
-        eyebrow="LOPDP"
         titulo="Privacidad y protección de datos"
         descripcion="Acolita.App trata tus datos personales conforme a la Ley Orgánica de Protección de Datos Personales del Ecuador."
       />

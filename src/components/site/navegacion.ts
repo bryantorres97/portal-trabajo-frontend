@@ -1,26 +1,37 @@
 import {
+  FileText,
   HardHat,
+  HelpCircle,
   Home,
+  Mail,
   MessageCircle,
-  Phone,
   Search,
   ShieldCheck,
   UserRound,
   Users,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 
-export type ItemNavegacion = { href: string; label: string; icon: LucideIcon };
+export type ItemNavegacion = { href: string; label: string; icon: LucideIcon; descripcion?: string };
 
 /** Rutas que solo se marcan activas en coincidencia exacta (p. ej. /trabajadores ≠ /trabajadores/[id]). */
 const EXACTAS = new Set(["/", "/trabajadores"]);
 
+/** Destinos principales del encabezado: lo que la mayoría viene a hacer. */
 export const navPrincipal: ItemNavegacion[] = [
-  { href: "/", label: "Inicio", icon: Home },
-  { href: "/oficios", label: "Oficios", icon: HardHat },
-  { href: "/como-funciona", label: "Cómo funciona", icon: ShieldCheck },
-  { href: "/trabajadores", label: "Trabajadores", icon: Users },
-  { href: "/contacto", label: "Contacto", icon: Phone },
+  { href: "/buscar", label: "Buscar", icon: Search, descripcion: "Encuentra un trabajador habilitado" },
+  { href: "/oficios", label: "Oficios", icon: Wrench, descripcion: "Servicios y tarifas referenciales" },
+  { href: "/como-funciona", label: "Cómo funciona", icon: HelpCircle, descripcion: "El proceso y sus garantías" },
+  { href: "/trabajadores", label: "Soy trabajador", icon: HardHat, descripcion: "Cómo registrarte en el GAD" },
+];
+
+/** Información complementaria (menú móvil y pie de página). */
+export const navSecundaria: ItemNavegacion[] = [
+  { href: "/contratantes", label: "Para quien contrata", icon: Users },
+  { href: "/contacto", label: "Contacto y ayuda", icon: Mail },
+  { href: "/privacidad", label: "Privacidad y datos", icon: ShieldCheck },
+  { href: "/terminos", label: "Términos y condiciones", icon: FileText },
 ];
 
 /**
@@ -30,14 +41,9 @@ export const navPrincipal: ItemNavegacion[] = [
 export const navInferior: ItemNavegacion[] = [
   { href: "/", label: "Inicio", icon: Home },
   { href: "/buscar", label: "Buscar", icon: Search },
-  { href: "/oficios", label: "Oficios", icon: HardHat },
+  { href: "/oficios", label: "Oficios", icon: Wrench },
   { href: "/mensajes", label: "Mensajes", icon: MessageCircle },
   { href: "/cuenta", label: "Mi cuenta", icon: UserRound },
-];
-
-export const navSecundaria: ItemNavegacion[] = [
-  { href: "/contratantes", label: "Contratantes", icon: Users },
-  { href: "/privacidad", label: "Privacidad y datos", icon: ShieldCheck },
 ];
 
 export function estaActivo(pathname: string, href: string) {

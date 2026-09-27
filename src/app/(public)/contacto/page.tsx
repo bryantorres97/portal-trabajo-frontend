@@ -13,11 +13,7 @@ export const metadata: Metadata = {
 export default function ContactoPage() {
   return (
     <>
-      <PageHeader
-        eyebrow="Contacto"
-        titulo="Estamos para acolitarte"
-        descripcion={`${institucion.direccion} del ${institucion.gad}.`}
-      />
+      <PageHeader titulo="Estamos para acolitarte" descripcion={`${institucion.direccion} del ${institucion.gad}.`} />
 
       <div className="grid lg:grid-cols-2">
         <Section>

@@ -25,7 +25,6 @@ export default async function TerminosPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Documentos legales"
         titulo="Términos y condiciones"
         descripcion="Reglas de uso de la plataforma para ciudadanos y trabajadores."
       />

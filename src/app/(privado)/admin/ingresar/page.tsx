@@ -42,7 +42,6 @@ export default async function IngresoPersonalPage({ searchParams }: PageProps<"/
   return (
     <>
       <PageHeader
-        eyebrow="GAD Municipalidad de Ambato"
         titulo="Ingreso del personal"
         descripcion="El panel administrativo es solo para funcionarios del GAD, con su cuenta institucional de Microsoft 365."
       />

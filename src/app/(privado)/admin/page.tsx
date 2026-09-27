@@ -84,7 +84,6 @@ export default async function AdminPage({ searchParams }: PageProps<"/admin">) {
   return (
     <>
       <PageHeader
-        eyebrow="GAD Municipalidad de Ambato"
         titulo="Panel administrativo"
         descripcion={`${user.displayName ?? user.email ?? "Personal del GAD"} · ${user.roles.map(etiquetaRol).join(", ")}.`}
       />

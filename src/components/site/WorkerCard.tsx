@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { BadgeCheck, Briefcase, MapPin } from "lucide-react";
+import { BadgeCheck, Briefcase, MapPin, Star } from "lucide-react";
 
-import { Estrellas } from "@/components/site/Estrellas";
 import { iniciales } from "@/lib/busqueda";
 import { cn } from "@/lib/utils";
 
@@ -34,11 +33,19 @@ export function Avatar({ nombre, foto, className }: { nombre: string; foto?: str
   );
 }
 
-export function Disponibilidad({ disponible }: { disponible: boolean }) {
+export function Disponibilidad({ disponible, compacta }: { disponible: boolean; compacta?: boolean }) {
+  if (compacta) {
+    return (
+      <span className={cn("flex items-center gap-1.5 font-semibold", disponible ? "text-verde-fuerte" : "")}>
+        <span className={cn("h-2 w-2 rounded-full", disponible ? "bg-verde" : "bg-muted-foreground/50")} aria-hidden />
+        {disponible ? "Disponible" : "No disponible"}
+      </span>
+    );
+  }
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-xs font-bold",
+        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold",
         disponible ? "bg-verde/15 text-foreground" : "bg-muted text-muted-foreground",
       )}
     >
@@ -63,56 +70,68 @@ export type WorkerCardData = {
 
 export function WorkerCard({ worker, headingLevel = 3 }: { worker: WorkerCardData; headingLevel?: 2 | 3 }) {
   const Titulo = headingLevel === 2 ? "h2" : "h3";
+  const servicios = worker.services.slice(0, 3);
+  const extra = worker.services.length - servicios.length;
   return (
-    <article className="relative flex h-full flex-col gap-3 tarjeta p-4 transition-shadow focus-within:ring-2 focus-within:ring-ring hover:shadow-md">
-      <div className="flex items-start gap-3">
+    <article className="group relative flex h-full flex-col panel p-5 transition-[box-shadow,transform] duration-200 ease-out focus-within:ring-2 focus-within:ring-ring hover:-translate-y-0.5 hover:shadow-[var(--shadow-elevada)]">
+      <div className="flex items-start gap-4">
         <Avatar
           nombre={worker.displayName}
           foto={worker.hasPhoto ? fotoTrabajador(worker.id) : null}
-          className="h-14 w-14 text-lg"
+          className="h-16 w-16 text-xl"
         />
         <div className="min-w-0 flex-1">
-          <Titulo className="text-base leading-tight font-bold">
+          <Titulo className="text-lg leading-tight font-extrabold">
             <Link href={`/trabajadores/${worker.id}`} className="after:absolute after:inset-0 focus:outline-none">
               {worker.displayName}
             </Link>
           </Titulo>
-          {worker.specialty && <p className="mt-0.5 truncate text-sm text-muted-foreground">{worker.specialty}</p>}
-          <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-verde-fuerte">
-            <BadgeCheck className="h-3.5 w-3.5" aria-hidden /> Habilitado por el GAD
+          {worker.specialty && <p className="mt-0.5 line-clamp-1 text-sm text-muted-foreground">{worker.specialty}</p>}
+          <p className="mt-1.5 flex items-center gap-1.5 text-sm">
+            {worker.ratingCount > 0 ? (
+              <>
+                <Star className="h-4 w-4 fill-amarillo text-amarillo" aria-hidden />
+                <span className="font-bold tabular-nums">{worker.ratingAvg.toFixed(1)}</span>
+                <span className="text-muted-foreground tabular-nums">
+                  ({worker.ratingCount} {worker.ratingCount === 1 ? "opinión" : "opiniones"})
+                </span>
+              </>
+            ) : (
+              <span className="text-muted-foreground">Nuevo en la plataforma</span>
+            )}
           </p>
         </div>
       </div>
-      <ul className="flex flex-wrap gap-1.5" aria-label="Oficios">
-        {worker.services.map((s) => (
-          <li key={s.slug} className="rounded-lg bg-secondary px-2 py-0.5 text-xs font-semibold">
+
+      <ul className="mt-4 mb-5 flex flex-wrap gap-1.5" aria-label="Oficios">
+        {servicios.map((s) => (
+          <li key={s.slug} className="rounded-full bg-secondary px-3 py-1 text-xs font-semibold">
             {s.name}
           </li>
         ))}
+        {extra > 0 && <li className="rounded-full px-2 py-1 text-xs font-semibold text-muted-foreground">+{extra}</li>}
       </ul>
-      <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs text-muted-foreground">
-        {worker.ratingCount > 0 ? (
-          <span className="flex items-center gap-1">
-            <Estrellas valor={worker.ratingAvg} tamaño="sm" />
-            <span>
-              {worker.ratingAvg.toFixed(1)} ({worker.ratingCount})
-            </span>
-          </span>
-        ) : (
-          <span>Sin calificaciones aún</span>
-        )}
+
+      <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-1.5 border-t border-border/70 pt-4 text-sm text-muted-foreground">
+        <Disponibilidad disponible={worker.isAvailable} compacta />
         <span className="flex items-center gap-1">
-          <Briefcase className="h-3.5 w-3.5" aria-hidden />
+          <Briefcase className="h-4 w-4" aria-hidden />
           {worker.yearsExperience} {worker.yearsExperience === 1 ? "año" : "años"}
         </span>
         {worker.parish && (
-          <span className="flex items-center gap-1">
-            <MapPin className="h-3.5 w-3.5" aria-hidden />
-            {worker.parish}
+          <span className="flex min-w-0 items-center gap-1">
+            <MapPin className="h-4 w-4 shrink-0" aria-hidden />
+            <span className="truncate">{worker.parish}</span>
           </span>
         )}
       </div>
-      <Disponibilidad disponible={worker.isAvailable} />
+      <span
+        className="absolute top-4 right-4 grid h-7 w-7 place-items-center rounded-full bg-verde/15 text-verde-fuerte"
+        title="Habilitado por el GAD"
+      >
+        <BadgeCheck className="h-4 w-4" aria-hidden />
+        <span className="sr-only">Habilitado por el GAD</span>
+      </span>
     </article>
   );
 }

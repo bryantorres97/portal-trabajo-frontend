@@ -41,7 +41,6 @@ export default function ContratantesPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Contratantes"
         titulo="Contrata con seguridad"
         descripcion="Acolita.App te permite encontrar trabajadores de oficio de Ambato habilitados por el Municipio, con acuerdos registrados y respaldo institucional."
       />

@@ -27,7 +27,6 @@ export default async function TrabajadorCuentaPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Mi cuenta"
         titulo={w ? "Mi perfil de trabajador" : "Soy trabajador"}
         descripcion={
           w

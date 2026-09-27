@@ -24,7 +24,6 @@ export default async function ConsentimientoPage({ searchParams }: PageProps<"/c
   return (
     <>
       <PageHeader
-        eyebrow="Antes de continuar"
         titulo="Términos y tratamiento de datos"
         descripcion="Para usar tu cuenta necesitamos que leas y aceptes la versión vigente de estos documentos."
       />

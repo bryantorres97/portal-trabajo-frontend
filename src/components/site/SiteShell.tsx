@@ -3,72 +3,136 @@ import type { ReactNode } from "react";
 
 import { MensajesProvider } from "@/components/chat/MensajesProvider";
 import { BottomNav } from "@/components/site/BottomNav";
-import { LogoInstitucional } from "@/components/site/Logo";
+import { Logo, LogoInstitucional } from "@/components/site/Logo";
+import { navPrincipal, navSecundaria } from "@/components/site/navegacion";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { institucion } from "@/content/site";
+import { cn } from "@/lib/utils";
 
 export function SiteShell({ children }: { children: ReactNode }) {
   return (
     <MensajesProvider>
-      <div className="min-h-screen bg-background pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0">
+      <div className="flex min-h-screen flex-col overflow-x-clip bg-background pb-[calc(4.75rem+env(safe-area-inset-bottom))] md:pb-0">
         <a
           href="#contenido"
           className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded-lg focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
         >
           Saltar al contenido
         </a>
-        <div className="h-1.5 w-full barra-marca" />
+        <div className="h-1 w-full barra-marca" />
         <SiteHeader />
 
-        <main id="contenido" className="mx-auto max-w-6xl">
+        <main id="contenido" className="mx-auto w-full max-w-6xl flex-1">
           {children}
         </main>
 
-        <footer className="mx-auto max-w-6xl px-4 pt-12 pb-10">
-          <div className="tarjeta p-5">
-            <LogoInstitucional />
-            <p className="mt-3 text-sm font-semibold text-foreground">{institucion.direccion}</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Acolita.App es la plataforma municipal de intermediación laboral del {institucion.gad}. No constituye
-              relación de dependencia laboral entre las partes ni con el {institucion.gad}.
-            </p>
-            <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
-              <Link href="/contacto" className="font-semibold text-primary">
-                Contacto
-              </Link>
-              <Link href="/privacidad" className="font-semibold text-primary">
-                Privacidad y derechos del titular
-              </Link>
-              <Link href="/terminos" className="font-semibold text-primary">
-                Términos y condiciones
-              </Link>
-            </div>
-            <p className="mt-4 text-xs text-muted-foreground">
-              © {new Date().getFullYear()} {institucion.gad}. Tarifas referenciales, no vinculantes.
-            </p>
-          </div>
-        </footer>
-
+        <PiePagina />
         <BottomNav />
       </div>
     </MensajesProvider>
   );
 }
 
-export function PageHeader({ eyebrow, titulo, descripcion }: { eyebrow: string; titulo: string; descripcion: string }) {
+function PiePagina() {
   return (
-    <header className="px-4 pt-8 pb-6">
-      <p className="text-xs font-bold tracking-[0.18em] text-primary uppercase">{eyebrow}</p>
-      <h1 className="mt-2 text-3xl leading-tight font-extrabold sm:text-4xl">{titulo}</h1>
-      <p className="mt-3 max-w-3xl text-base leading-relaxed text-muted-foreground">{descripcion}</p>
+    <footer className="mt-16 superficie">
+      <div className="contenedor grid gap-10 py-12 md:grid-cols-[1.4fr_1fr_1fr]">
+        <div className="max-w-sm">
+          <Logo />
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+            Plataforma municipal que conecta a la ciudadanía con trabajadores de oficio registrados, capacitados y
+            habilitados por el Municipio.
+          </p>
+          <div className="mt-6 flex items-center gap-3">
+            <span className="h-10 w-1 rounded-full barra-marca" aria-hidden />
+            <LogoInstitucional />
+          </div>
+          <p className="mt-2 text-xs text-muted-foreground">{institucion.direccion}</p>
+        </div>
+        <nav aria-label="Portal">
+          <h2 className="font-sans text-sm font-bold tracking-normal">Portal</h2>
+          <ul className="mt-3 space-y-1">
+            {navPrincipal.map((i) => (
+              <li key={i.href}>
+                <EnlacePie href={i.href}>{i.label}</EnlacePie>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <nav aria-label="Información">
+          <h2 className="font-sans text-sm font-bold tracking-normal">Información</h2>
+          <ul className="mt-3 space-y-1">
+            {navSecundaria.map((i) => (
+              <li key={i.href}>
+                <EnlacePie href={i.href}>{i.label}</EnlacePie>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+      <div className="border-t border-border/70">
+        <p className="contenedor flex flex-col gap-1 py-5 text-xs text-muted-foreground sm:flex-row sm:justify-between">
+          <span>
+            © {new Date().getFullYear()} {institucion.gad}. Tarifas referenciales, no vinculantes.
+          </span>
+          <span>No constituye relación de dependencia laboral entre las partes ni con el GAD.</span>
+        </p>
+      </div>
+    </footer>
+  );
+}
+
+function EnlacePie({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <Link
+      href={href}
+      className="inline-flex min-h-9 items-center text-sm text-muted-foreground underline-offset-4 transition-colors hover:text-foreground hover:underline"
+    >
+      {children}
+    </Link>
+  );
+}
+
+/** Encabezado de página. Sin etiqueta sobre el título: el título habla por sí mismo. */
+export function PageHeader({
+  titulo,
+  descripcion,
+  children,
+  className,
+}: {
+  titulo: string;
+  descripcion?: string;
+  /** Acciones o contenido extra bajo la descripción. */
+  children?: ReactNode;
+  className?: string;
+}) {
+  return (
+    <header className={cn("px-4 pt-10 pb-6 sm:px-6 lg:pt-14", className)}>
+      <h1 className="max-w-4xl text-[2rem] leading-[1.1] font-extrabold sm:text-5xl">{titulo}</h1>
+      {descripcion && (
+        <p className="mt-4 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">{descripcion}</p>
+      )}
+      {children}
     </header>
   );
 }
 
-export function Section({ titulo, children }: { titulo?: string; children: ReactNode }) {
+export function Section({
+  titulo,
+  descripcion,
+  children,
+  className,
+}: {
+  titulo?: string;
+  descripcion?: string;
+  children: ReactNode;
+  className?: string;
+}) {
   return (
-    <section className="px-4 py-6">
-      {titulo && <h2 className="mb-4 text-xl font-extrabold sm:text-2xl">{titulo}</h2>}
+    <section className={cn("px-4 py-6 sm:px-6", className)}>
+      {titulo && <h2 className="text-2xl font-extrabold sm:text-3xl">{titulo}</h2>}
+      {descripcion && <p className="mt-2 max-w-2xl text-muted-foreground">{descripcion}</p>}
+      {(titulo || descripcion) && <div className="mb-5" />}
       {children}
     </section>
   );
