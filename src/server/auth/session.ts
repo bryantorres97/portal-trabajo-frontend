@@ -227,9 +227,18 @@ export async function revokeEncryptedTokens(tokensEnc: string[]): Promise<void> 
 
 /**
  * Revoca sesiones del usuario: una en particular o todas ("cerrar sesión en todos los dispositivos").
- * Devuelve cuántas se revocaron. También revoca los refresh tokens en Cognito.
+ * Devuelve cuántas sesiones web se revocaron. También revoca sus refresh tokens en Cognito.
+ * Al cerrar todas, marca `users.tokens_valid_after`: la app móvil guarda sus propios tokens y
+ * deja de ser aceptada hasta que vuelva a iniciar sesión (ver `findBearerUserId`).
  */
 export async function revokeUserSessions(userId: string, sessionId?: string): Promise<number> {
+  if (!sessionId) {
+    const { error } = await getAdminDb()
+      .from("users")
+      .update({ tokens_valid_after: new Date().toISOString() })
+      .eq("id", userId);
+    if (error) throw error;
+  }
   let query = getAdminDb()
     .from("auth_sessions")
     .update({ revoked_at: new Date().toISOString() })

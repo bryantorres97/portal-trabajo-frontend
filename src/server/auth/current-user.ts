@@ -10,7 +10,7 @@ import { hasPermission } from "@/server/auth/authorize";
 import { STAFF_SIGNIN_PATH } from "@/server/auth/entra";
 import { resolveSession, type AuthSource, type SessionIdentity } from "@/server/auth/session";
 import { SESSION_COOKIE } from "@/server/auth/session-cookie";
-import { findUserIdByIdentity, loadUser, type AppUser } from "@/server/auth/users";
+import { findBearerUserId, findUserIdByIdentity, loadUser, type AppUser } from "@/server/auth/users";
 import { verifyAccessToken } from "@/server/auth/verify";
 import { getPendingConsents } from "@/server/users/consents";
 
@@ -67,7 +67,8 @@ export async function getCurrentUser(): Promise<AppUser | null> {
  * Usuario de un request de API: primero `Authorization: Bearer <access_token>`
  * (clientes móviles), luego la cookie de sesión web. Con Bearer se devuelve el usuario
  * aunque esté bloqueado, para que la autorización responda 403 (no 401). Un Bearer de Cognito
- * nunca lleva permisos internos (ADR-012).
+ * nunca lleva permisos internos (ADR-012). Un token autenticado antes del último «cerrar sesión en
+ * todos los dispositivos» no resuelve usuario (401): la app debe volver a ingresar.
  */
 export async function getRequestUser(): Promise<AppUser | null> {
   const authorization = (await headers()).get("authorization");
@@ -75,7 +76,7 @@ export async function getRequestUser(): Promise<AppUser | null> {
     if (!isAuthConfigured()) return null;
     try {
       const claims = await verifyAccessToken(authorization.slice("Bearer ".length).trim());
-      const userId = await findUserIdByIdentity(claims.iss, claims.sub);
+      const userId = await findBearerUserId(claims.iss, claims.sub, claims.auth_time ?? claims.iat);
       return userId ? await loadUser(userId, { source: "COGNITO" }) : null;
     } catch {
       return null;

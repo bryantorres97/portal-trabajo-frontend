@@ -17,7 +17,7 @@ La validación está en `src/lib/env.ts` (servidor, `server-only`) y `src/lib/en
 | `COGNITO_DOMAIN` | Cognito | No | Dominio del pool dev | Idem | Dominio del pool de staging | `ambato-contribuyentes.auth.us-east-2.amazoncognito.com` |
 | `COGNITO_SCOPES` | Cognito | No | `openid email profile` | Idem | Idem | Idem (el pool del GAD no soporta `phone`) |
 | `COGNITO_IDENTITY_PROVIDERS` | Cognito | No | Vacío (o `Google` si el pool dev lo tiene) | Idem | Idem | `Google` (Facebook cuando el GAD lo confirme) |
-| `COGNITO_EXTRA_CLIENT_IDS` | Cognito | No | Vacío | Vacío | Client móvil (Fase 11) | Client móvil |
+| `COGNITO_EXTRA_CLIENT_IDS` | Cognito | No | Client móvil del pool dev (para probar la app) | Idem | Client móvil (Fase 11) | Client móvil del pool del GAD |
 | `ENTRA_TENANT_ID` | Entra ID | No | Tenant propio de prueba | Idem | Idem | Tenant del GAD |
 | `ENTRA_CLIENT_ID` | Entra ID | No | App `acolita-admin-dev` | Idem (otro redirect URI) | Idem | App registration del GAD |
 | `ENTRA_CLIENT_SECRET` | Entra ID | No | Secreto de la app de prueba | Secreto | Secreto | Secreto (o certificado) del GAD |

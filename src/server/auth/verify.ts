@@ -25,6 +25,15 @@ function crearVerificadores() {
       tokenUse: "id",
       clientId: env.COGNITO_CLIENT_ID,
     }),
+    /** ID tokens de los clientes públicos (app móvil): solo en el primer ingreso por API (`/me/bootstrap`). */
+    mobileId:
+      env.COGNITO_EXTRA_CLIENT_IDS.length > 0
+        ? CognitoJwtVerifier.create({
+            userPoolId: env.COGNITO_USER_POOL_ID,
+            tokenUse: "id",
+            clientId: env.COGNITO_EXTRA_CLIENT_IDS,
+          })
+        : null,
   };
 }
 
@@ -49,4 +58,14 @@ export async function verifyIdToken(token: string, expectedNonce?: string): Prom
     throw new Error("El nonce del ID token no coincide");
   }
   return payload;
+}
+
+/**
+ * ID token emitido para un client ID adicional (app móvil). El ID token del cliente web no se
+ * acepta aquí: la web crea el usuario en su propio callback.
+ */
+export async function verifyMobileIdToken(token: string): Promise<CognitoIdTokenPayload> {
+  const verificador = getVerifiers().mobileId;
+  if (!verificador) throw new Error("No hay client IDs adicionales configurados (COGNITO_EXTRA_CLIENT_IDS)");
+  return verificador.verify(token);
 }

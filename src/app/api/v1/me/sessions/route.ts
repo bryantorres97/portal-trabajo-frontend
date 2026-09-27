@@ -21,7 +21,11 @@ export async function GET() {
   }
 }
 
-/** DELETE /api/v1/me/sessions — cierra todas las sesiones del portal y revoca los refresh tokens. */
+/**
+ * DELETE /api/v1/me/sessions — «cerrar sesión en todos los dispositivos»: cierra las sesiones web,
+ * revoca sus refresh tokens y deja de aceptar los access tokens de la app móvil autenticados antes
+ * de este momento (la app debe volver a iniciar sesión). Funciona con cookie o con Bearer.
+ */
 export async function DELETE(request: Request) {
   try {
     assertSameOrigin(request);

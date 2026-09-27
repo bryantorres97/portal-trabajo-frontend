@@ -7,13 +7,14 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 9B (notificaciones push) implementada** (commit y migración en la nube; validación manual pendiente). **Fase 9 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 8 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 7 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
+| Fase actual | **Fase 11 (soporte de la API para la app móvil) implementada** (commit y migración en la nube; validación manual con la app pendiente). **Fase 9B (notificaciones push) implementada** (commit y migración en la nube; validación manual pendiente). **Fase 9 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 8 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 7 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
 | Siguiente fase | Fase 10 — Calidad y producción |
 | Rama de trabajo | `development` · último commit: Fase 9B (notificaciones push). Se commitea solo con confirmación del usuario |
-| Última actualización | 2026-09-27 |
+| Última actualización | 2026-09-28 |
 
 ## Siguiente paso concreto
 
+0. **Fase 11**: commit y migración en la nube ✅. Falta crear el app client público en el pool dev, agregarlo a `COGNITO_EXTRA_CLIENT_IDS` y validar con la app (`docs/phases/fase-11-app-movil.md`).
 1. ~~Commit de Fase 0 + 1~~ ✅ `b208b58`.
 2. **Probar el login real con el pool dev** (B2). Todo está listo: `.env.local` completo, migraciones aplicadas en el proyecto Supabase dev en la nube (`Portal Empleo`), callback `http://localhost:3000/api/auth/callback` aceptado por Cognito. Solo falta que el usuario inicie sesión en el navegador (`pnpm dev` → `/cuenta`). Checklist en `docs/setup/cognito-dev.md`.
 3. Solicitar al GAD el App Client del portal (P-02). Preguntas abiertas: P-02, P-06, P-13, P-15, P-20 (P-21 decidida: Entra ID para el personal, ADR-012). Pedir al GAD el app registration de Entra (texto listo en `docs/setup/entra-dev.md` §4).
@@ -74,7 +75,7 @@ Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al 
 - [x] Fase 9 — Panel administrativo → `docs/phases/fase-09-panel-administrativo.md` · migración en la nube · validación manual pendiente
 - [x] Fase 9B — Notificaciones push (FCM, avisos del GAD por segmento) → `docs/phases/fase-09b-notificaciones-push.md` (ADR-015) · migración en la nube · validación manual pendiente
 - [ ] Fase 10 — Calidad y producción
-- [ ] Fase 11 — Aplicación móvil (arquitectura)
+- [x] Fase 11 — Soporte de la API para la app móvil → `docs/phases/fase-11-app-movil.md` (ADR-016; la app se planifica en `../portal_empleo_mobile_app/docs`) · migración en la nube · validación manual pendiente
 
 ## Comandos de verificación
 
@@ -116,3 +117,5 @@ pgTAP, integración y E2E con datos corren en el **CI** (base efímera). Para va
 | 2026-09-27 | Migración `fotos_oficios_unsplash` aplicada en la nube con confirmación del usuario: las 10 rutas del catálogo apuntan a las fotos nuevas (verificado en `/`, `/oficios` y el detalle); se retiran las fotos anteriores. |
 | 2026-09-27 | Proyecto Firebase de pruebas (`acolita-3fa4a`) creado por el usuario; cuenta de servicio verificada contra FCM (`validate_only`) y `CRON_SECRET` agregado. **Fase 9B implementada** (ADR-015): avisos del GAD a todos los dispositivos, usuarios, solo clientes, solo trabajadores o personas y dispositivos elegidos, con plataformas, programación, cancelación, bandeja opcional, auditoría y permiso `notifications.broadcast`; entregas por dispositivo con reintentos; dispositivos anónimos de la app; preferencia de avisos; push en el navegador (service worker propio) ligado a la sesión; despacho con `after()` y Vercel Cron. Corregido: el despachador desactivaba dispositivos ante cualquier INVALID_ARGUMENT y el enlace http de local invalidaba el mensaje. Validación en la nube con transacción revertida: 46/46 (Fases 5, 6 y 8 sin regresiones). Unit 448. |
 | 2026-09-27 | Migración `notificaciones_push` aplicada en la nube con confirmación del usuario (advisors sin observaciones, `notifications.broadcast` asignado). Verificado en el servidor local: despachador protegido por `CRON_SECRET`, validación de tokens anónimos contra FCM, CSP. |
+| 2026-09-28 | **Fase 11 implementada** (pedido del usuario: cubrir los huecos de la API que detectó el análisis de la app móvil). `POST /me/bootstrap` (primer ingreso por Bearer con verificador de ID token solo para clientes móviles), cierre global que alcanza a la app (`users.tokens_valid_after` y `auth_time`, ADR-016), `/me/unread` con Bearer, foto y propuesta del trabajador por API, `/report-reasons`, `/content/faq` y `/content/legal/{code}`, y **OpenAPI 3.1** en `/api/v1/openapi.json` (entradas desde Zod, respuestas verificadas contra los tipos del servidor, test que exige documentar cada Route Handler). Unit 474; lint, formato, tipos y build OK. Migración validada en la nube con transacción revertida (3/3, sin regresiones). |
+| 2026-09-28 | Migración `app_movil` aplicada en la nube con confirmación del usuario (columna verificada, ninguna cuenta marcada, caché de PostgREST recargada, advisors sin observaciones). Commit de la Fase 11. |

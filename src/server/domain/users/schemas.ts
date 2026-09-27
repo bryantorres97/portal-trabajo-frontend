@@ -52,3 +52,8 @@ export const userSearchSchema = z.object({
   q: opcional(z.string().trim().max(120)),
   page: z.coerce.number().int().min(1).max(1000).default(1),
 });
+
+/** Primer ingreso de la app móvil: el ID token del mismo inicio de sesión que el access token (Bearer). */
+export const mobileBootstrapSchema = z.object({
+  idToken: z.string({ error: "Falta el ID token" }).min(20, "ID token inválido").max(8192, "ID token inválido"),
+});

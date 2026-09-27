@@ -2,7 +2,13 @@ import type { Jwk } from "aws-jwt-verify/jwk";
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 
-import { getVerifiers, resetVerifiersForTests, verifyAccessToken, verifyIdToken } from "@/server/auth/verify";
+import {
+  getVerifiers,
+  resetVerifiersForTests,
+  verifyAccessToken,
+  verifyIdToken,
+  verifyMobileIdToken,
+} from "@/server/auth/verify";
 
 /**
  * Verificación de JWT con un JWKS de prueba (sin AWS): se firma con una clave RSA local
@@ -42,9 +48,10 @@ beforeAll(async () => {
   privateKey = par.privateKey;
   jwk = { ...(await exportJWK(par.publicKey)), kty: "RSA", kid: KID, alg: "RS256", use: "sig" } as Jwk;
   resetVerifiersForTests();
-  const { access, id } = getVerifiers();
+  const { access, id, mobileId } = getVerifiers();
   access.cacheJwks({ keys: [jwk] });
   id.cacheJwks({ keys: [jwk] });
+  mobileId?.cacheJwks({ keys: [jwk] });
 });
 
 afterAll(() => {
@@ -110,5 +117,22 @@ describe("verifyIdToken", () => {
   it("rechaza un ID token emitido para el cliente móvil (solo web usa ID tokens aquí)", async () => {
     const token = await firmar({ sub: "abc", token_use: "id", aud: MOVIL, nonce: "n1" });
     await expect(verifyIdToken(token, "n1")).rejects.toThrow();
+  });
+});
+
+describe("verifyMobileIdToken (primer ingreso de la app, /me/bootstrap)", () => {
+  it("acepta un ID token emitido para el cliente móvil", async () => {
+    const token = await firmar({ sub: "abc", token_use: "id", aud: MOVIL });
+    await expect(verifyMobileIdToken(token)).resolves.toMatchObject({ sub: "abc", aud: MOVIL });
+  });
+
+  it("rechaza el ID token del cliente web y los de otros clientes", async () => {
+    await expect(verifyMobileIdToken(await firmar({ sub: "abc", token_use: "id", aud: CLIENT }))).rejects.toThrow();
+    await expect(verifyMobileIdToken(await firmar({ sub: "abc", token_use: "id", aud: "otro" }))).rejects.toThrow();
+  });
+
+  it("rechaza un access token usado como ID token", async () => {
+    const token = await firmar({ sub: "abc", token_use: "access", client_id: MOVIL });
+    await expect(verifyMobileIdToken(token)).rejects.toThrow();
   });
 });

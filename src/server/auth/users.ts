@@ -147,6 +147,41 @@ export async function findUserIdByIdentity(issuer: string, sub: string): Promise
 }
 
 /**
+ * Un token cuya autenticación original (`auth_time`, en segundos; Cognito la conserva al renovar)
+ * es anterior al último «cerrar sesión en todos los dispositivos» ya no vale. Se compara por
+ * segundo completo: un ingreso en el mismo segundo del cierre sigue valiendo.
+ */
+export function isAuthTimeRevoked(authTime: number, tokensValidAfter: string | null): boolean {
+  if (!tokensValidAfter) return false;
+  return authTime < Math.floor(Date.parse(tokensValidAfter) / 1000);
+}
+
+/** Dueño de una identidad y su marca de cierre global (`users.tokens_valid_after`). */
+export async function findIdentityOwner(
+  issuer: string,
+  sub: string,
+): Promise<{ userId: string; tokensValidAfter: string | null } | null> {
+  const { data, error } = await getAdminDb()
+    .from("user_identities")
+    .select("user_id, users(tokens_valid_after)")
+    .eq("issuer", issuer)
+    .eq("sub", sub)
+    .maybeSingle<{ user_id: string; users: { tokens_valid_after: string | null } | null }>();
+  if (error) throw error;
+  return data ? { userId: data.user_id, tokensValidAfter: data.users?.tokens_valid_after ?? null } : null;
+}
+
+/**
+ * Usuario de un access token presentado como Bearer (app móvil): dueño de la identidad y que no
+ * haya cerrado todas sus sesiones después de autenticarse. `null` si no aplica.
+ */
+export async function findBearerUserId(issuer: string, sub: string, authTime: number): Promise<string | null> {
+  const identidad = await findIdentityOwner(issuer, sub);
+  if (!identidad || isAuthTimeRevoked(authTime, identidad.tokensValidAfter)) return null;
+  return identidad.userId;
+}
+
+/**
  * Carga el usuario con sus roles vigentes y permisos efectivos.
  * Con `source`, solo cuentan los roles que valen en ese tipo de sesión (ADR-012): los internos
  * en sesiones de Entra ID y los ciudadanos en sesiones de Cognito. Sin `source` (vistas

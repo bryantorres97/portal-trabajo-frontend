@@ -211,3 +211,12 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - Despacho: al responder (`after()`) tras cada acción que genera push y con Vercel Cron cada minuto (`/api/internal/outbox`) para reintentos y avisos programados. **Requiere el plan Pro de Vercel** (Hobby solo admite tareas diarias); la alternativa es pg_cron + pg_net llamando al mismo endpoint.
   - Permiso nuevo `notifications.broadcast` (ADMIN_SISTEMA); crear y cancelar se auditan. Máximo 20 avisos por hora por funcionario.
 - **Consecuencias:** conteos exactos (entregados, fallidos, descartados) y tokens inválidos desactivados; con cientos de miles de dispositivos habrá que evaluar temas de FCM o más concurrencia.
+
+## ADR-016 — Soporte de la app móvil: primer ingreso por API y cierre global por `auth_time`
+
+- **Estado:** ACEPTADA (2026-09-28). Parte de la Fase 11; la app vive en `../portal_empleo_mobile_app` (sus decisiones: ADR-M01…M06 en su `docs/DECISIONS.md`).
+- **Contexto:** la app usa un app client **público** de Cognito con PKCE y guarda sus propios tokens (ADR-M02 de la app). El servidor no los conoce: no hay fila en `auth_sessions`. Faltaban el alta del usuario (solo ocurría en `/api/auth/callback`) y una forma de "cerrar en todos los dispositivos" que alcance a la app.
+- **Decisión:**
+  - `POST /api/v1/me/bootstrap` con `Authorization: Bearer <access token>` + `{ idToken }`. El ID token se verifica con un verificador aparte que **solo** acepta los client IDs de `COGNITO_EXTRA_CLIENT_IDS` (el verificador del web sigue aceptando solo `COGNITO_CLIENT_ID`); ambos tokens deben tener el mismo `sub` y el ID token debe estar emitido para el `client_id` del access token. Reutiliza `upsertUserFromLogin` y audita `USER_FIRST_LOGIN`/`USER_LOGIN` con `channel: "APP"`. Idempotente.
+  - Cierre global: `revokeUserSessions(userId)` (sin sesión concreta) marca `users.tokens_valid_after = now()`. Un Bearer cuyo `auth_time` (Cognito lo conserva al renovar con el refresh token) sea anterior a la marca no resuelve usuario (401). La app debe volver a iniciar sesión. Se descartó `GlobalSignOut` de Cognito: exige el scope `aws.cognito.signin.user.admin`, que el portal no pide, y no invalida los access tokens ya emitidos.
+- **Consecuencias:** un access token robado deja de servir tras el cierre global aunque no haya vencido. Cerrar una sola sesión web no afecta a la app.
