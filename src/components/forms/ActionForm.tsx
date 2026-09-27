@@ -13,6 +13,8 @@ type Props = {
   submitLabel: string;
   pendingLabel?: string;
   variant?: "primary" | "secondary" | "danger";
+  /** "sm" para acciones en línea (validar, revocar…) en listas densas del panel. */
+  tamano?: "sm" | "md";
   className?: string;
   /** Oculta el mensaje de éxito (p. ej. cuando la acción redirige). */
   silentSuccess?: boolean;
@@ -27,6 +29,7 @@ export function ActionForm({
   submitLabel,
   pendingLabel = "Guardando…",
   variant = "primary",
+  tamano = "md",
   className,
   silentSuccess,
 }: Props) {
@@ -55,7 +58,7 @@ export function ActionForm({
         type="submit"
         disabled={pending}
         aria-disabled={pending}
-        className={boton({ variante: variantes[variant], tamano: "md" })}
+        className={boton({ variante: variantes[variant], tamano })}
       >
         {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
         {pending ? pendingLabel : submitLabel}

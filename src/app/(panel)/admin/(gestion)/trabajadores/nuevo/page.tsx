@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { Section } from "@/components/site/SiteShell";
 import { requirePagePermission } from "@/server/auth/current-user";
 import { getWorkerFormOptions } from "@/server/workers/admin";
 
@@ -21,9 +20,9 @@ export default async function NuevoTrabajadorPage() {
         titulo="Registrar trabajador"
         descripcion="Alta presencial en el punto de atención. Al final el sistema avisa si la persona podría estar ya registrada."
       />
-      <Section>
+      <div className="max-w-4xl">
         <WorkerWizard action={registrarTrabajador} opciones={opciones} cancelHref="/admin/trabajadores" />
-      </Section>
+      </div>
     </>
   );
 }

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { AlertTriangle, Check, Clock, ExternalLink, KeyRound, MapPin, MessageCircle, PencilLine } from "lucide-react";
 
 import { ActionForm } from "@/components/forms/ActionForm";
+import { AvanceHabilitacion, habilitacionDetenida } from "@/components/site/AvanceHabilitacion";
 import { Avatar } from "@/components/site/WorkerCard";
 import { boton } from "@/components/ui/boton";
 import { campo } from "@/components/ui/campo";
@@ -12,15 +13,6 @@ import type { OwnWorker } from "@/server/workers/public-profile";
 
 import { cambiarDisponibilidad, canjearCodigo, proponerFoto, proponerPerfil } from "./actions";
 import { InterruptorDisponibilidad, SubirFoto } from "./ControlesTrabajador";
-
-const PASOS = ["Registro", "Documentos", "Capacitación", "Habilitado"] as const;
-
-function pasoActual(s: WorkerStatus): number {
-  if (s === "REGISTRADO") return 0;
-  if (s === "DOCUMENTACION_PENDIENTE" || s === "PENDIENTE_REVISION") return 1;
-  if (s.startsWith("CAPACITACION")) return s === "CAPACITACION_APROBADA" ? 2.5 : 2;
-  return 3;
-}
 
 const QUE_SIGUE: Record<WorkerStatus, { titulo: string; texto: string; tono: "info" | "ok" | "alerta" }> = {
   REGISTRADO: {
@@ -132,9 +124,8 @@ export function VincularCuenta() {
 }
 
 export function PanelTrabajador({ w, fotoUrl }: { w: OwnWorker; fotoUrl: string | null }) {
-  const paso = pasoActual(w.status);
   const sigue = QUE_SIGUE[w.status];
-  const detenido = w.status === "SUSPENDIDO" || w.status === "INACTIVO" || w.status === "RECHAZADO";
+  const detenido = habilitacionDetenida(w.status);
 
   return (
     <div className="px-4 pt-8 pb-4 sm:px-6 lg:pt-12">
@@ -158,31 +149,7 @@ export function PanelTrabajador({ w, fotoUrl }: { w: OwnWorker; fotoUrl: string 
         <h2 id="titulo-estado" className="sr-only">
           Tu estado
         </h2>
-        {!detenido && (
-          <ol className="grid grid-cols-4 gap-2" aria-label="Avance de tu habilitación">
-            {PASOS.map((p, i) => {
-              const hecho = i < paso || (i === 3 && paso === 3);
-              const actual = !hecho && i === Math.ceil(paso);
-              return (
-                <li key={p} className="flex flex-col gap-2" aria-current={actual ? "step" : undefined}>
-                  <span
-                    className={cn("h-2 rounded-full", hecho ? "bg-verde" : actual ? "bg-primary" : "bg-secondary")}
-                  />
-                  <span
-                    className={cn(
-                      "flex items-center gap-1 text-xs font-bold sm:text-sm",
-                      hecho ? "text-verde-fuerte" : actual ? "text-primary" : "text-muted-foreground",
-                    )}
-                  >
-                    {hecho && <Check className="h-3.5 w-3.5" aria-hidden />}
-                    {p}
-                    <span className="sr-only">{hecho ? " (completado)" : actual ? " (en curso)" : " (pendiente)"}</span>
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        )}
+        {!detenido && <AvanceHabilitacion status={w.status} etiqueta="Avance de tu habilitación" />}
         <div
           className={cn(
             "flex gap-3 rounded-2xl p-4",

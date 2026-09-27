@@ -1,33 +1,30 @@
+import { Insignia } from "@/components/admin/AdminHeader";
 import { cn } from "@/lib/utils";
 import { ETIQUETAS_ESTADO, type WorkerStatus } from "@/server/domain/workers/state-machine";
 
 const estilos: Record<WorkerStatus, string> = {
-  REGISTRADO: "bg-azul/15 text-foreground",
-  DOCUMENTACION_PENDIENTE: "bg-naranja/20 text-foreground",
-  PENDIENTE_REVISION: "bg-amarillo/25 text-foreground",
-  CAPACITACION_PENDIENTE: "bg-naranja/20 text-foreground",
-  CAPACITACION_EN_PROCESO: "bg-azul/15 text-foreground",
-  CAPACITACION_APROBADA: "bg-verde/15 text-foreground",
-  HABILITADO: "bg-verde/25 text-foreground",
-  SUSPENDIDO: "bg-destructive/15 text-destructive",
-  RECHAZADO: "bg-muted text-muted-foreground",
-  INACTIVO: "bg-muted text-muted-foreground",
+  REGISTRADO: "bg-azul/12 text-foreground [--punto:var(--azul)]",
+  DOCUMENTACION_PENDIENTE: "bg-naranja/15 text-foreground [--punto:var(--naranja)]",
+  PENDIENTE_REVISION: "bg-amarillo/25 text-foreground [--punto:oklch(0.62_0.14_75)]",
+  CAPACITACION_PENDIENTE: "bg-naranja/15 text-foreground [--punto:var(--naranja)]",
+  CAPACITACION_EN_PROCESO: "bg-azul/12 text-foreground [--punto:var(--azul)]",
+  CAPACITACION_APROBADA: "bg-verde/12 text-foreground [--punto:var(--verde)]",
+  HABILITADO: "bg-verde/20 text-foreground [--punto:var(--verde-fuerte)]",
+  SUSPENDIDO: "bg-destructive/12 text-destructive [--punto:var(--destructive)]",
+  RECHAZADO: "bg-muted text-muted-foreground [--punto:var(--muted-foreground)]",
+  INACTIVO: "bg-muted text-muted-foreground [--punto:var(--muted-foreground)]",
 };
 
 export function EstadoTrabajador({ status, className }: { status: WorkerStatus; className?: string }) {
-  return (
-    <span className={cn("inline-flex rounded-lg px-2 py-0.5 text-xs font-bold", estilos[status], className)}>
-      {ETIQUETAS_ESTADO[status]}
-    </span>
-  );
+  return <Insignia className={cn(estilos[status], className)}>{ETIQUETAS_ESTADO[status]}</Insignia>;
 }
 
 const estilosDocumento: Record<string, string> = {
-  PENDIENTE: "bg-amarillo/25 text-foreground",
-  VALIDADO: "bg-verde/20 text-foreground",
-  RECHAZADO: "bg-destructive/15 text-destructive",
-  VENCIDO: "bg-naranja/20 text-foreground",
-  REEMPLAZADO: "bg-muted text-muted-foreground",
+  PENDIENTE: "bg-amarillo/25 text-foreground [--punto:oklch(0.62_0.14_75)]",
+  VALIDADO: "bg-verde/20 text-foreground [--punto:var(--verde-fuerte)]",
+  RECHAZADO: "bg-destructive/12 text-destructive [--punto:var(--destructive)]",
+  VENCIDO: "bg-naranja/15 text-foreground [--punto:var(--naranja)]",
+  REEMPLAZADO: "bg-muted text-muted-foreground [--punto:var(--muted-foreground)]",
 };
 
 const etiquetasDocumento: Record<string, string> = {
@@ -39,11 +36,7 @@ const etiquetasDocumento: Record<string, string> = {
 };
 
 export function EstadoDocumento({ status }: { status: string }) {
-  return (
-    <span className={cn("inline-flex rounded-lg px-2 py-0.5 text-xs font-bold", estilosDocumento[status])}>
-      {etiquetasDocumento[status] ?? status}
-    </span>
-  );
+  return <Insignia className={estilosDocumento[status]}>{etiquetasDocumento[status] ?? status}</Insignia>;
 }
 
 export const ETIQUETAS_INSCRIPCION: Record<string, string> = {

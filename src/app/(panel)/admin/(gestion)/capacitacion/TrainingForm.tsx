@@ -1,11 +1,9 @@
 "use client";
 
 import { ActionForm, FieldError } from "@/components/forms/ActionForm";
+import { campoCompacto } from "@/components/ui/campo";
 import type { ActionState } from "@/lib/action-state";
 import type { Training } from "@/server/workers/training";
-
-const campo =
-  "mt-1 w-full rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30 aria-[invalid=true]:border-destructive";
 
 type Accion = (prev: ActionState, formData: FormData) => Promise<ActionState>;
 
@@ -41,7 +39,7 @@ export function TrainingForm({ action, valores, pre }: { action: Accion; valores
                   defaultValue={v.code}
                   required
                   maxLength={40}
-                  className={campo}
+                  className={campoCompacto}
                   {...err("code")}
                 />
                 <FieldError id={id("code-error")} state={state} name="code" />
@@ -56,7 +54,7 @@ export function TrainingForm({ action, valores, pre }: { action: Accion; valores
                   defaultValue={v.name}
                   required
                   maxLength={120}
-                  className={campo}
+                  className={campoCompacto}
                   {...err("name")}
                 />
                 <FieldError id={id("name-error")} state={state} name="name" />
@@ -72,7 +70,7 @@ export function TrainingForm({ action, valores, pre }: { action: Accion; valores
                 defaultValue={v.description ?? ""}
                 maxLength={500}
                 rows={2}
-                className={campo}
+                className={campoCompacto}
                 {...err("description")}
               />
               <FieldError id={id("description-error")} state={state} name="description" />
@@ -82,7 +80,7 @@ export function TrainingForm({ action, valores, pre }: { action: Accion; valores
                 <label htmlFor={id("provider")} className="text-sm font-bold">
                   Modalidad
                 </label>
-                <select id={id("provider")} name="provider" defaultValue={v.provider} className={campo}>
+                <select id={id("provider")} name="provider" defaultValue={v.provider} className={campoCompacto}>
                   <option value="INTERNO">Dictado por el GAD</option>
                   <option value="EXTERNO">Externo (con evidencia)</option>
                 </select>
@@ -98,7 +96,7 @@ export function TrainingForm({ action, valores, pre }: { action: Accion; valores
                   min={1}
                   max={120}
                   defaultValue={v.validityMonths ?? ""}
-                  className={campo}
+                  className={campoCompacto}
                   {...err("validityMonths")}
                 />
                 <FieldError id={id("validityMonths-error")} state={state} name="validityMonths" />

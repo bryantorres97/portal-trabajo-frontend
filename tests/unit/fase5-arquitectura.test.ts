@@ -17,7 +17,7 @@ function archivos(dir: string): string[] {
 }
 
 const raiz = path.resolve(import.meta.dirname, "../../src");
-const admin = archivos(path.join(raiz, "app", "(privado)", "admin"));
+const admin = archivos(path.join(raiz, "app", "(panel)", "admin"));
 
 describe("el panel del GAD no accede al chat (RN-09)", () => {
   it.each(admin.map((f) => [path.relative(raiz, f), f]))("%s", (_nombre, archivo) => {

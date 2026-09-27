@@ -5,7 +5,7 @@ import { hasPermission, requirePermission } from "@/server/auth/authorize";
 import type { AppUser } from "@/server/auth/users";
 import { getAdminDb } from "@/server/db/admin";
 import { parseWorkerForm, statusChangeSchema, toWorkerRpc, workerSearchSchema } from "@/server/domain/workers/schemas";
-import { transitionPermission, type WorkerStatus } from "@/server/domain/workers/state-machine";
+import { WORKER_STATUSES, transitionPermission, type WorkerStatus } from "@/server/domain/workers/state-machine";
 import { DomainError, throwPg } from "@/server/errors";
 import { auditParams, type RequestContext } from "@/server/http/request-info";
 
@@ -48,9 +48,15 @@ function patron(q: string): string {
   return `%${q.replace(/[%_\\]/g, (c) => `\\${c}`).replace(/[,()"]/g, " ")}%`;
 }
 
-export async function searchWorkersAdmin(actor: AppUser, params: { q?: string; status?: string; page?: number }) {
+/** Filtro PostgREST: foto o cambios de perfil enviados por el trabajador y aún sin revisar. */
+const POR_REVISAR = "photo_status.eq.PENDIENTE,proposal_submitted_at.not.is.null";
+
+export async function searchWorkersAdmin(
+  actor: AppUser,
+  params: { q?: string; status?: string; pendingReview?: boolean; page?: number },
+) {
   requirePermission(actor, "worker.read");
-  const { q, status, page } = workerSearchSchema.parse(params);
+  const { q, status, pendingReview, page } = workerSearchSchema.parse(params);
   const privado = hasPermission(actor, "worker.read.private");
   let query = getAdminDb()
     .from("worker_profiles")
@@ -61,6 +67,7 @@ export async function searchWorkersAdmin(actor: AppUser, params: { q?: string; s
     .order("status_changed_at", { ascending: false })
     .range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1);
   if (status) query = query.eq("status", status);
+  const grupos: string[] = pendingReview ? [POR_REVISAR] : [];
   if (q) {
     const p = patron(q);
     const telefono = q.replace(/[\s-]/g, "");
@@ -70,8 +77,11 @@ export async function searchWorkersAdmin(actor: AppUser, params: { q?: string; s
       filtros.push(`first_names.ilike.${p}`, `last_names.ilike.${p}`, `email.ilike.${p}`);
       if (/^\d{4,10}$/.test(telefono)) filtros.push(`phone.like.${telefono}%`);
     }
-    query = query.or(filtros.join(","));
+    grupos.push(filtros.join(","));
   }
+  // Dos grupos OR se combinan con AND en un único filtro (PostgREST admite lógica anidada).
+  if (grupos.length === 1) query = query.or(grupos[0]);
+  if (grupos.length === 2) query = query.or(`and(or(${grupos[0]}),or(${grupos[1]}))`);
   const { data, error, count } = await query.returns<ListRow[]>();
   if (error) throw error;
   const items: WorkerListItem[] = (data ?? []).map((w) => ({
@@ -89,6 +99,36 @@ export async function searchWorkersAdmin(actor: AppUser, params: { q?: string; s
     pendingReview: w.photo_status === "PENDIENTE" || !!w.proposal_submitted_at,
   }));
   return { items, total: count ?? 0, page, pageSize: PAGE_SIZE };
+}
+
+export type ResumenTrabajadores = {
+  porEstado: Record<WorkerStatus, number>;
+  /** Perfiles con foto o descripción enviadas por el trabajador y pendientes de revisión. */
+  porRevisar: number;
+  /** Documentos cargados y aún sin validar. */
+  documentosPendientes: number;
+};
+
+/** Conteos para la portada del panel. Solo cifras: no expone datos de ningún trabajador. */
+export async function workerSummary(actor: AppUser): Promise<ResumenTrabajadores> {
+  requirePermission(actor, "worker.read");
+  const db = getAdminDb();
+  const contar = async (consulta: PromiseLike<{ count: number | null; error: unknown }>) => {
+    const { count, error } = await consulta;
+    if (error) throw error;
+    return count ?? 0;
+  };
+  const perfiles = () => db.from("worker_profiles").select("id", { count: "exact", head: true });
+  const [estados, porRevisar, documentosPendientes] = await Promise.all([
+    Promise.all(WORKER_STATUSES.map(async (s) => [s, await contar(perfiles().eq("status", s))] as const)),
+    contar(perfiles().neq("status", "RECHAZADO").or(POR_REVISAR)),
+    contar(db.from("worker_documents").select("id", { count: "exact", head: true }).eq("status", "PENDIENTE")),
+  ]);
+  return {
+    porEstado: Object.fromEntries(estados) as Record<WorkerStatus, number>,
+    porRevisar,
+    documentosPendientes,
+  };
 }
 
 export type WorkerDetail = Awaited<ReturnType<typeof getWorkerDetail>>;

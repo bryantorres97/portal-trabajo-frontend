@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { z } from "zod";
 
-import { AdminHeader, EstadoUsuario } from "@/components/admin/AdminHeader";
+import { AdminHeader, Bloque, EstadoUsuario } from "@/components/admin/AdminHeader";
 import { ActionForm } from "@/components/forms/ActionForm";
-import { Section } from "@/components/site/SiteShell";
+import { campoCompacto, etiqueta } from "@/components/ui/campo";
 import { etiquetaProveedor, etiquetaRol, formatearFechaHora } from "@/lib/formatos";
 import { hasPermission } from "@/server/auth/authorize";
 import { requirePagePermission } from "@/server/auth/current-user";
@@ -14,9 +14,6 @@ import { getUserDetail, listInternalRoles } from "@/server/users/admin";
 import { asignarRol, cambiarEstado, revocarRol } from "../actions";
 
 export const metadata: Metadata = { title: "Detalle de usuario · Panel GAD" };
-
-const campo =
-  "mt-1 w-full rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30";
 
 export default async function UsuarioDetallePage({ params }: PageProps<"/admin/usuarios/[id]">) {
   const { id } = await params;
@@ -41,26 +38,36 @@ export default async function UsuarioDetallePage({ params }: PageProps<"/admin/u
         descripcion={detalle.email ?? "Sin correo verificado"}
       />
 
-      <div className="grid gap-2 lg:grid-cols-2">
-        <Section titulo="Datos de la cuenta">
-          <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 tarjeta p-5 text-sm">
-            <dt className="text-muted-foreground">Estado</dt>
-            <dd>
-              <EstadoUsuario status={detalle.status} />
-              {detalle.blockedReason && <p className="mt-1 text-xs text-muted-foreground">{detalle.blockedReason}</p>}
-            </dd>
-            <dt className="text-muted-foreground">Alta</dt>
-            <dd>{formatearFechaHora(detalle.createdAt)}</dd>
-            <dt className="text-muted-foreground">Último ingreso</dt>
-            <dd>{formatearFechaHora(detalle.lastLoginAt)}</dd>
-            <dt className="text-muted-foreground">Formas de ingreso</dt>
-            <dd>{detalle.identities.map((i) => etiquetaProveedor(i.provider)).join(", ") || "—"}</dd>
+      <div className="grid items-start gap-6 lg:grid-cols-2">
+        <Bloque titulo="Datos de la cuenta">
+          <dl className="grid gap-x-6 gap-y-3.5 text-sm sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <dt className="text-xs text-muted-foreground">Estado</dt>
+              <dd className="mt-1">
+                <EstadoUsuario status={detalle.status} />
+                {detalle.blockedReason && <p className="mt-1 text-sm text-muted-foreground">{detalle.blockedReason}</p>}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Alta</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums">{formatearFechaHora(detalle.createdAt)}</dd>
+            </div>
+            <div>
+              <dt className="text-xs text-muted-foreground">Último ingreso</dt>
+              <dd className="mt-0.5 font-semibold tabular-nums">{formatearFechaHora(detalle.lastLoginAt)}</dd>
+            </div>
+            <div className="sm:col-span-2">
+              <dt className="text-xs text-muted-foreground">Formas de ingreso</dt>
+              <dd className="mt-0.5 font-semibold">
+                {detalle.identities.map((i) => etiquetaProveedor(i.provider)).join(", ") || "—"}
+              </dd>
+            </div>
           </dl>
-        </Section>
+        </Bloque>
 
-        <Section titulo="Roles">
-          <div className="space-y-4 tarjeta p-5">
-            <ul className="divide-y divide-border">
+        <Bloque titulo="Roles">
+          <div className="space-y-4">
+            <ul className="-my-2 divide-y divide-border/70">
               {detalle.roles.map((rol) => {
                 const interno = rolesInternos.some((r) => r.code === rol);
                 return (
@@ -72,6 +79,7 @@ export default async function UsuarioDetallePage({ params }: PageProps<"/admin/u
                         submitLabel="Revocar"
                         pendingLabel="…"
                         variant="secondary"
+                        tamano="sm"
                         className="flex items-center gap-2 space-y-0"
                       >
                         <input type="hidden" name="userId" value={detalle.id} />
@@ -91,10 +99,10 @@ export default async function UsuarioDetallePage({ params }: PageProps<"/admin/u
             {puedeRoles && detalle.isStaff && detalle.status === "ACTIVO" && asignables.length > 0 && (
               <ActionForm action={asignarRol} submitLabel="Asignar rol" pendingLabel="Asignando…">
                 <input type="hidden" name="userId" value={detalle.id} />
-                <label htmlFor="roleCode" className="text-sm font-bold">
+                <label htmlFor="roleCode" className={etiqueta}>
                   Asignar un rol interno
                 </label>
-                <select id="roleCode" name="roleCode" className={campo} required>
+                <select id="roleCode" name="roleCode" className={campoCompacto} required>
                   {asignables.map((r) => (
                     <option key={r.code} value={r.code}>
                       {r.name}
@@ -107,12 +115,15 @@ export default async function UsuarioDetallePage({ params }: PageProps<"/admin/u
               <p className="text-xs text-muted-foreground">Solo un administrador del sistema puede cambiar roles.</p>
             )}
           </div>
-        </Section>
+        </Bloque>
       </div>
 
       {puedeBloquear && detalle.status !== "ELIMINADO" && (
-        <Section titulo={detalle.status === "BLOQUEADO" ? "Desbloquear cuenta" : "Bloquear cuenta"}>
-          <div className="tarjeta p-5">
+        <Bloque
+          titulo={detalle.status === "BLOQUEADO" ? "Desbloquear cuenta" : "Bloquear cuenta"}
+          className="mt-6 max-w-2xl"
+        >
+          <div>
             {detalle.status === "ACTIVO" ? (
               esInterno && !puedeRoles ? (
                 <p className="text-sm text-muted-foreground">
@@ -127,7 +138,7 @@ export default async function UsuarioDetallePage({ params }: PageProps<"/admin/u
                 >
                   <input type="hidden" name="userId" value={detalle.id} />
                   <input type="hidden" name="status" value="BLOQUEADO" />
-                  <label htmlFor="reason" className="text-sm font-bold">
+                  <label htmlFor="reason" className={etiqueta}>
                     Motivo (queda registrado en la auditoría)
                   </label>
                   <textarea
@@ -137,7 +148,7 @@ export default async function UsuarioDetallePage({ params }: PageProps<"/admin/u
                     minLength={5}
                     maxLength={500}
                     rows={3}
-                    className={campo}
+                    className={campoCompacto}
                   />
                   <p className="text-xs text-muted-foreground">
                     El bloqueo cierra de inmediato todas las sesiones de la cuenta.
@@ -148,14 +159,14 @@ export default async function UsuarioDetallePage({ params }: PageProps<"/admin/u
               <ActionForm action={cambiarEstado} submitLabel="Desbloquear cuenta" pendingLabel="Desbloqueando…">
                 <input type="hidden" name="userId" value={detalle.id} />
                 <input type="hidden" name="status" value="ACTIVO" />
-                <label htmlFor="reason" className="text-sm font-bold">
+                <label htmlFor="reason" className={etiqueta}>
                   Observación (opcional)
                 </label>
-                <textarea id="reason" name="reason" maxLength={500} rows={2} className={campo} />
+                <textarea id="reason" name="reason" maxLength={500} rows={2} className={campoCompacto} />
               </ActionForm>
             )}
           </div>
-        </Section>
+        </Bloque>
       )}
     </>
   );

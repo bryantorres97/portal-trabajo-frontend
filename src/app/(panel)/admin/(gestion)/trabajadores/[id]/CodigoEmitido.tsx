@@ -35,7 +35,7 @@ export function CodigoEmitido({ code, expiresAt }: { code: string; expiresAt?: s
   const [copiado, setCopiado] = useState(false);
   return (
     <div className="rounded-xl border-2 border-dashed border-primary bg-primary/5 p-4 text-center">
-      <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">Código de activación</p>
+      <p className="text-sm font-semibold text-muted-foreground">Código de activación</p>
       <p className="mt-1 font-mono text-3xl font-extrabold tracking-[0.2em]" aria-live="polite">
         {code}
       </p>

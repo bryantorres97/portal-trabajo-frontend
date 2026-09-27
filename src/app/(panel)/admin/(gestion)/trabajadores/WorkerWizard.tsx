@@ -5,6 +5,7 @@ import { AlertTriangle, Check, ChevronLeft, ChevronRight, Loader2 } from "lucide
 import { useActionState, useMemo, useRef, useState } from "react";
 import type { z } from "zod";
 
+import { campo } from "@/components/ui/campo";
 import { cn } from "@/lib/utils";
 import {
   sugerirNombrePublico,
@@ -16,9 +17,6 @@ import {
 import { ETIQUETAS_ESTADO } from "@/server/domain/workers/state-machine";
 
 import type { WorkerFormState } from "./actions";
-
-const campo =
-  "mt-1 w-full rounded-xl border border-input bg-card px-3 py-2.5 text-base outline-none focus:border-primary focus:ring-2 focus:ring-ring/30 aria-[invalid=true]:border-destructive";
 
 type Opciones = {
   services: { id: string; name: string; category: string }[];

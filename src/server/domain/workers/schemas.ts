@@ -155,6 +155,8 @@ export function sugerirNombrePublico(nombres: string, apellidos: string): string
 export const workerSearchSchema = z.object({
   q: opcional(z.string().trim().max(120)),
   status: opcional(z.enum(WORKER_STATUSES)),
+  /** Solo perfiles con foto o cambios propuestos por revisar. */
+  pendingReview: z.boolean().default(false),
   page: z.coerce.number().int().min(1).max(1000).default(1),
 });
 

@@ -1,16 +1,15 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-import { notFound } from "next/navigation";
-import { CheckCircle2, FileText, Link2, Lightbulb, Pencil } from "lucide-react";
-import { z } from "zod";
+import { ArrowUpRight, FileText, Link2, Lightbulb, Pencil } from "lucide-react";
 
-import { AdminHeader } from "@/components/admin/AdminHeader";
+import { AdminHeader, Aviso, Bloque, Insignia } from "@/components/admin/AdminHeader";
 import { ETIQUETAS_INSCRIPCION, EstadoDocumento, EstadoTrabajador } from "@/components/admin/EstadoTrabajador";
 import { ActionForm } from "@/components/forms/ActionForm";
-import { Section } from "@/components/site/SiteShell";
+import { AvanceHabilitacion, habilitacionDetenida } from "@/components/site/AvanceHabilitacion";
+import { boton } from "@/components/ui/boton";
+import { campoCompacto, etiqueta } from "@/components/ui/campo";
 import { formatearFecha, formatearFechaHora } from "@/lib/formatos";
+import { cn } from "@/lib/utils";
 import { hasPermission } from "@/server/auth/authorize";
-import { requirePagePermission } from "@/server/auth/current-user";
 import type { AppUser } from "@/server/auth/users";
 import { formatBytes } from "@/server/domain/documents/files";
 import {
@@ -21,11 +20,9 @@ import {
   requiresReason,
   type WorkerStatus,
 } from "@/server/domain/workers/state-machine";
-import { DomainError } from "@/server/errors";
-import { currentRequestContext } from "@/server/http/request-info";
-import { getWorkerDetail, type WorkerDetail } from "@/server/workers/admin";
-import { canOpenDocument, listDocumentTypes } from "@/server/workers/documents";
-import { listTrainings } from "@/server/workers/training";
+import type { WorkerDetail } from "@/server/workers/admin";
+import { canOpenDocument, type listDocumentTypes } from "@/server/workers/documents";
+import type { listTrainings } from "@/server/workers/training";
 
 import {
   actualizarInscripcion,
@@ -39,11 +36,6 @@ import {
   subirFotoTrabajador,
 } from "../actions";
 import { EmitirCodigoForm } from "./CodigoEmitido";
-
-export const metadata: Metadata = { title: "Ficha del trabajador · Panel GAD" };
-
-const campo =
-  "mt-1 w-full rounded-xl border border-input bg-card px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-ring/30";
 
 /** Qué suele tocar a continuación, para guiar al personal en cada estado. */
 const siguientePaso: Record<WorkerStatus, string> = {
@@ -59,55 +51,89 @@ const siguientePaso: Record<WorkerStatus, string> = {
   INACTIVO: "Dado de baja. Puede reactivarse si mantiene su capacitación vigente.",
 };
 
-export default async function TrabajadorPage({ params, searchParams }: PageProps<"/admin/trabajadores/[id]">) {
-  const { id } = await params;
-  const sp = await searchParams;
-  const actor = await requirePagePermission("worker.read", `/admin/trabajadores/${id}`);
-  if (!z.uuid().safeParse(id).success) notFound();
+/** Desplegable de una acción secundaria dentro de un bloque (cargar, registrar, rechazar…). */
+const desplegable = "rounded-xl border border-border p-3 open:bg-secondary/30";
+const resumenDesplegable = "flex min-h-8 cursor-pointer items-center text-sm font-bold text-primary";
 
-  const w = await getWorkerDetail(actor, id, await currentRequestContext()).catch((e) => {
-    if (e instanceof DomainError && e.status === 404) notFound();
-    throw e;
-  });
-  const [tipos, cursos] = await Promise.all([listDocumentTypes(), listTrainings({ onlyActive: true })]);
+type Tipos = Awaited<ReturnType<typeof listDocumentTypes>>;
+type Cursos = Awaited<ReturnType<typeof listTrainings>>;
+
+/** Ficha administrativa del trabajador: estado, documentos, capacitación, perfil público y cuenta. */
+export function FichaTrabajador({
+  w,
+  actor,
+  tipos,
+  cursos,
+  aviso,
+}: {
+  w: WorkerDetail;
+  actor: AppUser;
+  tipos: Tipos;
+  cursos: Cursos;
+  aviso?: "registrado" | "guardado";
+}) {
+  const editable = hasPermission(actor, "worker.update") && !!w.private && w.status !== "RECHAZADO";
 
   return (
     <>
       <AdminHeader
         migas={[{ href: "/admin/trabajadores", label: "Trabajadores" }, { label: w.displayName }]}
         titulo={w.displayName}
-        descripcion={w.services.map((s) => s.name).join(" · ")}
-      />
+        descripcion={
+          <span className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+            <EstadoTrabajador status={w.status} />
+            {w.services.length > 0 && <span>{w.services.map((s) => s.name).join(" · ")}</span>}
+          </span>
+        }
+        acciones={
+          <>
+            {isPubliclyVisible(w.status) && (
+              <Link href={`/trabajadores/${w.id}`} className={boton({ variante: "secundario", tamano: "sm" })}>
+                <ArrowUpRight aria-hidden /> Ver perfil público
+              </Link>
+            )}
+            {editable && (
+              <Link
+                href={`/admin/trabajadores/${w.id}/editar`}
+                className={boton({ variante: "secundario", tamano: "sm" })}
+              >
+                <Pencil aria-hidden /> Editar datos
+              </Link>
+            )}
+          </>
+        }
+      >
+        {!habilitacionDetenida(w.status) && (
+          <AvanceHabilitacion status={w.status} etiqueta="Avance de la habilitación" className="mt-6 max-w-2xl" />
+        )}
+      </AdminHeader>
 
-      {(sp.registrado === "1" || sp.guardado === "1") && (
-        <Section>
-          <p role="status" className="flex gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
-            <CheckCircle2 className="h-5 w-5 shrink-0 text-verde" aria-hidden />
-            {sp.registrado === "1"
-              ? "Trabajador registrado. Continúa con los documentos, la foto y el código de activación."
-              : "Cambios guardados."}
-          </p>
-        </Section>
+      {aviso && (
+        <Aviso tipo="exito" className="mb-6">
+          {aviso === "registrado"
+            ? "Trabajador registrado. Continúa con los documentos, la foto y el código de activación."
+            : "Cambios guardados."}
+        </Aviso>
       )}
 
-      <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-        <div>
-          <Datos w={w} actor={actor} />
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
+        <div className="order-2 space-y-6 lg:order-1">
           <Documentos w={w} actor={actor} tipos={tipos} />
           <Capacitacion w={w} actor={actor} cursos={cursos} />
+          <Datos w={w} />
           <Historial w={w} />
         </div>
-        <div>
+        <div className="order-1 space-y-6 lg:order-2">
           <Estado w={w} actor={actor} />
-          <Cuenta w={w} actor={actor} />
           <PerfilPublico w={w} actor={actor} />
+          <Cuenta w={w} actor={actor} />
         </div>
       </div>
     </>
   );
 }
 
-function Datos({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
+function Datos({ w }: { w: WorkerDetail }) {
   const p = w.private;
   const filas: [string, string][] = [
     ...(p
@@ -118,7 +144,7 @@ function Datos({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
           ["Fecha de nacimiento", formatearFecha(p.birthDate)],
           ["Dirección", p.address ?? "—"],
           [
-            "Emergencia",
+            "Contacto de emergencia",
             p.emergencyContactName ? `${p.emergencyContactName} · ${p.emergencyContactPhone ?? "—"}` : "—",
           ],
         ] as [string, string][])
@@ -129,57 +155,58 @@ function Datos({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
     ["Disponible", w.isAvailable ? "Sí" : "No"],
     ["Registrado", `${formatearFecha(w.createdAt)}${w.registeredBy ? ` por ${w.registeredBy}` : ""}`],
   ];
-  const editable = hasPermission(actor, "worker.update") && !!p && w.status !== "RECHAZADO";
   return (
-    <Section titulo="Datos del trabajador">
-      <div className="tarjeta p-5">
-        {!p && (
-          <p className="mb-3 text-xs text-muted-foreground">
-            Los datos personales solo los ve el personal con permiso para ello.
-          </p>
-        )}
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
-          {filas.map(([k, v]) => (
-            <div key={k} className="contents">
-              <dt className="text-muted-foreground">{k}</dt>
-              <dd className="font-semibold break-words">{v}</dd>
-            </div>
-          ))}
-        </dl>
-        {p && <p className="mt-3 text-xs text-muted-foreground">La consulta de datos personales queda registrada.</p>}
-        {editable && (
-          <Link
-            href={`/admin/trabajadores/${w.id}/editar`}
-            className="mt-4 inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold"
-          >
-            <Pencil className="h-4 w-4" aria-hidden /> Editar datos y oficios
-          </Link>
-        )}
-      </div>
-    </Section>
+    <Bloque
+      titulo="Datos del trabajador"
+      descripcion={
+        p
+          ? "La consulta de datos personales queda registrada."
+          : "Los datos personales solo los ve el personal con permiso para ello."
+      }
+    >
+      <dl className="grid gap-x-6 gap-y-3.5 text-sm sm:grid-cols-2">
+        {filas.map(([k, v]) => (
+          <div key={k} className="min-w-0">
+            <dt className="text-xs text-muted-foreground">{k}</dt>
+            <dd className="mt-0.5 font-semibold break-words">{v}</dd>
+          </div>
+        ))}
+      </dl>
+    </Bloque>
   );
 }
 
 function Estado({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
   const acciones = manualTransitions(w.status, actor.permissions);
+  const visible = isPubliclyVisible(w.status);
   return (
-    <Section titulo="Estado">
-      <div className="space-y-4 tarjeta p-5">
-        <div>
-          <EstadoTrabajador status={w.status} className="text-sm" />
-          <p className="mt-2 text-xs text-muted-foreground">Desde {formatearFechaHora(w.statusChangedAt)}</p>
+    <Bloque
+      titulo="Estado"
+      descripcion={
+        <>
+          {ETIQUETAS_ESTADO[w.status]} desde {formatearFechaHora(w.statusChangedAt)}
           {w.status === "SUSPENDIDO" && w.suspendedUntil && (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Suspensión prevista hasta {formatearFecha(w.suspendedUntil)}
-            </p>
+            <> · suspensión prevista hasta {formatearFecha(w.suspendedUntil)}</>
           )}
-          <p className="mt-2 text-xs font-semibold">
-            {isPubliclyVisible(w.status) ? "Visible en la búsqueda pública." : "No visible en la búsqueda pública."}
-          </p>
-        </div>
-        <p className="flex gap-2 rounded-xl bg-secondary p-3 text-sm">
-          <Lightbulb className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-          {siguientePaso[w.status]}
+        </>
+      }
+    >
+      <div className="space-y-3">
+        <p
+          className={cn(
+            "flex items-center gap-2 text-sm font-semibold",
+            visible ? "text-verde-fuerte" : "text-muted-foreground",
+          )}
+        >
+          <span className={cn("h-2 w-2 rounded-full", visible ? "bg-verde" : "bg-muted-foreground/50")} aria-hidden />
+          {visible ? "Visible en la búsqueda pública" : "No visible en la búsqueda pública"}
+        </p>
+        <p className="flex gap-2.5 rounded-xl bg-primary/5 p-3 text-sm">
+          <Lightbulb className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+          <span>
+            <span className="block font-bold">Siguiente paso</span>
+            {siguientePaso[w.status]}
+          </span>
         </p>
         {acciones.map((to) => {
           const motivo = requiresReason(w.status, to);
@@ -187,10 +214,12 @@ function Estado({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
           return (
             <details
               key={to}
-              className="rounded-xl border border-border p-3"
+              className={cn(desplegable, peligrosa && "border-destructive/25")}
               open={acciones.length === 1 && !peligrosa}
             >
-              <summary className="cursor-pointer text-sm font-bold">{accionHacia(w.status, to)}</summary>
+              <summary className={cn(resumenDesplegable, peligrosa && "text-destructive")}>
+                {accionHacia(w.status, to)}
+              </summary>
               <ActionForm
                 action={cambiarEstadoTrabajador}
                 submitLabel={accionHacia(w.status, to)}
@@ -200,70 +229,68 @@ function Estado({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
               >
                 <input type="hidden" name="workerId" value={w.id} />
                 <input type="hidden" name="to" value={to} />
-                <p className="text-xs text-muted-foreground">
+                <p className="text-sm text-muted-foreground">
                   Pasará a «{ETIQUETAS_ESTADO[to]}». El cambio queda en el historial y en la auditoría.
                 </p>
-                <label htmlFor={`reason-${to}`} className="text-sm font-bold">
-                  {motivo ? "Motivo" : "Observación (opcional)"}
-                </label>
-                <textarea
-                  id={`reason-${to}`}
-                  name="reason"
-                  rows={2}
-                  maxLength={500}
-                  required={motivo}
-                  minLength={motivo ? 5 : undefined}
-                  className={campo}
-                />
+                <div>
+                  <label htmlFor={`reason-${to}`} className={etiqueta}>
+                    {motivo ? "Motivo" : "Observación (opcional)"}
+                  </label>
+                  <textarea
+                    id={`reason-${to}`}
+                    name="reason"
+                    rows={2}
+                    maxLength={500}
+                    required={motivo}
+                    minLength={motivo ? 5 : undefined}
+                    className={campoCompacto}
+                  />
+                </div>
                 {to === "SUSPENDIDO" && (
-                  <>
-                    <label htmlFor="suspendedUntil" className="text-sm font-bold">
+                  <div>
+                    <label htmlFor="suspendedUntil" className={etiqueta}>
                       Hasta (opcional)
                     </label>
-                    <input id="suspendedUntil" name="suspendedUntil" type="date" className={campo} />
-                  </>
+                    <input id="suspendedUntil" name="suspendedUntil" type="date" className={campoCompacto} />
+                  </div>
                 )}
               </ActionForm>
             </details>
           );
         })}
       </div>
-    </Section>
+    </Bloque>
   );
 }
 
-function Documentos({
-  w,
-  actor,
-  tipos,
-}: {
-  w: WorkerDetail;
-  actor: AppUser;
-  tipos: Awaited<ReturnType<typeof listDocumentTypes>>;
-}) {
+function Documentos({ w, actor, tipos }: { w: WorkerDetail; actor: AppUser; tipos: Tipos }) {
   const puedeSubir = hasPermission(actor, "document.upload") && w.status !== "RECHAZADO";
   const puedeRevisar = hasPermission(actor, "document.review");
   const vigentes = w.documents.filter((d) => d.status !== "REEMPLAZADO");
   const obligatorios = tipos.filter((t) => t.required);
   return (
-    <Section titulo="Documentos">
-      <div className="space-y-4 tarjeta p-5">
-        <p className="text-xs text-muted-foreground">
+    <Bloque
+      titulo="Documentos"
+      descripcion={
+        <>
           {obligatorios.length
             ? `Obligatorios: ${obligatorios.map((t) => t.name).join(", ")}.`
             : "Ningún documento es obligatorio por ahora (pendiente de definición del GAD)."}{" "}
-          Cada apertura de un documento queda registrada.
-        </p>
+          Cada apertura queda registrada.
+        </>
+      }
+    >
+      <div className="space-y-4">
         {w.documents.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aún no hay documentos.</p>
+          <p className="text-sm text-muted-foreground">Aún no hay documentos cargados.</p>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="-my-3 divide-y divide-border/70">
             {w.documents.map((d) => (
               <li key={d.id} className={d.status === "REEMPLAZADO" ? "py-3 opacity-60" : "py-3"}>
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="flex items-center gap-2 text-sm font-bold">
-                      <FileText className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+                      <FileText className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                       {d.typeName}
                     </p>
                     <p className="truncate text-xs text-muted-foreground">
@@ -272,28 +299,36 @@ function Documentos({
                     </p>
                     {d.reviewNote && <p className="mt-1 text-xs">Observación: {d.reviewNote}</p>}
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
                     <EstadoDocumento status={d.status} />
                     {canOpenDocument(actor, d.uploadedByMe) && (
                       <a
                         href={`/admin/trabajadores/${w.id}/documentos/${d.id}`}
                         target="_blank"
                         rel="noopener"
-                        className="text-xs font-bold text-primary underline"
+                        className="inline-flex min-h-9 items-center rounded-lg px-2 text-sm font-bold text-primary hover:bg-primary/10"
                       >
-                        Ver
+                        Abrir<span className="sr-only"> {d.typeName}</span>
                       </a>
                     )}
                   </div>
                 </div>
                 {puedeRevisar && d.status === "PENDIENTE" && (
-                  <div className="mt-2 flex flex-wrap gap-2">
-                    <ActionForm action={revisarDocumento} submitLabel="Validar" pendingLabel="…" className="space-y-0">
+                  <div className="mt-2 flex flex-wrap items-start gap-2">
+                    <ActionForm
+                      action={revisarDocumento}
+                      submitLabel="Validar"
+                      pendingLabel="…"
+                      tamano="sm"
+                      className="space-y-0"
+                    >
                       <input type="hidden" name="documentId" value={d.id} />
                       <input type="hidden" name="status" value="VALIDADO" />
                     </ActionForm>
                     <details className="flex-1">
-                      <summary className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-border px-4 text-sm font-bold">
+                      <summary
+                        className={cn(boton({ variante: "secundario", tamano: "sm" }), "cursor-pointer list-none")}
+                      >
                         Rechazar
                       </summary>
                       <ActionForm
@@ -304,10 +339,19 @@ function Documentos({
                       >
                         <input type="hidden" name="documentId" value={d.id} />
                         <input type="hidden" name="status" value="RECHAZADO" />
-                        <label htmlFor={`note-${d.id}`} className="text-sm font-bold">
-                          Motivo
-                        </label>
-                        <textarea id={`note-${d.id}`} name="note" rows={2} maxLength={500} required className={campo} />
+                        <div>
+                          <label htmlFor={`note-${d.id}`} className={etiqueta}>
+                            Motivo
+                          </label>
+                          <textarea
+                            id={`note-${d.id}`}
+                            name="note"
+                            rows={2}
+                            maxLength={500}
+                            required
+                            className={campoCompacto}
+                          />
+                        </div>
                       </ActionForm>
                     </details>
                   </div>
@@ -318,16 +362,19 @@ function Documentos({
         )}
 
         {puedeSubir && (
-          <details className="rounded-xl border border-border p-3" open={w.documents.length === 0}>
-            <summary className="cursor-pointer text-sm font-bold">Cargar documento</summary>
+          <details
+            className={cn(desplegable, "border-dashed", w.documents.length > 0 && "mt-6")}
+            open={w.documents.length === 0}
+          >
+            <summary className={resumenDesplegable}>Cargar documento</summary>
             <ActionForm action={subirDocumento} submitLabel="Cargar" pendingLabel="Subiendo…" className="mt-3">
               <input type="hidden" name="workerId" value={w.id} />
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label htmlFor="typeCode" className="text-sm font-bold">
+                  <label htmlFor="typeCode" className={etiqueta}>
                     Tipo
                   </label>
-                  <select id="typeCode" name="typeCode" required className={campo}>
+                  <select id="typeCode" name="typeCode" required className={campoCompacto}>
                     {tipos.map((t) => (
                       <option key={t.code} value={t.code}>
                         {t.name}
@@ -337,10 +384,10 @@ function Documentos({
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="replacesId" className="text-sm font-bold">
+                  <label htmlFor="replacesId" className={etiqueta}>
                     Reemplaza a <span className="font-normal text-muted-foreground">(opcional)</span>
                   </label>
-                  <select id="replacesId" name="replacesId" className={campo}>
+                  <select id="replacesId" name="replacesId" className={campoCompacto}>
                     <option value="">Ninguno</option>
                     {vigentes.map((d) => (
                       <option key={d.id} value={d.id}>
@@ -350,21 +397,21 @@ function Documentos({
                   </select>
                 </div>
                 <div>
-                  <label htmlFor="issuedAt" className="text-sm font-bold">
+                  <label htmlFor="issuedAt" className={etiqueta}>
                     Emitido <span className="font-normal text-muted-foreground">(opcional)</span>
                   </label>
-                  <input id="issuedAt" name="issuedAt" type="date" className={campo} />
+                  <input id="issuedAt" name="issuedAt" type="date" className={campoCompacto} />
                 </div>
                 <div>
-                  <label htmlFor="expiresAt" className="text-sm font-bold">
+                  <label htmlFor="expiresAt" className={etiqueta}>
                     Vence <span className="font-normal text-muted-foreground">(opcional)</span>
                   </label>
-                  <input id="expiresAt" name="expiresAt" type="date" className={campo} />
+                  <input id="expiresAt" name="expiresAt" type="date" className={campoCompacto} />
                 </div>
               </div>
               <div>
-                <label htmlFor="file" className="text-sm font-bold">
-                  Archivo (PDF, JPG, PNG o WEBP; máximo 4 MB)
+                <label htmlFor="file" className={etiqueta}>
+                  Archivo <span className="font-normal text-muted-foreground">(PDF, JPG, PNG o WEBP; máximo 4 MB)</span>
                 </label>
                 <input
                   id="file"
@@ -372,26 +419,18 @@ function Documentos({
                   type="file"
                   required
                   accept="application/pdf,image/jpeg,image/png,image/webp"
-                  className={campo}
+                  className={campoCompacto}
                 />
               </div>
             </ActionForm>
           </details>
         )}
       </div>
-    </Section>
+    </Bloque>
   );
 }
 
-function Capacitacion({
-  w,
-  actor,
-  cursos,
-}: {
-  w: WorkerDetail;
-  actor: AppUser;
-  cursos: Awaited<ReturnType<typeof listTrainings>>;
-}) {
+function Capacitacion({ w, actor, cursos }: { w: WorkerDetail; actor: AppUser; cursos: Cursos }) {
   const puedeRegistrar = hasPermission(actor, "training.record");
   const puedeAprobar = hasPermission(actor, "training.approve");
   const abiertas = new Set(
@@ -403,12 +442,12 @@ function Capacitacion({
     puedeRegistrar && w.status !== "RECHAZADO" && w.status !== "INACTIVO" && inscribibles.length > 0;
 
   return (
-    <Section titulo="Capacitación">
-      <div className="space-y-4 tarjeta p-5">
+    <Bloque titulo="Capacitación">
+      <div className="space-y-4">
         {w.enrollments.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Sin inscripciones.</p>
+          <p className="text-sm text-muted-foreground">Aún no está inscrito en ningún curso.</p>
         ) : (
-          <ul className="divide-y divide-border">
+          <ul className="-my-3 divide-y divide-border/70">
             {w.enrollments.map((e) => {
               const abierta = e.status === "INSCRITO" || e.status === "EN_PROCESO";
               const resultados = [
@@ -421,9 +460,7 @@ function Capacitacion({
                 <li key={e.id} className="py-3 text-sm">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <p className="font-bold">{e.training?.name ?? "Curso"}</p>
-                    <span className="rounded-lg bg-secondary px-2 py-0.5 text-xs font-bold">
-                      {ETIQUETAS_INSCRIPCION[e.status]}
-                    </span>
+                    <Insignia className="bg-secondary text-foreground">{ETIQUETAS_INSCRIPCION[e.status]}</Insignia>
                   </div>
                   <p className="text-xs text-muted-foreground">
                     Inscrito {formatearFecha(e.enrolledAt)}
@@ -433,16 +470,16 @@ function Capacitacion({
                   </p>
                   {e.resultNote && <p className="mt-1 text-xs">{e.resultNote}</p>}
                   {puedeRegistrar && abierta && (
-                    <details className="mt-2 rounded-xl border border-border p-3">
-                      <summary className="cursor-pointer text-sm font-bold">Registrar avance o resultado</summary>
+                    <details className={cn(desplegable, "mt-3")}>
+                      <summary className={resumenDesplegable}>Registrar avance o resultado</summary>
                       <ActionForm action={actualizarInscripcion} submitLabel="Guardar resultado" className="mt-3">
                         <input type="hidden" name="enrollmentId" value={e.id} />
                         <div className="grid gap-3 sm:grid-cols-2">
                           <div>
-                            <label htmlFor={`status-${e.id}`} className="text-sm font-bold">
+                            <label htmlFor={`status-${e.id}`} className={etiqueta}>
                               Resultado
                             </label>
-                            <select id={`status-${e.id}`} name="status" className={campo}>
+                            <select id={`status-${e.id}`} name="status" className={campoCompacto}>
                               {resultados.map((r) => (
                                 <option key={r} value={r}>
                                   {ETIQUETAS_INSCRIPCION[r]}
@@ -451,8 +488,8 @@ function Capacitacion({
                             </select>
                           </div>
                           <div>
-                            <label htmlFor={`score-${e.id}`} className="text-sm font-bold">
-                              Nota (0–100, opcional)
+                            <label htmlFor={`score-${e.id}`} className={etiqueta}>
+                              Nota <span className="font-normal text-muted-foreground">(0–100, opcional)</span>
                             </label>
                             <input
                               id={`score-${e.id}`}
@@ -461,15 +498,16 @@ function Capacitacion({
                               min={0}
                               max={100}
                               step="0.01"
-                              className={campo}
+                              className={campoCompacto}
                             />
                           </div>
                         </div>
                         <div>
-                          <label htmlFor={`evidence-${e.id}`} className="text-sm font-bold">
-                            Evidencia (documento cargado, opcional)
+                          <label htmlFor={`evidence-${e.id}`} className={etiqueta}>
+                            Evidencia{" "}
+                            <span className="font-normal text-muted-foreground">(documento cargado, opcional)</span>
                           </label>
-                          <select id={`evidence-${e.id}`} name="evidenceDocumentId" className={campo}>
+                          <select id={`evidence-${e.id}`} name="evidenceDocumentId" className={campoCompacto}>
                             <option value="">Sin evidencia</option>
                             {evidencias.map((d) => (
                               <option key={d.id} value={d.id}>
@@ -479,10 +517,19 @@ function Capacitacion({
                           </select>
                         </div>
                         <div>
-                          <label htmlFor={`note-e-${e.id}`} className="text-sm font-bold">
-                            Observación (obligatoria si reprueba o abandona)
+                          <label htmlFor={`note-e-${e.id}`} className={etiqueta}>
+                            Observación{" "}
+                            <span className="font-normal text-muted-foreground">
+                              (obligatoria si reprueba o abandona)
+                            </span>
                           </label>
-                          <textarea id={`note-e-${e.id}`} name="note" rows={2} maxLength={500} className={campo} />
+                          <textarea
+                            id={`note-e-${e.id}`}
+                            name="note"
+                            rows={2}
+                            maxLength={500}
+                            className={campoCompacto}
+                          />
                         </div>
                         {!puedeAprobar && (
                           <p className="text-xs text-muted-foreground">
@@ -498,37 +545,48 @@ function Capacitacion({
           </ul>
         )}
         {puedeInscribir && (
-          <ActionForm action={inscribirCapacitacion} submitLabel="Inscribir" pendingLabel="Inscribiendo…">
+          <ActionForm
+            action={inscribirCapacitacion}
+            submitLabel="Inscribir"
+            pendingLabel="Inscribiendo…"
+            className={cn("flex flex-col gap-2 space-y-0 sm:flex-row sm:items-end", w.enrollments.length > 0 && "mt-6")}
+          >
             <input type="hidden" name="workerId" value={w.id} />
-            <label htmlFor="trainingId" className="text-sm font-bold">
-              Inscribir en un curso
-            </label>
-            <select id="trainingId" name="trainingId" className={campo}>
-              {inscribibles.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                  {c.required ? " (obligatorio)" : ""}
-                </option>
-              ))}
-            </select>
+            <div className="flex-1">
+              <label htmlFor="trainingId" className={etiqueta}>
+                Inscribir en un curso
+              </label>
+              <select id="trainingId" name="trainingId" className={campoCompacto}>
+                {inscribibles.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {c.required ? " (obligatorio)" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
           </ActionForm>
         )}
       </div>
-    </Section>
+    </Bloque>
   );
 }
 
 function Historial({ w }: { w: WorkerDetail }) {
   return (
-    <Section titulo="Historial de estados">
-      <ol className="space-y-3 tarjeta p-5">
+    <Bloque titulo="Historial de estados">
+      <ol className="relative space-y-4 before:absolute before:top-2 before:bottom-2 before:left-[5px] before:w-px before:bg-border">
         {w.history.map((h) => (
-          <li key={h.id} className="border-l-2 border-primary/40 pl-3 text-sm">
+          <li key={h.id} className="relative pl-6 text-sm">
+            <span
+              className="absolute top-1.5 left-0 h-[11px] w-[11px] rounded-full border-2 border-card bg-primary/60"
+              aria-hidden
+            />
             <p className="font-bold">
               {h.from ? `${ETIQUETAS_ESTADO[h.from]} → ` : ""}
               {ETIQUETAS_ESTADO[h.to]}
             </p>
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-muted-foreground tabular-nums">
               {formatearFechaHora(h.at)}
               {h.actor ? ` · ${h.actor}` : ""}
             </p>
@@ -536,7 +594,7 @@ function Historial({ w }: { w: WorkerDetail }) {
           </li>
         ))}
       </ol>
-    </Section>
+    </Bloque>
   );
 }
 
@@ -544,8 +602,8 @@ function Cuenta({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
   const puedeEmitir =
     hasPermission(actor, "worker.activation_code") && !w.linked && w.status !== "RECHAZADO" && w.status !== "INACTIVO";
   return (
-    <Section titulo="Cuenta del trabajador">
-      <div className="space-y-3 tarjeta p-5 text-sm">
+    <Bloque titulo="Cuenta del trabajador">
+      <div className="space-y-3 text-sm">
         {w.linked ? (
           <p className="flex items-center gap-2 font-semibold text-verde-fuerte">
             <Link2 className="h-4 w-4" aria-hidden /> Cuenta vinculada
@@ -562,25 +620,25 @@ function Cuenta({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
         )}
         {puedeEmitir && <EmitirCodigoForm action={emitirCodigoActivacion} workerId={w.id} />}
       </div>
-    </Section>
+    </Bloque>
   );
 }
 
 function PerfilPublico({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
   const puedeModerar = hasPermission(actor, "worker.update") && w.status !== "RECHAZADO";
   return (
-    <Section titulo="Perfil público">
-      <div className="space-y-4 tarjeta p-5 text-sm">
+    <Bloque titulo="Perfil público" descripcion="Lo que ven los clientes en el portal.">
+      <div className="space-y-4 text-sm">
         <div className="flex items-center gap-3">
           {w.photo.hasApproved ? (
             // eslint-disable-next-line @next/next/no-img-element -- imagen servida por el propio portal
             <img
               src={`/admin/trabajadores/${w.id}/foto?v=approved`}
               alt={`Foto publicada de ${w.displayName}`}
-              className="h-20 w-20 rounded-2xl object-cover"
+              className="h-20 w-20 shrink-0 rounded-2xl object-cover"
             />
           ) : (
-            <span className="grid h-20 w-20 place-items-center rounded-2xl bg-muted text-xs text-muted-foreground">
+            <span className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-muted text-xs text-muted-foreground">
               Sin foto
             </span>
           )}
@@ -593,8 +651,8 @@ function PerfilPublico({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
         </div>
 
         {w.photo.hasPending && (
-          <div className="space-y-2 rounded-xl border border-naranja/60 bg-naranja/10 p-3">
-            <p className="font-bold">Foto propuesta por el trabajador</p>
+          <div className="space-y-3 rounded-xl bg-naranja/10 p-3">
+            <p className="font-bold">Foto enviada por el trabajador</p>
             {/* eslint-disable-next-line @next/next/no-img-element -- imagen servida por el propio portal */}
             <img
               src={`/admin/trabajadores/${w.id}/foto?v=pending`}
@@ -606,14 +664,14 @@ function PerfilPublico({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
         )}
 
         <div>
-          <p className="text-xs font-bold text-muted-foreground uppercase">Descripción publicada</p>
+          <p className="text-xs text-muted-foreground">Descripción publicada</p>
           <p className="mt-1 whitespace-pre-line">{w.publicBio ?? "—"}</p>
           {w.availabilityNote && <p className="mt-1 text-xs">Disponibilidad: {w.availabilityNote}</p>}
         </div>
 
         {w.proposal && (
-          <div className="space-y-2 rounded-xl border border-naranja/60 bg-naranja/10 p-3">
-            <p className="font-bold">Cambios propuestos ({formatearFecha(w.proposal.submittedAt)})</p>
+          <div className="space-y-3 rounded-xl bg-naranja/10 p-3">
+            <p className="font-bold">Cambios enviados el {formatearFecha(w.proposal.submittedAt)}</p>
             <p className="whitespace-pre-line">{w.proposal.bio ?? "(sin descripción)"}</p>
             {w.proposal.availabilityNote && <p className="text-xs">Disponibilidad: {w.proposal.availabilityNote}</p>}
             {puedeModerar && <Moderacion accion={revisarPerfil} workerId={w.id} etiqueta="cambios" />}
@@ -621,10 +679,8 @@ function PerfilPublico({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
         )}
 
         {puedeModerar && (
-          <details className="rounded-xl border border-border p-3">
-            <summary className="cursor-pointer font-bold">
-              {w.photo.hasApproved ? "Cambiar foto" : "Cargar foto"}
-            </summary>
+          <details className={cn(desplegable, "border-dashed")}>
+            <summary className={resumenDesplegable}>{w.photo.hasApproved ? "Cambiar foto" : "Cargar foto"}</summary>
             <ActionForm
               action={subirFotoTrabajador}
               submitLabel="Guardar foto"
@@ -632,17 +688,19 @@ function PerfilPublico({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
               className="mt-3"
             >
               <input type="hidden" name="workerId" value={w.id} />
-              <label htmlFor="foto" className="text-sm font-bold">
-                Foto (JPG, PNG o WEBP; máximo 4 MB)
-              </label>
-              <input
-                id="foto"
-                name="file"
-                type="file"
-                required
-                accept="image/jpeg,image/png,image/webp"
-                className={campo}
-              />
+              <div>
+                <label htmlFor="foto" className={etiqueta}>
+                  Foto <span className="font-normal text-muted-foreground">(JPG, PNG o WEBP; máximo 4 MB)</span>
+                </label>
+                <input
+                  id="foto"
+                  name="file"
+                  type="file"
+                  required
+                  accept="image/jpeg,image/png,image/webp"
+                  className={campoCompacto}
+                />
+              </div>
               <p className="text-xs text-muted-foreground">
                 Tomada en la atención presencial con consentimiento del trabajador: se publica sin revisión adicional.
               </p>
@@ -650,36 +708,38 @@ function PerfilPublico({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
           </details>
         )}
       </div>
-    </Section>
+    </Bloque>
   );
 }
 
 function Moderacion({
   accion,
   workerId,
-  etiqueta,
+  etiqueta: nombre,
 }: {
   accion: typeof revisarFoto;
   workerId: string;
   etiqueta: string;
 }) {
   return (
-    <div className="flex flex-wrap gap-2">
-      <ActionForm action={accion} submitLabel={`Aprobar ${etiqueta}`} pendingLabel="…" className="space-y-0">
+    <div className="flex flex-wrap items-start gap-2">
+      <ActionForm action={accion} submitLabel={`Aprobar ${nombre}`} pendingLabel="…" tamano="sm" className="space-y-0">
         <input type="hidden" name="workerId" value={workerId} />
         <input type="hidden" name="decision" value="APROBAR" />
       </ActionForm>
       <details className="flex-1">
-        <summary className="inline-flex min-h-11 cursor-pointer items-center rounded-xl border border-border bg-card px-4 text-sm font-bold">
+        <summary className={cn(boton({ variante: "secundario", tamano: "sm" }), "cursor-pointer list-none")}>
           Rechazar
         </summary>
-        <ActionForm action={accion} submitLabel={`Rechazar ${etiqueta}`} variant="danger" className="mt-2">
+        <ActionForm action={accion} submitLabel={`Rechazar ${nombre}`} variant="danger" className="mt-2">
           <input type="hidden" name="workerId" value={workerId} />
           <input type="hidden" name="decision" value="RECHAZAR" />
-          <label htmlFor={`motivo-${etiqueta}`} className="text-sm font-bold">
-            Motivo (lo verá el trabajador)
-          </label>
-          <textarea id={`motivo-${etiqueta}`} name="note" rows={2} maxLength={300} required className={campo} />
+          <div>
+            <label htmlFor={`motivo-${nombre}`} className={etiqueta}>
+              Motivo <span className="font-normal text-muted-foreground">(lo verá el trabajador)</span>
+            </label>
+            <textarea id={`motivo-${nombre}`} name="note" rows={2} maxLength={300} required className={campoCompacto} />
+          </div>
         </ActionForm>
       </details>
     </div>

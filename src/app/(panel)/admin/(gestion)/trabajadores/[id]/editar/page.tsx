@@ -3,7 +3,6 @@ import { notFound, redirect } from "next/navigation";
 import { z } from "zod";
 
 import { AdminHeader } from "@/components/admin/AdminHeader";
-import { Section } from "@/components/site/SiteShell";
 import { requirePagePermission } from "@/server/auth/current-user";
 import { DomainError } from "@/server/errors";
 import { currentRequestContext } from "@/server/http/request-info";
@@ -40,7 +39,7 @@ export default async function EditarTrabajadorPage({ params }: PageProps<"/admin
         titulo="Editar datos del trabajador"
         descripcion="Los cambios quedan registrados en la auditoría."
       />
-      <Section>
+      <div className="max-w-4xl">
         <WorkerWizard
           action={guardarTrabajador}
           opciones={opciones}
@@ -48,7 +47,7 @@ export default async function EditarTrabajadorPage({ params }: PageProps<"/admin
           workerId={id}
           cancelHref={`/admin/trabajadores/${id}`}
         />
-      </Section>
+      </div>
     </>
   );
 }
