@@ -46,7 +46,7 @@ GAD
 Ajustes respecto a §32 y su justificación:
 - **Web push:** se entrega al final de la Fase 5 y no bloquea el MVP, porque el push depende de permisos del navegador y la notificación in-app cubre la necesidad.
 - **Calificación en una sola escala**, en lugar de los 6 criterios del prototipo. Es más simple y más fácil de moderar.
-- **Sin pagos**, siempre que se confirme P-07.
+- **Sin pagos** (P-07 confirmada por el GAD, 2026-09-26): el precio acordado es solo una referencia.
 
 ## Clasificación de funcionalidades de §31
 

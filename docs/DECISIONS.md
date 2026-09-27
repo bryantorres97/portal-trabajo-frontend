@@ -186,7 +186,7 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
 
 ## ADR-014 — Modelo de contratación: la propuesta cuenta como aceptación de quien la envía
 
-- **Estado:** ACEPTADA (2026-09-26, Fase 6). P-07 sigue abierta: se adopta la recomendación (el precio es referencial, sin pagos).
+- **Estado:** ACEPTADA (2026-09-26, Fase 6). P-07 confirmada por el GAD (2026-09-26): sin pagos, el precio es solo una referencia.
 - **Contexto:** `01-negocio.md` §6.2 prevé `SOLICITUD`, `NEGOCIACION` y `ACEPTADA_PARCIAL`. En la práctica, quien envía una versión ya está de acuerdo con ella; pedirle que la acepte aparte es un paso vacío.
 - **Decisión:**
   - Enviar una versión registra la aceptación de quien la envía. La contraparte la acepta, la rechaza o contrapropone. La contratación existe (`CONTRATADA`) solo cuando **ambas** aceptaciones están en la **misma** versión (RN-04); un trigger lo impone.

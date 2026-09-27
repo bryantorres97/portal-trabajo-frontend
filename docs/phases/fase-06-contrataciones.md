@@ -1,6 +1,6 @@
 # Fase 6 — Contrataciones (checklist)
 
-Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEMENTADA (2026-09-26)**. Migración validada en Supabase dev dentro de una transacción revertida (pgTAP 73/73 y chat 37/37) y **aplicada en la nube** (2026-09-26; advisors sin observaciones, tarea pg_cron creada). Falta la validación manual.
+Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEMENTADA (2026-09-26)**. Migración validada en Supabase dev dentro de una transacción revertida (pgTAP 73/73 y chat 37/37) y **aplicada en la nube** (2026-09-26; advisors sin observaciones, tarea pg_cron creada). Validación manual en curso: propuesta, contrapropuesta y aceptación probadas por el usuario.
 
 ## Decisiones de diseño
 
@@ -20,7 +20,7 @@ Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEM
 | Chat | Cada evento publica un mensaje `SYSTEM` con `contract_id` (tarjeta «Ver condiciones», en tiempo real por el canal de la conversación). Barra con las contrataciones activas bajo la cabecera | Tarjetas de sistema en el chat |
 | Notificaciones | `CONTRACT_UPDATE`: una no leída por contratación para la contraparte (+ push si hay dispositivos). Se marca al abrir el detalle | Igual que el chat |
 | Privacidad | Dirección exacta solo para las partes. Auditoría con versión y hash, sin el contenido. El personal del GAD no ve contrataciones (solo resuelve disputas) | `04-modelo-datos.md` §7 |
-| Pagos (P-07) | Sin pagos: el precio es referencial y así se indica en el formulario | Recomendación vigente |
+| Pagos (P-07) | Sin pagos: el precio es referencial y así se indica en el formulario | Confirmado por el GAD (2026-09-26) |
 
 ## Checklist
 
@@ -48,7 +48,7 @@ Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEM
 - [x] pgTAP (73): RLS y privilegios, solo las partes (404), versión obsoleta y hash distinto (409), inmutabilidad, transiciones en la base, modificación, disputa, confirmación automática, expiración, RN-13/RN-14, resolución del GAD, historial reconstruible
 - [x] Integración (CI): aceptaciones y contrapropuestas concurrentes (una gana, 409 las demás), dos propuestas simultáneas, acceso de terceros
 - [x] E2E: control de acceso de páginas y API, CSRF, tarea interna protegida
-- [ ] Validación manual
+- [~] Validación manual: pasos 1, 2 y aceptación del 4 OK (usuario, 2026-09-26); faltan concurrencia (3), ejecución (resto del 4), retiro, rechazo y cancelación (5) y disputa (6)
 
 ## Resultados
 - Pruebas locales: unit 362; lint, formato, tipos y build OK.

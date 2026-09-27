@@ -40,7 +40,7 @@ Se priorizan las que bloquean decisiones técnicas. **Bloquea** indica la primer
 | P-04 | ✅ Respondida en parte: el personal del GAD usa **MFA corporativo de Microsoft 365**. **Nueva duda → P-21** | Seguridad / autenticación | F2 | Ver P-21 |
 | P-05 | ✅ **Respondida:** el pool de ciudadanos tiene federación con **Google y Facebook** | — | — | `COGNITO_IDENTITY_PROVIDERS=Google,Facebook` en producción (Facebook cuando Meta lo apruebe) |
 | P-06 | ¿Qué documentos son obligatorios para habilitar a un trabajador? ¿Se exige el certificado de antecedentes penales? ¿Tienen vigencia? | Datos / legal | F4 | Tipos configurables; ninguno bloqueante hasta que se confirme |
-| P-07 | ¿La plataforma participa en pagos o solo registra el precio acordado como referencia? | Contratación / arquitectura | F6 | Solo referencia, sin pagos |
+| P-07 | ✅ **Respondida (2026-09-26):** la plataforma **no** maneja pagos; el precio acordado es solo una referencia | — | — | Regla RN-17 |
 | P-08 | ✅ **Respondida:** **no** se muestra el teléfono ni el WhatsApp del trabajador. Todo contacto pasa por el chat interno | — | — | Regla RN-19 |
 | P-09 | ~~Registro Civil~~ → **Descartada:** el portal no maneja cédula | — | — | — |
 | P-10 | ✅ **Respondida:** el trabajador **sí** califica al cliente. Esa calificación la ven **solo otros trabajadores y el personal del GAD**, nunca los clientes | — | — | Regla RN-20, ADR-011 |

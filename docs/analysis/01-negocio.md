@@ -25,7 +25,7 @@ El MVP cubre el ciclo completo: registrar al trabajador → habilitarlo → que 
 ## 2. Comprensión del negocio
 
 - **[CONFIRMADO]** La plataforma es administrada institucionalmente por el GAD. Su objetivo es la intermediación laboral de oficios, no la intermediación financiera.
-- **[INFERIDO, del prototipo]** El pago se hace directo entre cliente y trabajador. La plataforma no cobra comisiones ni retiene dinero (`contratantes.tsx`: "La plataforma no cobra comisiones ni retiene dinero"). → **[PENDIENTE]** confirmar con el GAD. Si se confirma, el MVP **no** incluye pagos.
+- **[INFERIDO, del prototipo]** El pago se hace directo entre cliente y trabajador. La plataforma no cobra comisiones ni retiene dinero (`contratantes.tsx`: "La plataforma no cobra comisiones ni retiene dinero"). → **[CONFIRMADO, GAD 2026-09-26]** El MVP **no** incluye pagos (P-07).
 - **[INFERIDO, del prototipo]** Existe un marco normativo local ("Ordenanza RC-025-2019, Art. 12") y la plataforma "no constituye relación de dependencia laboral". → **[PENDIENTE]** validar el texto con el área jurídica.
 - **[CONFIRMADO]** El trabajador no se auto-registra. Lo registra personal del GAD en puntos de atención.
 - **[CONFIRMADO]** Tener un registro no significa ser visible. Solo los trabajadores **HABILITADOS** aparecen en el portal.
@@ -107,7 +107,7 @@ Principios: mínimo privilegio. **[CONFIRMADO, GAD 2026-09-24]** No se exige sep
 | RN-14 | Un trabajador suspendido no aparece en búsquedas. Sus contrataciones activas siguen visibles para las partes, pero no puede aceptar nuevas | RECOMENDACIÓN |
 | RN-15 | Toda acción administrativa relevante genera un registro de auditoría inmutable | CONFIRMADO |
 | RN-16 | No se permite la auto-denuncia ni denunciar dos veces el mismo objeto mientras exista una denuncia abierta del mismo denunciante | RECOMENDACIÓN |
-| RN-17 | El precio acordado es informativo. La plataforma no procesa pagos | INFERIDO / PENDIENTE |
+| RN-17 | El precio acordado es informativo. La plataforma no procesa pagos | CONFIRMADO (GAD) |
 | RN-18 | El cliente debe aceptar los términos y dar su consentimiento de tratamiento de datos antes de usar funciones transaccionales; se guarda la versión aceptada | CONFIRMADO (consentimiento) / RECOMENDACIÓN (versionado) |
 | RN-19 | El teléfono y el WhatsApp del trabajador **nunca** se muestran a clientes. Todo contacto pasa por el chat interno | CONFIRMADO (GAD) |
 | RN-20 | La calificación que el trabajador hace del cliente es visible **solo para trabajadores y personal del GAD**, nunca para otros clientes ni en páginas públicas | CONFIRMADO (GAD) |
