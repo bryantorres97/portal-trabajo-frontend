@@ -1,5 +1,8 @@
 import {
+  BarChart3,
   ClipboardList,
+  FileSpreadsheet,
+  FileText,
   Flag,
   GraduationCap,
   HardHat,
@@ -73,11 +76,32 @@ export const modulosPanel: ModuloPanel[] = [
     href: "/admin/denuncias",
   },
   {
-    titulo: "Auditoría y reportes",
-    detalle: "Registro de acciones y métricas.",
+    titulo: "Indicadores",
+    detalle: "Trabajadores, contrataciones y denuncias en cifras.",
+    icon: BarChart3,
+    permisos: ["metrics.read"],
+    href: "/admin/indicadores",
+  },
+  {
+    titulo: "Reportes",
+    detalle: "Listados filtrables y descarga en CSV.",
+    icon: FileSpreadsheet,
+    permisos: ["metrics.read"],
+    href: "/admin/reportes",
+  },
+  {
+    titulo: "Auditoría",
+    detalle: "Acciones registradas y accesos a información confidencial.",
     icon: ClipboardList,
     permisos: ["audit.read"],
-    fase: "Fase 9",
+    href: "/admin/auditoria",
+  },
+  {
+    titulo: "Contenido",
+    detalle: "Preguntas frecuentes y documentos legales.",
+    icon: FileText,
+    permisos: ["content.manage"],
+    href: "/admin/contenido",
   },
 ];
 

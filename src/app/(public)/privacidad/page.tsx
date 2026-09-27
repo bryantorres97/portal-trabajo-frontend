@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { connection } from "next/server";
 import { Info } from "lucide-react";
 
+import { Markdown } from "@/components/site/Markdown";
 import { PageHeader, Section } from "@/components/site/SiteShell";
 import { institucion } from "@/content/site";
+import { logger } from "@/lib/logger";
+import { getLegalDocument, type LegalDocument } from "@/server/users/consents";
 
 export const metadata: Metadata = {
   title: "Privacidad y protección de datos",
@@ -11,7 +15,7 @@ export const metadata: Metadata = {
 };
 
 /**
- * Texto PROVISIONAL. Debe ser validado por el área jurídica del GAD (P-15,
+ * Resumen de respaldo (solo si no se puede leer la versión vigente de PRIVACIDAD). Texto PROVISIONAL. Debe ser validado por el área jurídica del GAD (P-15,
  * docs/analysis/05-seguridad-auditoria.md §24). Se retiraron del prototipo
  * plazos y datos no confirmados (conservación del chat, antecedentes penales,
  * ubicación en jornada segura).
@@ -47,7 +51,15 @@ const bloques = [
   },
 ];
 
-export default function PrivacidadPage() {
+/** Muestra la versión vigente de PRIVACIDAD (la que se acepta y el GAD administra desde el panel). */
+export default async function PrivacidadPage() {
+  await connection();
+  let doc: LegalDocument | null = null;
+  try {
+    doc = await getLegalDocument("PRIVACIDAD");
+  } catch (error) {
+    logger.error("privacidad.load_failed", { error });
+  }
   return (
     <>
       <PageHeader
@@ -56,18 +68,27 @@ export default function PrivacidadPage() {
       />
 
       <Section>
-        <p className="mb-4 flex gap-3 rounded-2xl border border-azul/40 bg-azul/5 p-4 text-sm leading-relaxed">
-          <Info className="h-5 w-5 shrink-0 text-azul" aria-hidden />
-          <span>Versión preliminar del aviso de privacidad, sujeta a validación jurídica institucional.</span>
-        </p>
-        <div className="grid gap-3 sm:grid-cols-2">
-          {bloques.map((b) => (
-            <article key={b.titulo} className="tarjeta p-4">
-              <h2 className="text-base font-bold">{b.titulo}</h2>
-              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{b.detalle}</p>
-            </article>
-          ))}
-        </div>
+        {doc ? (
+          <article className="tarjeta p-5">
+            <p className="mb-4 text-xs text-muted-foreground">Versión {doc.version}</p>
+            <Markdown source={doc.contentMd} />
+          </article>
+        ) : (
+          <>
+            <p className="mb-4 flex gap-3 rounded-2xl border border-azul/40 bg-azul/5 p-4 text-sm leading-relaxed">
+              <Info className="h-5 w-5 shrink-0 text-azul" aria-hidden />
+              <span>Versión preliminar del aviso de privacidad, sujeta a validación jurídica institucional.</span>
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {bloques.map((b) => (
+                <article key={b.titulo} className="tarjeta p-4">
+                  <h2 className="text-base font-bold">{b.titulo}</h2>
+                  <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{b.detalle}</p>
+                </article>
+              ))}
+            </div>
+          </>
+        )}
       </Section>
 
       <Section titulo="Tus derechos como titular">

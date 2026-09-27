@@ -29,6 +29,7 @@ export const navPrincipal: ItemNavegacion[] = [
 /** Información complementaria (menú móvil y pie de página). */
 export const navSecundaria: ItemNavegacion[] = [
   { href: "/contratantes", label: "Para quien contrata", icon: Users },
+  { href: "/preguntas-frecuentes", label: "Preguntas frecuentes", icon: HelpCircle },
   { href: "/contacto", label: "Contacto y ayuda", icon: Mail },
   { href: "/privacidad", label: "Privacidad y datos", icon: ShieldCheck },
   { href: "/terminos", label: "Términos y condiciones", icon: FileText },

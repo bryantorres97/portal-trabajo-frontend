@@ -15,6 +15,7 @@ const PAGINAS_ESTATICAS = [
   "/contratantes",
   "/trabajadores",
   "/contacto",
+  "/preguntas-frecuentes",
   "/privacidad",
   "/terminos",
 ];
