@@ -42,12 +42,15 @@ export type ConversationSummary = {
 
 export type ChatMessage = {
   id: number;
-  senderId: string;
+  /** null en mensajes de sistema sin actor (p. ej. una propuesta que expiró). */
+  senderId: string | null;
   isMine: boolean;
   kind: "TEXT" | "SYSTEM";
   /** null si el GAD lo ocultó por moderación. */
   body: string | null;
   hidden: boolean;
+  /** Contratación a la que se refiere un mensaje de sistema (tarjeta en el chat). */
+  contractId: string | null;
   createdAt: string;
 };
 
@@ -129,11 +132,12 @@ export async function listMessages(
   if (error) throwPg(error);
   const filas = (data ?? []) as {
     id: number | string;
-    sender_id: string;
+    sender_id: string | null;
     is_mine: boolean;
     kind: "TEXT" | "SYSTEM";
     body: string | null;
     hidden: boolean;
+    contract_id: string | null;
     created_at: string;
   }[];
   // Llegan del más reciente al más antiguo; se devuelven en orden cronológico.
@@ -146,6 +150,7 @@ export async function listMessages(
       kind: m.kind,
       body: m.body,
       hidden: m.hidden,
+      contractId: m.contract_id,
       createdAt: m.created_at,
     }))
     .reverse();

@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   Bell,
   ChevronRight,
+  FileSignature,
   HardHat,
   KeyRound,
   LogOut,
@@ -38,6 +39,7 @@ export type DatosPanelCuenta = {
   perfil: { fullName: string; phone: string; sector: string };
   perfilCompleto: boolean;
   trabajador: { status: WorkerStatus; displayName: string } | null;
+  contrataciones: { activas: number; porResponder: number };
   notificaciones: {
     unread: number;
     items: {
@@ -109,6 +111,24 @@ export function PanelCuenta({ d }: { d: DatosPanelCuenta }) {
 
       <nav aria-label="Accesos" className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <AccesoMensajes />
+        <Acceso
+          href="/contrataciones"
+          icono={<FileSignature className="h-6 w-6" aria-hidden />}
+          titulo="Mis contrataciones"
+          detalle={
+            d.contrataciones.porResponder > 0 ? (
+              <span className="font-bold text-primary">
+                {d.contrataciones.porResponder === 1
+                  ? "1 espera tu respuesta"
+                  : `${d.contrataciones.porResponder} esperan tu respuesta`}
+              </span>
+            ) : d.contrataciones.activas > 0 ? (
+              `${d.contrataciones.activas} ${d.contrataciones.activas === 1 ? "activa" : "activas"}`
+            ) : (
+              "Tus acuerdos por escrito"
+            )
+          }
+        />
         <Acceso
           href="/buscar"
           icono={<Search className="h-6 w-6" aria-hidden />}

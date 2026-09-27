@@ -28,11 +28,15 @@ export function fromPgError(error: PgError): DomainError | null {
     case "P0002": // no_data_found
       return new DomainError(404, mensaje, "not_found");
     case "23505": // unique_violation
+    case "55000": // object_not_in_prerequisite_state (versión obsoleta, estado que no admite la acción)
       return new DomainError(409, mensaje, "conflict");
     case "54000": // program_limit_exceeded (límites anti-abuso, RN-11)
       return new DomainError(429, mensaje, "rate_limited");
     case "23514": // check_violation
     case "22P02": // invalid_text_representation (enum/uuid inválido)
+    case "22007": // invalid_datetime_format
+    case "22008": // datetime_field_overflow
+    case "22003": // numeric_value_out_of_range
       return new DomainError(422, mensaje, "invalid");
     default:
       return null;

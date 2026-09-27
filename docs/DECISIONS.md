@@ -182,4 +182,18 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
 - **Consecuencias:**
   - En la máquina de desarrollo solo se ejecutan lint, formato, tipos, pruebas unitarias y build.
   - Las migraciones deben probarse en el CI antes de aplicarlas en la nube; un error en la nube se revierte solo (cada migración es una transacción), como ocurrió con `pg_trgm` en la Fase 4.
+  - **Validación sin CI (2026-09-26):** `node scripts/validar-nube.mjs <migración> [pruebas.test.sql…]` ejecuta la migración y las pruebas pgTAP en Supabase dev dentro de UNA transacción que termina siempre en excepción (adaptador mínimo `scripts/tap-shim.sql`): la nube queda intacta. Sirve para validar antes del `db push` mientras el repositorio no tenga remoto con CI.
 
+## ADR-014 — Modelo de contratación: la propuesta cuenta como aceptación de quien la envía
+
+- **Estado:** ACEPTADA (2026-09-26, Fase 6). P-07 sigue abierta: se adopta la recomendación (el precio es referencial, sin pagos).
+- **Contexto:** `01-negocio.md` §6.2 prevé `SOLICITUD`, `NEGOCIACION` y `ACEPTADA_PARCIAL`. En la práctica, quien envía una versión ya está de acuerdo con ella; pedirle que la acepte aparte es un paso vacío.
+- **Decisión:**
+  - Enviar una versión registra la aceptación de quien la envía. La contraparte la acepta, la rechaza o contrapropone. La contratación existe (`CONTRATADA`) solo cuando **ambas** aceptaciones están en la **misma** versión (RN-04); un trigger lo impone.
+  - Estados: `PROPUESTA_ENVIADA → CONTRATADA → EN_CURSO → FINALIZACION_PENDIENTE → FINALIZADA`, más `EN_DISPUTA`, `CANCELADA`, `RECHAZADA` y `EXPIRADA`. No hay `SOLICITUD`, `NEGOCIACION` ni `ACEPTADA_PARCIAL`.
+  - Tras `CONTRATADA`, una modificación es una versión pendiente: lo acordado sigue vigente hasta que la otra parte la acepte (no se vuelve a un estado intermedio).
+  - Aceptar exige la versión y su hash SHA-256 (calculado por la base): si cambió, 409.
+  - El cliente puede confirmar la finalización desde `EN_CURSO` aunque el trabajador no haya marcado el fin.
+  - La disputa crea una denuncia `CONTRACT` (bandeja de la Fase 8); quien la abrió puede retirarla y la contratación vuelve a su estado anterior. El GAD la resuelve con `report.manage` (`fn_admin_resolve_contract_dispute`; la interfaz llega en la Fase 8).
+  - Plazos en `app_settings`: 7 días para responder una propuesta y 7 días para confirmar la finalización (luego se confirma sola). Se aplican al leer y con pg_cron cada 15 minutos.
+- **Consecuencias:** menos pasos para el usuario y un modelo más simple; el historial (`contract_events`) y las versiones permiten reconstruir cada acuerdo.

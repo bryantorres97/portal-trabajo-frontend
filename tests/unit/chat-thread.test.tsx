@@ -4,15 +4,31 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ChatThread } from "@/components/chat/ChatThread";
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), push: vi.fn() }) }));
 
 const base = {
   conversationId: "00000000-0000-4000-8000-0000000000c1",
   currentUserId: "00000000-0000-4000-8000-0000000000a1",
   counterpartName: "Walter P.",
   initialMessages: [
-    { id: 1, isMine: false, body: "Hola, ¿en qué le ayudo?", hidden: false, createdAt: "2026-09-26T15:00:00Z" },
-    { id: 2, isMine: true, body: "Tengo una fuga", hidden: false, createdAt: "2026-09-26T15:01:00Z" },
+    {
+      id: 1,
+      isMine: false,
+      kind: "TEXT" as const,
+      body: "Hola, ¿en qué le ayudo?",
+      hidden: false,
+      contractId: null,
+      createdAt: "2026-09-26T15:00:00Z",
+    },
+    {
+      id: 2,
+      isMine: true,
+      kind: "TEXT" as const,
+      body: "Tengo una fuga",
+      hidden: false,
+      contractId: null,
+      createdAt: "2026-09-26T15:01:00Z",
+    },
   ],
   initialHasMore: false,
   initialOtherLastReadId: 2,
@@ -138,5 +154,64 @@ describe("ChatThread", () => {
     fireEvent.click(opcion);
     expect(await screen.findByText("¿Bloquear esta conversación?")).toBeTruthy();
     expect(llamadas.some((l) => l.url.endsWith("/block"))).toBe(false);
+  });
+
+  it("muestra los eventos de contratación como tarjetas con enlace, sin opción de denunciar", () => {
+    const contrato = "00000000-0000-4000-8000-00000000c0c0";
+    render(
+      <ChatThread
+        {...base}
+        initialMessages={[
+          ...base.initialMessages,
+          {
+            id: 3,
+            isMine: false,
+            kind: "SYSTEM",
+            body: "Walter P. envió una contrapropuesta (versión 2).",
+            hidden: false,
+            contractId: contrato,
+            createdAt: "2026-09-26T15:02:00Z",
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Walter P. envió una contrapropuesta (versión 2).")).toBeTruthy();
+    expect(screen.getByRole("link", { name: /Ver condiciones/ }).getAttribute("href")).toBe(
+      `/contrataciones/${contrato}`,
+    );
+    expect(screen.getAllByLabelText("Opciones del mensaje")).toHaveLength(1);
+  });
+
+  it("ofrece proponer condiciones solo si se puede y abre el formulario", () => {
+    const opciones = { services: [{ id: "s1", name: "Gasfitería", priceUnit: "OBRA", isPrimary: true }], parishes: [] };
+    const { unmount } = render(<ChatThread {...base} opcionesContrato={opciones} puedeProponer={false} />);
+    expect(screen.queryByRole("button", { name: "Proponer condiciones" })).toBeNull();
+    unmount();
+    render(<ChatThread {...base} opcionesContrato={opciones} puedeProponer />);
+    fireEvent.click(screen.getByRole("button", { name: "Proponer condiciones" }));
+    expect(screen.getByLabelText("¿Qué trabajo se hará?")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Enviar propuesta" })).toBeTruthy();
+  });
+
+  it("muestra la contratación activa de la conversación con lo que toca hacer", () => {
+    render(
+      <ChatThread
+        {...base}
+        contratos={[
+          {
+            id: "00000000-0000-4000-8000-00000000c0c1",
+            status: "PROPUESTA_ENVIADA",
+            needsMyAction: true,
+            pendingModification: false,
+            priceAmount: 45,
+            priceUnit: "OBRA",
+            serviceName: "Gasfitería",
+          },
+        ]}
+      />,
+    );
+    const enlace = screen.getByRole("link", { name: /Gasfitería/ });
+    expect(enlace.getAttribute("href")).toBe("/contrataciones/00000000-0000-4000-8000-00000000c0c1");
+    expect(enlace.textContent).toContain("Te toca");
   });
 });

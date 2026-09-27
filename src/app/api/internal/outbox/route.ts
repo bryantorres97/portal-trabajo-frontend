@@ -1,9 +1,7 @@
-import { timingSafeEqual } from "node:crypto";
-
 import { NextResponse } from "next/server";
 
-import { getCronEnv } from "@/lib/env";
-import { problem, toProblem } from "@/server/http/api";
+import { toProblem } from "@/server/http/api";
+import { cronRejection } from "@/server/http/cron";
 import { dispatchOutbox } from "@/server/notifications/notifications";
 
 /**
@@ -11,18 +9,9 @@ import { dispatchOutbox } from "@/server/notifications/notifications";
  * programador de tareas (Vercel Cron) con `Authorization: Bearer <CRON_SECRET>`.
  */
 export async function GET(request: Request) {
-  let secreto: string;
+  const rechazo = cronRejection(request);
+  if (rechazo) return rechazo;
   try {
-    secreto = getCronEnv().CRON_SECRET;
-  } catch {
-    return problem(503, "No disponible", "Falta configurar CRON_SECRET.");
-  }
-  try {
-    const esperado = Buffer.from(`Bearer ${secreto}`);
-    const recibido = Buffer.from(request.headers.get("authorization") ?? "");
-    if (recibido.length !== esperado.length || !timingSafeEqual(recibido, esperado)) {
-      return problem(401, "No autenticado");
-    }
     return NextResponse.json(await dispatchOutbox(), { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return toProblem(error);

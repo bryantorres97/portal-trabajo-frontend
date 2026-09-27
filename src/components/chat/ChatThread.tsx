@@ -10,6 +10,7 @@ import {
   BadgeCheck,
   Check,
   CheckCheck,
+  FileSignature,
   Flag,
   Loader2,
   MoreVertical,
@@ -22,6 +23,9 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, type FormEve
 
 import { useMensajes } from "@/components/chat/MensajesProvider";
 import { useRealtimeChannel } from "@/components/chat/useRealtimeChannel";
+import { BarraContratos, TarjetaSistema, type ContratoChat } from "@/components/contracts/ContratoEnChat";
+import type { OpcionesFormulario } from "@/components/contracts/FormularioCondiciones";
+import { ProponerCondiciones } from "@/components/contracts/ProponerCondiciones";
 import { Avatar } from "@/components/site/WorkerCard";
 import {
   Dialog,
@@ -44,8 +48,11 @@ import { cn } from "@/lib/utils";
 export type MensajeInicial = {
   id: number;
   isMine: boolean;
+  kind: "TEXT" | "SYSTEM";
   body: string | null;
   hidden: boolean;
+  /** Mensajes de sistema: contratación a la que se refieren (tarjeta con enlace). */
+  contractId: string | null;
   createdAt: string;
 };
 
@@ -75,6 +82,12 @@ type Props = {
   workerLinked: boolean;
   myRole: "CLIENTE" | "TRABAJADOR";
   reasons: { code: string; label: string }[];
+  /** Contrataciones activas de esta conversación (barra superior). */
+  contratos?: ContratoChat[];
+  /** Opciones del formulario de condiciones; sin ellas no se ofrece «Proponer condiciones». */
+  opcionesContrato?: OpcionesFormulario | null;
+  /** Se puede enviar una propuesta nueva (no hay otra abierta y el trabajador activó su cuenta). */
+  puedeProponer?: boolean;
 };
 
 const MAX = 2000;
@@ -124,6 +137,7 @@ export function ChatThread(p: Props) {
   const [denunciando, setDenunciando] = useState<number | null>(null);
   const [confirmarBloqueo, setConfirmarBloqueo] = useState(false);
   const [nuevosAbajo, setNuevosAbajo] = useState(0);
+  const [proponiendo, setProponiendo] = useState(false);
   const [divisor] = useState(() => primerNoLeido(p.initialMessages.map(desdeServidor), p.unreadAtOpen ?? 0));
   const listaRef = useRef<HTMLOListElement>(null);
   const cajaRef = useRef<HTMLTextAreaElement>(null);
@@ -131,6 +145,7 @@ export function ChatThread(p: Props) {
   const ultimoLeido = useRef(0);
   const base = `/api/v1/conversations/${p.conversationId}`;
   const puedeEscribir = !p.blockedByMe && !p.blockedByOther && !p.closed;
+  const puedeProponer = puedeEscribir && !!p.puedeProponer && !!p.opcionesContrato;
 
   // Móvil: la conversación ocupa la pantalla; se evita que la página de fondo se desplace.
   useEffect(() => {
@@ -220,12 +235,16 @@ export function ChatThread(p: Props) {
           id: Number(payload.id),
           key: String(payload.id),
           isMine: payload.senderId === p.currentUserId,
+          kind: payload.kind === "SYSTEM" ? "SYSTEM" : "TEXT",
           body: String(payload.body),
           hidden: false,
+          contractId: typeof payload.contractId === "string" ? payload.contractId : null,
           createdAt: String(payload.createdAt),
           estado: "ok",
         };
         setMensajes((prev) => unir(prev, [m]));
+        // Un evento de contratación cambia la barra superior y lo que se puede proponer.
+        if (m.kind === "SYSTEM") router.refresh();
       },
       read: (payload) => {
         if (payload.role !== p.myRole) setOtroLeyo((v) => Math.max(v, Number(payload.lastReadId)));
@@ -286,8 +305,10 @@ export function ChatThread(p: Props) {
         key: clientMessageId,
         clientMessageId,
         isMine: true,
+        kind: "TEXT",
         body: cuerpo,
         hidden: false,
+        contractId: null,
         createdAt: new Date().toISOString(),
         estado: "enviando",
       },
@@ -368,10 +389,21 @@ export function ChatThread(p: Props) {
             {conexion === "sin-conexion" && <span className="shrink-0">· reconectando…</span>}
           </p>
         </div>
+        {puedeProponer && (
+          <button
+            type="button"
+            onClick={() => setProponiendo(true)}
+            aria-label="Proponer condiciones"
+            className="inline-flex min-h-11 min-w-11 items-center justify-center gap-2 rounded-xl bg-primary/10 px-3 text-sm font-bold text-primary hover:bg-primary/15"
+          >
+            <FileSignature className="h-5 w-5 sm:h-4 sm:w-4" aria-hidden />
+            <span className="hidden sm:inline">Proponer condiciones</span>
+          </button>
+        )}
         {p.profileHref && (
           <Link
             href={p.profileHref}
-            className="hidden min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm font-bold hover:bg-secondary sm:inline-flex"
+            className="hidden min-h-11 items-center gap-2 rounded-xl border border-border px-3 text-sm font-bold hover:bg-secondary xl:inline-flex"
           >
             <UserRound className="h-4 w-4" aria-hidden /> Ver perfil
           </Link>
@@ -407,6 +439,8 @@ export function ChatThread(p: Props) {
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
+
+      {p.contratos && p.contratos.length > 0 && <BarraContratos contratos={p.contratos} />}
 
       {/* Mensajes */}
       <div className="relative min-h-0 flex-1">
@@ -447,8 +481,12 @@ export function ChatThread(p: Props) {
             const previo = mensajes[i - 1];
             const siguiente = mensajes[i + 1];
             const nuevoDia = !previo || !mismoDia(previo.createdAt, m.createdAt);
-            const inicioGrupo = nuevoDia || previo?.isMine !== m.isMine;
-            const finGrupo = !siguiente || siguiente.isMine !== m.isMine || !mismoDia(siguiente.createdAt, m.createdAt);
+            const inicioGrupo = nuevoDia || previo?.isMine !== m.isMine || previo?.kind === "SYSTEM";
+            const finGrupo =
+              !siguiente ||
+              siguiente.isMine !== m.isMine ||
+              siguiente.kind === "SYSTEM" ||
+              !mismoDia(siguiente.createdAt, m.createdAt);
             return (
               <li key={m.key} className={cn(inicioGrupo && "pt-2")}>
                 {nuevoDia && (
@@ -465,60 +503,64 @@ export function ChatThread(p: Props) {
                     <span className="h-px flex-1 bg-primary/30" />
                   </p>
                 )}
-                <div className={cn("group flex items-end gap-1", m.isMine ? "justify-end" : "justify-start")}>
-                  <div
-                    className={cn(
-                      "max-w-[82%] px-3.5 py-2 text-[0.95rem] leading-snug shadow-sm sm:max-w-[68%]",
-                      m.isMine ? "rounded-2xl bg-primary text-primary-foreground" : "rounded-2xl bg-card",
-                      m.isMine && finGrupo && "rounded-br-md",
-                      !m.isMine && finGrupo && "rounded-bl-md",
-                      m.estado === "error" && "bg-destructive/15 text-foreground",
-                      m.estado === "enviando" && "opacity-80",
-                    )}
-                  >
-                    {m.hidden ? (
-                      <p className="italic opacity-80">Mensaje ocultado por moderación.</p>
-                    ) : (
-                      <p className="break-words whitespace-pre-wrap">{m.body}</p>
-                    )}
-                    <p
+                {m.kind === "SYSTEM" ? (
+                  <TarjetaSistema texto={m.body} contractId={m.contractId} hora={formatearHora(m.createdAt)} />
+                ) : (
+                  <div className={cn("group flex items-end gap-1", m.isMine ? "justify-end" : "justify-start")}>
+                    <div
                       className={cn(
-                        "mt-0.5 flex items-center justify-end gap-1 text-[11px] tabular-nums",
-                        m.isMine && m.estado !== "error" ? "text-primary-foreground/80" : "text-muted-foreground",
+                        "max-w-[82%] px-3.5 py-2 text-[0.95rem] leading-snug shadow-sm sm:max-w-[68%]",
+                        m.isMine ? "rounded-2xl bg-primary text-primary-foreground" : "rounded-2xl bg-card",
+                        m.isMine && finGrupo && "rounded-br-md",
+                        !m.isMine && finGrupo && "rounded-bl-md",
+                        m.estado === "error" && "bg-destructive/15 text-foreground",
+                        m.estado === "enviando" && "opacity-80",
                       )}
                     >
-                      {formatearHora(m.createdAt)}
-                      {m.isMine && m.estado === "enviando" && (
-                        <Loader2 className="h-3 w-3 animate-spin" aria-label="Enviando" />
+                      {m.hidden ? (
+                        <p className="italic opacity-80">Mensaje ocultado por moderación.</p>
+                      ) : (
+                        <p className="break-words whitespace-pre-wrap">{m.body}</p>
                       )}
-                      {m.isMine &&
-                        m.estado === "ok" &&
-                        (m.id <= otroLeyo ? (
-                          <CheckCheck className="h-3.5 w-3.5" aria-label="Visto" />
-                        ) : (
-                          <Check className="h-3.5 w-3.5" aria-label="Enviado" />
-                        ))}
-                    </p>
-                  </div>
-                  {!m.isMine && m.estado === "ok" && !m.hidden && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        aria-label="Opciones del mensaje"
-                        className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground opacity-60 transition-opacity hover:bg-card hover:opacity-100 focus-visible:opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                      <p
+                        className={cn(
+                          "mt-0.5 flex items-center justify-end gap-1 text-[11px] tabular-nums",
+                          m.isMine && m.estado !== "error" ? "text-primary-foreground/80" : "text-muted-foreground",
+                        )}
                       >
-                        <MoreVertical className="h-4 w-4" aria-hidden />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="start" className="z-[60]">
-                        <DropdownMenuItem
-                          className="min-h-11 text-base text-destructive focus:text-destructive"
-                          onSelect={() => setDenunciando(m.id)}
+                        {formatearHora(m.createdAt)}
+                        {m.isMine && m.estado === "enviando" && (
+                          <Loader2 className="h-3 w-3 animate-spin" aria-label="Enviando" />
+                        )}
+                        {m.isMine &&
+                          m.estado === "ok" &&
+                          (m.id <= otroLeyo ? (
+                            <CheckCheck className="h-3.5 w-3.5" aria-label="Visto" />
+                          ) : (
+                            <Check className="h-3.5 w-3.5" aria-label="Enviado" />
+                          ))}
+                      </p>
+                    </div>
+                    {!m.isMine && m.estado === "ok" && !m.hidden && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger
+                          aria-label="Opciones del mensaje"
+                          className="grid h-9 w-9 shrink-0 place-items-center rounded-full text-muted-foreground opacity-60 transition-opacity hover:bg-card hover:opacity-100 focus-visible:opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
                         >
-                          <Flag className="mr-2 h-4 w-4" aria-hidden /> Denunciar mensaje
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  )}
-                </div>
+                          <MoreVertical className="h-4 w-4" aria-hidden />
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="start" className="z-[60]">
+                          <DropdownMenuItem
+                            className="min-h-11 text-base text-destructive focus:text-destructive"
+                            onSelect={() => setDenunciando(m.id)}
+                          >
+                            <Flag className="mr-2 h-4 w-4" aria-hidden /> Denunciar mensaje
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    )}
+                  </div>
+                )}
                 {m.isMine && m.estado === "error" && (
                   <p className="mt-1 flex justify-end">
                     <button
@@ -653,6 +695,15 @@ export function ChatThread(p: Props) {
           </div>
         )}
       </footer>
+
+      {p.opcionesContrato && (
+        <ProponerCondiciones
+          modo={{ tipo: "nueva", conversationId: p.conversationId }}
+          opciones={p.opcionesContrato}
+          abierto={proponiendo}
+          onAbiertoChange={setProponiendo}
+        />
+      )}
 
       <Dialog open={confirmarBloqueo} onOpenChange={setConfirmarBloqueo}>
         <DialogContent className="max-w-md rounded-2xl">

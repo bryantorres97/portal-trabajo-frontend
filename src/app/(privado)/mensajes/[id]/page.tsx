@@ -5,6 +5,7 @@ import { ChatThread } from "@/components/chat/ChatThread";
 import { fotoTrabajador } from "@/components/site/WorkerCard";
 import { requireConsentedPageAuth } from "@/server/auth/current-user";
 import { getConversation, listMessageReportReasons, listMessages } from "@/server/chat/chat";
+import { getContractFormOptions, listContracts } from "@/server/contracts/contracts";
 import { DomainError } from "@/server/errors";
 
 export const metadata: Metadata = { title: "Conversación" };
@@ -24,6 +25,10 @@ export default async function ConversacionPage({ params }: PageProps<"/mensajes/
     listMessageReportReasons(),
   ]);
   const esCliente = c.myRole === "CLIENTE";
+  const [contratos, opcionesContrato] = await Promise.all([
+    listContracts(auth.user, { scope: "activas" }, c.id),
+    c.workerLinked ? getContractFormOptions(auth.user, c.id) : null,
+  ]);
 
   return (
     <ChatThread
@@ -44,6 +49,9 @@ export default async function ConversacionPage({ params }: PageProps<"/mensajes/
       workerLinked={c.workerLinked}
       myRole={c.myRole}
       reasons={motivos}
+      contratos={contratos}
+      opcionesContrato={opcionesContrato}
+      puedeProponer={c.workerLinked && !contratos.some((k) => k.status === "PROPUESTA_ENVIADA")}
     />
   );
 }

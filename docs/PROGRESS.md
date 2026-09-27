@@ -7,9 +7,9 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 5 completada técnicamente** (commit, migración en la nube y Realtime en la nube verificados); validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
-| Siguiente fase | Fase 6 — Contrataciones |
-| Rama de trabajo | `development` · último commit: Fase 5. Se commitea solo con confirmación del usuario |
+| Fase actual | **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
+| Siguiente fase | Fase 7 — Calificaciones |
+| Rama de trabajo | `development` · último commit: Fase 6. Se commitea solo con confirmación del usuario |
 | Última actualización | 2026-09-26 |
 
 ## Siguiente paso concreto
@@ -18,9 +18,10 @@
 2. **Probar el login real con el pool dev** (B2). Todo está listo: `.env.local` completo, migraciones aplicadas en el proyecto Supabase dev en la nube (`Portal Empleo`), callback `http://localhost:3000/api/auth/callback` aceptado por Cognito. Solo falta que el usuario inicie sesión en el navegador (`pnpm dev` → `/cuenta`). Checklist en `docs/setup/cognito-dev.md`.
 3. Solicitar al GAD el App Client del portal (P-02). Preguntas abiertas: P-02, P-06, P-13, P-15, P-20 (P-21 decidida: Entra ID para el personal, ADR-012). Pedir al GAD el app registration de Entra (texto listo en `docs/setup/entra-dev.md` §4).
 4. ~~Fase 2B: prueba manual y commit~~ ✅. Queda el pedido formal al GAD del app registration.
-5. **Fase 5**: validar manualmente (`docs/phases/fase-05-chat.md`), con un trabajador vinculado de la Fase 4. Push: falta el proyecto Firebase.
-6. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
-7. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
+5. **Fase 6**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-06-contrataciones.md`). El repositorio no tiene remoto: las pruebas de integración y E2E con base no se han ejecutado en un CI.
+6. **Fase 5**: validar manualmente (`docs/phases/fase-05-chat.md`), con un trabajador vinculado de la Fase 4. Push: falta el proyecto Firebase.
+7. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
+8. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
 
 ## Bloqueos y dependencias externas
 
@@ -62,7 +63,7 @@ Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al 
 - [x] Fase 3 — Catálogo y búsqueda → `docs/phases/fase-03-catalogo-busqueda.md` (incluye el seed de categorías desde `src/content/site.ts`)
 - [x] Fase 4 — Gestión de trabajadores → `docs/phases/fase-04-gestion-trabajadores.md` (incluye el código de activación) · validación manual pendiente
 - [x] Fase 5 — Chat → `docs/phases/fase-05-chat.md` · validación manual pendiente
-- [ ] Fase 6 — Contrataciones
+- [x] Fase 6 — Contrataciones → `docs/phases/fase-06-contrataciones.md` (ADR-014) · migración en la nube · validación manual pendiente
 - [ ] Fase 7 — Calificaciones
 - [ ] Fase 8 — Denuncias y moderación
 - [ ] Fase 9 — Panel administrativo
@@ -76,7 +77,7 @@ pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build   # 
 supabase db push --dry-run && supabase db push                                # esquema → Supabase dev (nube), con confirmación
 ```
 
-pgTAP, integración y E2E con datos corren en el **CI** (base efímera). Desde 2026-09-26 no se usa Supabase local en la máquina de desarrollo (ADR-013).
+pgTAP, integración y E2E con datos corren en el **CI** (base efímera). Para validar una migración y sus pruebas pgTAP en la nube sin guardar nada: `node scripts/validar-nube.mjs supabase/migrations/<nueva>.sql supabase/tests/<prueba>.test.sql`. Desde 2026-09-26 no se usa Supabase local en la máquina de desarrollo (ADR-013).
 
 ## Bitácora de sesiones
 
@@ -96,3 +97,5 @@ pgTAP, integración y E2E con datos corren en el **CI** (base efímera). Desde 2
 | 2026-09-26 | **Fase 5 implementada**: chat cliente ↔ trabajador (conversación 1:1 con lectura y bloqueo por parte, mensajes inmutables, envío idempotente, límites 20/min y 10 conversaciones/día), Realtime privado con JWT ES256 propio (ADR-004 verificado con Realtime real: p95 < 1 s), degradación a consulta periódica, notificaciones in-app (una por conversación), outbox y despachador FCM (desactivado sin credenciales), denuncia de mensajes (enganche de la Fase 8). Tests: unit 253, integración 74, pgTAP 126, E2E 122. CI genera la clave local y levanta Realtime. |
 | 2026-09-26 | Decisión del usuario: **solo Supabase en la nube** (ADR-013). Commit de la Fase 5 y migración `chat_notificaciones` aplicada en la nube (advisors sin observaciones). Clave ES256 importada por el usuario en Supabase dev y `REALTIME_JWT_PRIVATE_KEY` agregada a `.env.local`; verificado contra Realtime de la nube: canal propio `SUBSCRIBED`, ajeno `Unauthorized`, otra clave `JwtSignatureError`. |
 | 2026-09-26 | **Rediseño UI/UX** en etapas: 1 (base visual y portal público, `0f36d01`), 2 (Mi cuenta y espacio del trabajador, `d73b8bf`) y 3 (panel del GAD con marco propio: grupo de rutas `(panel)`, barra lateral por permisos, portada «Por atender» con conteos por estado, listados y ficha del trabajador reorganizados, ingreso del personal a pantalla completa con el logo del GAD). Tests: unit 330, E2E 122. |
+| 2026-09-26 | **Fase 6 implementada**: contrataciones con versiones inmutables y hash SHA-256, aceptación bilateral de la misma versión (la propuesta cuenta como aceptación de quien la envía, ADR-014), 409 ante versión obsoleta, modificaciones sin perder lo acordado, inicio, fin y confirmación (automática a los 7 días), cancelación con motivo, expiración a los 7 días (al leer y con pg_cron), disputa como denuncia `CONTRACT`, tarjetas en el chat, `/contrataciones` y notificaciones. Nuevo `scripts/validar-nube.mjs`: migración + pgTAP en la nube dentro de una transacción revertida (Fase 6 73/73, Fase 5 37/37). Unit 362. |
+| 2026-09-26 | Error en `/cuenta` y en las conversaciones (`fn_list_contracts` no existía): el código de la Fase 6 corría sin su migración. Con la confirmación del usuario se aplicó `contrataciones` en la nube (advisors sin observaciones, pg_cron creado, caché de PostgREST recargada). |

@@ -9,6 +9,7 @@ import { hasPermission } from "@/server/auth/authorize";
 import { enabledIdentityProviders } from "@/server/auth/cognito";
 import { getCurrentAuth, type CurrentAuth } from "@/server/auth/current-user";
 import { listActiveSessions } from "@/server/auth/session";
+import { listContracts } from "@/server/contracts/contracts";
 import { listNotifications } from "@/server/notifications/notifications";
 import { getPendingConsents } from "@/server/users/consents";
 import { listIdentities } from "@/server/users/identities";
@@ -137,12 +138,13 @@ function Ingreso() {
 
 async function Panel({ auth }: { auth: CurrentAuth }) {
   const { user } = auth;
-  const [perfil, identidades, sesiones, notificaciones, trabajador] = await Promise.all([
+  const [perfil, identidades, sesiones, notificaciones, trabajador, contratos] = await Promise.all([
     getClientProfile(user.id),
     listIdentities(user.id),
     listActiveSessions(user.id, auth.sessionId),
     listNotifications(user, 10),
     getOwnWorker(user.id),
+    listContracts(user, { scope: "activas" }),
   ]);
   const proveedoresVinculables = enabledIdentityProviders().filter((p) => !identidades.some((i) => i.provider === p));
   const tieneNativo = identidades.some((i) => i.provider === "COGNITO");
@@ -162,6 +164,10 @@ async function Panel({ auth }: { auth: CurrentAuth }) {
         perfilCompleto: !!perfil,
         trabajador: trabajador ? { status: trabajador.status, displayName: trabajador.displayName } : null,
         notificaciones,
+        contrataciones: {
+          activas: contratos.length,
+          porResponder: contratos.filter((c) => c.needsMyAction).length,
+        },
         identidades: identidades.map((i) => ({
           id: i.id,
           provider: i.provider,
