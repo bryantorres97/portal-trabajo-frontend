@@ -1,8 +1,9 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Loader2 } from "lucide-react";
 import { useActionState, type ReactNode } from "react";
 
+import { boton } from "@/components/ui/boton";
 import { initialActionState, type ActionState } from "@/lib/action-state";
 import { cn } from "@/lib/utils";
 
@@ -17,11 +18,7 @@ type Props = {
   silentSuccess?: boolean;
 };
 
-const estilos = {
-  primary: "bg-primary text-primary-foreground hover:bg-primary/90",
-  secondary: "border border-border bg-card text-foreground hover:bg-secondary",
-  danger: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-};
+const variantes = { primary: "primario", secondary: "secundario", danger: "peligro" } as const;
 
 /** Formulario ligado a una Server Action con estado de carga y mensajes accesibles. */
 export function ActionForm({
@@ -42,10 +39,15 @@ export function ActionForm({
         <p
           role={state.status === "error" ? "alert" : "status"}
           className={cn(
-            "rounded-xl p-3 text-sm font-semibold",
-            state.status === "error" ? "bg-destructive/10 text-destructive" : "bg-verde/10 text-foreground",
+            "flex items-start gap-2 rounded-2xl px-4 py-3 text-sm font-semibold",
+            state.status === "error" ? "bg-destructive/10 text-destructive" : "bg-verde/15 text-foreground",
           )}
         >
+          {state.status === "error" ? (
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          ) : (
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-verde-fuerte" aria-hidden />
+          )}
           {state.message}
         </p>
       )}
@@ -53,10 +55,7 @@ export function ActionForm({
         type="submit"
         disabled={pending}
         aria-disabled={pending}
-        className={cn(
-          "inline-flex min-h-11 items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold transition-colors disabled:opacity-70",
-          estilos[variant],
-        )}
+        className={boton({ variante: variantes[variant], tamano: "md" })}
       >
         {pending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden />}
         {pending ? pendingLabel : submitLabel}

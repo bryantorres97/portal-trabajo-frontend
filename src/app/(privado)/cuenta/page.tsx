@@ -1,41 +1,21 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import { redirect } from "next/navigation";
-import {
-  AlertTriangle,
-  CheckCircle2,
-  KeyRound,
-  LogIn,
-  LogOut,
-  MonitorSmartphone,
-  Bell,
-  HardHat,
-  MessageCircle,
-  ShieldCheck,
-  UserRound,
-} from "lucide-react";
+import { AlertTriangle, BadgeCheck, CheckCircle2, LogIn, MessageCircle, ShieldCheck } from "lucide-react";
 
-import { ActionForm } from "@/components/forms/ActionForm";
-import { PageHeader, Section } from "@/components/site/SiteShell";
+import { boton } from "@/components/ui/boton";
 import { isAuthConfigured } from "@/lib/env";
-import { describirDispositivo, etiquetaProveedor, etiquetaRol, formatearFechaHora } from "@/lib/formatos";
+import { cn } from "@/lib/utils";
 import { hasPermission } from "@/server/auth/authorize";
 import { enabledIdentityProviders } from "@/server/auth/cognito";
 import { getCurrentAuth, type CurrentAuth } from "@/server/auth/current-user";
 import { listActiveSessions } from "@/server/auth/session";
+import { listNotifications } from "@/server/notifications/notifications";
 import { getPendingConsents } from "@/server/users/consents";
 import { listIdentities } from "@/server/users/identities";
 import { getClientProfile } from "@/server/users/profile";
-import { listNotifications } from "@/server/notifications/notifications";
+import { getOwnWorker } from "@/server/workers/public-profile";
 
-import {
-  cerrarSesion,
-  cerrarTodasLasSesiones,
-  desvincularIdentidad,
-  guardarPerfil,
-  marcarNotificacionesLeidas,
-} from "./actions";
-import { ProfileForm } from "./ProfileForm";
+import { PanelCuenta } from "./PanelCuenta";
 
 export const metadata: Metadata = { title: "Mi cuenta" };
 
@@ -79,301 +59,132 @@ export default async function CuentaPage({ searchParams }: PageProps<"/cuenta">)
 
   return (
     <>
-      <PageHeader
-        titulo={auth ? `Hola${auth.user.displayName ? `, ${auth.user.displayName}` : ""}` : "Ingresa a Acolita.App"}
-        descripcion={
-          auth
-            ? "Gestiona tu perfil, tus formas de ingreso y tus sesiones."
-            : "Inicia sesión o crea tu cuenta para contactar trabajadores y gestionar tus contrataciones."
-        }
-      />
-
-      {mensaje && (
-        <Section>
-          <p role="alert" className="flex gap-3 rounded-2xl border border-destructive/40 bg-destructive/5 p-4 text-sm">
-            <AlertTriangle className="h-5 w-5 shrink-0 text-destructive" aria-hidden />
-            <span>{mensaje}</span>
-          </p>
-        </Section>
+      {(mensaje || avisoVinculo) && (
+        <div className="px-4 pt-6 sm:px-6">
+          {mensaje && (
+            <p role="alert" className="flex gap-3 rounded-2xl bg-destructive/10 p-4 text-sm text-destructive">
+              <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden />
+              <span>{mensaje}</span>
+            </p>
+          )}
+          {avisoVinculo && (
+            <p role="status" className="flex gap-3 rounded-2xl bg-secondary p-4 text-sm">
+              {avisoVinculo.tipo === "ok" ? (
+                <CheckCircle2 className="h-5 w-5 shrink-0 text-verde-fuerte" aria-hidden />
+              ) : (
+                <AlertTriangle className="h-5 w-5 shrink-0 text-naranja" aria-hidden />
+              )}
+              <span>{avisoVinculo.texto}</span>
+            </p>
+          )}
+        </div>
       )}
-      {avisoVinculo && (
-        <Section>
-          <p role="status" className="flex gap-3 rounded-2xl border border-border bg-card p-4 text-sm">
-            {avisoVinculo.tipo === "ok" ? (
-              <CheckCircle2 className="h-5 w-5 shrink-0 text-verde" aria-hidden />
-            ) : (
-              <AlertTriangle className="h-5 w-5 shrink-0 text-naranja" aria-hidden />
-            )}
-            <span>{avisoVinculo.texto}</span>
-          </p>
-        </Section>
-      )}
-
       {auth ? <Panel auth={auth} /> : <Ingreso />}
     </>
   );
 }
 
 function Ingreso() {
+  const beneficios = [
+    { icon: MessageCircle, texto: "Escribe a trabajadores sin compartir tu teléfono." },
+    { icon: BadgeCheck, texto: "Todos están registrados y habilitados por el GAD." },
+    { icon: ShieldCheck, texto: "Tus acuerdos quedan registrados y puedes denunciar abusos." },
+  ];
   return (
-    <Section>
-      <div className="tarjeta p-5">
+    <div className="grid items-center gap-10 px-4 pt-10 pb-6 sm:px-6 lg:grid-cols-2 lg:pt-16">
+      <div>
+        <h1 className="text-4xl leading-tight font-extrabold sm:text-5xl">Ingresa a Acolita.App</h1>
+        <p className="mt-4 max-w-lg text-lg text-muted-foreground">
+          Inicia sesión o crea tu cuenta para contactar trabajadores y gestionar tus contrataciones.
+        </p>
+        <ul className="mt-8 space-y-4">
+          {beneficios.map((b) => (
+            <li key={b.texto} className="flex items-start gap-3">
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-verde/15 text-verde-fuerte">
+                <b.icon className="h-5 w-5" aria-hidden />
+              </span>
+              <span className="pt-2">{b.texto}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="panel p-6 sm:p-8">
         {isAuthConfigured() ? (
-          <div className="flex flex-col gap-3 sm:max-w-sm">
-            <a
-              href="/api/auth/login?returnTo=%2Fcuenta"
-              className="inline-flex min-h-13 items-center justify-center gap-2 rounded-2xl bg-primary px-6 text-base font-bold text-primary-foreground"
-            >
-              <LogIn className="h-5 w-5" aria-hidden /> Ingresar o crear cuenta
+          <div className="flex flex-col gap-3">
+            <a href="/api/auth/login?returnTo=%2Fcuenta" className={cn(boton({ tamano: "lg" }), "w-full")}>
+              <LogIn aria-hidden /> Ingresar o crear cuenta
             </a>
             {enabledIdentityProviders().map((proveedor) => (
               <a
                 key={proveedor}
                 href={`/api/auth/login?proveedor=${proveedor}&returnTo=%2Fcuenta`}
-                className="inline-flex min-h-13 items-center justify-center rounded-2xl border border-border bg-card px-6 text-base font-bold"
+                className={cn(boton({ variante: "secundario", tamano: "lg" }), "w-full")}
               >
                 Continuar con {proveedor}
               </a>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-muted-foreground">El inicio de sesión estará disponible próximamente.</p>
+          <p className="text-muted-foreground">El inicio de sesión estará disponible próximamente.</p>
         )}
-        <p className="mt-4 text-xs text-muted-foreground">
+        <p className="mt-5 text-sm text-muted-foreground">
           El acceso usa el sistema de identidad ciudadana del GAD Municipalidad de Ambato.
         </p>
       </div>
-    </Section>
+    </div>
   );
 }
 
 async function Panel({ auth }: { auth: CurrentAuth }) {
   const { user } = auth;
-  const [perfil, identidades, sesiones, notificaciones] = await Promise.all([
+  const [perfil, identidades, sesiones, notificaciones, trabajador] = await Promise.all([
     getClientProfile(user.id),
     listIdentities(user.id),
     listActiveSessions(user.id, auth.sessionId),
     listNotifications(user, 10),
+    getOwnWorker(user.id),
   ]);
   const proveedoresVinculables = enabledIdentityProviders().filter((p) => !identidades.some((i) => i.provider === p));
   const tieneNativo = identidades.some((i) => i.provider === "COGNITO");
 
   return (
-    <div className="grid gap-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,22rem)]">
-      <div>
-        <Section titulo="Tu perfil">
-          <div className="tarjeta p-5">
-            {!perfil && (
-              <p className="mb-4 flex gap-2 text-sm text-muted-foreground">
-                <UserRound className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                Completa tu nombre para que los trabajadores sepan con quién conversan.
-              </p>
-            )}
-            <ProfileForm
-              action={guardarPerfil}
-              initial={{
-                fullName: perfil?.fullName ?? user.displayName ?? "",
-                phone: perfil?.phone ?? "",
-                sector: perfil?.sector ?? "",
-              }}
-            />
-          </div>
-        </Section>
-
-        <Section titulo="Formas de ingreso">
-          <div className="tarjeta p-5">
-            <p className="text-sm text-muted-foreground">
-              Si ingresas de distintas maneras (usuario y contraseña, Google…), vincúlalas para usar siempre esta misma
-              cuenta.
-            </p>
-            <ul className="mt-4 divide-y divide-border">
-              {identidades.map((i) => {
-                const enUso = i.issuer === auth.identity.issuer && i.sub === auth.identity.sub;
-                return (
-                  <li key={i.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                    <div className="flex min-w-0 items-center gap-3">
-                      <KeyRound className="h-5 w-5 shrink-0 text-primary" aria-hidden />
-                      <div className="min-w-0">
-                        <p className="font-bold">
-                          {etiquetaProveedor(i.provider)}
-                          {enUso && <span className="ml-2 text-xs font-semibold text-verde-fuerte">en uso</span>}
-                        </p>
-                        <p className="truncate text-xs text-muted-foreground">
-                          {i.email ?? "sin correo"} · último ingreso {formatearFechaHora(i.lastLoginAt)}
-                        </p>
-                      </div>
-                    </div>
-                    {!enUso && identidades.length > 1 && (
-                      <ActionForm
-                        action={desvincularIdentidad}
-                        submitLabel="Quitar"
-                        pendingLabel="Quitando…"
-                        variant="secondary"
-                        className="flex items-center gap-2 space-y-0"
-                      >
-                        <input type="hidden" name="identityId" value={i.id} />
-                      </ActionForm>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-            {(proveedoresVinculables.length > 0 || !tieneNativo) && (
-              <div className="mt-4 flex flex-wrap gap-2">
-                {!tieneNativo && (
-                  <a
-                    href="/api/auth/login?intent=link&returnTo=%2Fcuenta"
-                    className="inline-flex min-h-11 items-center rounded-xl border border-border px-4 text-sm font-bold"
-                  >
-                    Vincular usuario y contraseña
-                  </a>
-                )}
-                {proveedoresVinculables.map((p) => (
-                  <a
-                    key={p}
-                    href={`/api/auth/login?intent=link&proveedor=${p}&returnTo=%2Fcuenta`}
-                    className="inline-flex min-h-11 items-center rounded-xl border border-border px-4 text-sm font-bold"
-                  >
-                    Vincular {p}
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </Section>
-      </div>
-
-      <div>
-        <Section titulo="Acceso">
-          <div className="space-y-4 tarjeta p-5">
-            <div>
-              <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">Correo</p>
-              <p className="mt-1 truncate text-sm font-semibold">{user.email ?? "Sin correo verificado"}</p>
-            </div>
-            <div>
-              <p className="text-xs font-bold tracking-wide text-muted-foreground uppercase">Roles</p>
-              <ul className="mt-2 flex flex-wrap gap-2">
-                {user.roles.map((rol) => (
-                  <li key={rol} className="rounded-lg bg-secondary px-2.5 py-1 text-xs font-bold">
-                    {etiquetaRol(rol)}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <Link
-                href="/mensajes"
-                className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground"
-              >
-                <MessageCircle className="h-4 w-4" aria-hidden /> Mensajes
-              </Link>
-              <Link
-                href="/cuenta/trabajador"
-                className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold"
-              >
-                <HardHat className="h-4 w-4" aria-hidden />
-                {user.roles.includes("TRABAJADOR") ? "Mi perfil de trabajador" : "Soy trabajador"}
-              </Link>
-              {hasPermission(user, "admin.access") && (
-                <Link
-                  href="/admin"
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-primary-foreground"
-                >
-                  <ShieldCheck className="h-4 w-4" aria-hidden /> Panel administrativo
-                </Link>
-              )}
-              <form action="/api/auth/logout" method="post">
-                <button
-                  type="submit"
-                  className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-border px-4 text-sm font-bold"
-                >
-                  <LogOut className="h-4 w-4" aria-hidden /> Cerrar sesión
-                </button>
-              </form>
-            </div>
-          </div>
-        </Section>
-
-        <Section titulo="Notificaciones">
-          <div className="tarjeta p-5">
-            {notificaciones.items.length === 0 ? (
-              <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Bell className="h-4 w-4" aria-hidden /> No tienes notificaciones.
-              </p>
-            ) : (
-              <ul className="divide-y divide-border">
-                {notificaciones.items.map((n) => (
-                  <li key={n.id} className="py-2.5">
-                    <Link href={n.link ?? "/cuenta"} className="block">
-                      <p className={n.readAt ? "text-sm font-semibold" : "text-sm font-extrabold"}>
-                        {!n.readAt && (
-                          <span className="mr-1.5 inline-block h-2 w-2 rounded-full bg-primary" aria-hidden />
-                        )}
-                        {n.title}
-                        {!n.readAt && <span className="sr-only"> (sin leer)</span>}
-                      </p>
-                      {n.body && <p className="truncate text-xs text-muted-foreground">{n.body}</p>}
-                      <p className="text-[11px] text-muted-foreground">{formatearFechaHora(n.createdAt)}</p>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-            {notificaciones.unread > 0 && (
-              <ActionForm
-                action={marcarNotificacionesLeidas}
-                submitLabel="Marcar todas como leídas"
-                variant="secondary"
-                className="mt-3"
-              >
-                {null}
-              </ActionForm>
-            )}
-          </div>
-        </Section>
-
-        <Section titulo="Sesiones activas">
-          <div className="tarjeta p-5">
-            <ul className="divide-y divide-border">
-              {sesiones.map((s) => (
-                <li key={s.id} className="flex items-start justify-between gap-3 py-3">
-                  <div className="flex min-w-0 gap-3">
-                    <MonitorSmartphone className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
-                    <div className="min-w-0">
-                      <p className="text-sm font-bold">
-                        {describirDispositivo(s.userAgent)}
-                        {s.current && <span className="ml-2 text-xs font-semibold text-verde-fuerte">esta sesión</span>}
-                      </p>
-                      <p className="text-xs text-muted-foreground">Activa desde {formatearFechaHora(s.createdAt)}</p>
-                    </div>
-                  </div>
-                  {!s.current && (
-                    <ActionForm
-                      action={cerrarSesion}
-                      submitLabel="Cerrar"
-                      pendingLabel="…"
-                      variant="secondary"
-                      className="space-y-0"
-                    >
-                      <input type="hidden" name="sessionId" value={s.id} />
-                    </ActionForm>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <ActionForm
-              action={cerrarTodasLasSesiones}
-              submitLabel="Cerrar sesión en todos los dispositivos"
-              pendingLabel="Cerrando…"
-              variant="danger"
-              className="mt-4"
-              silentSuccess
-            >
-              <p className="text-xs text-muted-foreground">También cierra esta sesión.</p>
-            </ActionForm>
-          </div>
-        </Section>
-      </div>
-    </div>
+    <PanelCuenta
+      d={{
+        nombre: perfil?.fullName ?? user.displayName,
+        email: user.email,
+        esTrabajador: user.roles.includes("TRABAJADOR"),
+        esPersonal: hasPermission(user, "admin.access"),
+        perfil: {
+          fullName: perfil?.fullName ?? user.displayName ?? "",
+          phone: perfil?.phone ?? "",
+          sector: perfil?.sector ?? "",
+        },
+        perfilCompleto: !!perfil,
+        trabajador: trabajador ? { status: trabajador.status, displayName: trabajador.displayName } : null,
+        notificaciones,
+        identidades: identidades.map((i) => ({
+          id: i.id,
+          provider: i.provider,
+          email: i.email,
+          lastLoginAt: i.lastLoginAt,
+          enUso: i.issuer === auth.identity.issuer && i.sub === auth.identity.sub,
+        })),
+        sesiones: sesiones.map((s) => ({
+          id: s.id,
+          userAgent: s.userAgent,
+          createdAt: s.createdAt,
+          current: s.current,
+        })),
+        vincular: [
+          ...(tieneNativo
+            ? []
+            : [{ href: "/api/auth/login?intent=link&returnTo=%2Fcuenta", etiqueta: "Vincular usuario y contraseña" }]),
+          ...proveedoresVinculables.map((p) => ({
+            href: `/api/auth/login?intent=link&proveedor=${p}&returnTo=%2Fcuenta`,
+            etiqueta: `Vincular ${p}`,
+          })),
+        ],
+      }}
+    />
   );
 }

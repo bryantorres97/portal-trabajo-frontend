@@ -1,10 +1,8 @@
 "use client";
 
 import { ActionForm, FieldError } from "@/components/forms/ActionForm";
+import { campo } from "@/components/ui/campo";
 import type { ActionState } from "@/lib/action-state";
-
-const campo =
-  "mt-1 w-full rounded-xl border border-input bg-card px-4 py-3 text-base text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-ring/30 aria-[invalid=true]:border-destructive";
 
 type Props = {
   action: (prev: ActionState, formData: FormData) => Promise<ActionState>;
@@ -13,7 +11,7 @@ type Props = {
 
 export function ProfileForm({ action, initial }: Props) {
   return (
-    <ActionForm action={action} submitLabel="Guardar perfil">
+    <ActionForm action={action} submitLabel="Guardar mis datos" pendingLabel="Guardando…">
       {(state) => (
         <>
           <div>
