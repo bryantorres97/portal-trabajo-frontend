@@ -12,7 +12,7 @@ import type { WebPushConfig } from "@/lib/env";
  * Firebase se carga solo al activar.
  */
 
-const CLAVE = "acolita.push.token";
+const CLAVE = "llankana.push.token";
 
 type Estado = "cargando" | "no-soportado" | "bloqueado" | "inactivo" | "activo" | "procesando";
 

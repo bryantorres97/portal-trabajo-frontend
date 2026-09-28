@@ -63,11 +63,11 @@ describe("token de Realtime (ADR-004)", () => {
     vi.stubEnv("REALTIME_JWT_PRIVATE_KEY", JSON.stringify(jwk));
   });
 
-  it("emite un JWT ES256 de 10 minutos con iss acolita, sub = users.id y rol authenticated", async () => {
+  it("emite un JWT ES256 de 10 minutos con iss llankana, sub = users.id y rol authenticated", async () => {
     const { issueRealtimeToken } = await import("@/server/realtime/token");
     const { token, expiresAt } = await issueRealtimeToken(WORKER);
     const { payload, protectedHeader } = await jwtVerify(token, publica, {
-      issuer: "acolita",
+      issuer: "llankana",
       audience: "authenticated",
     });
     expect(protectedHeader).toMatchObject({ alg: "ES256", kid: "kid-prueba" });
@@ -87,14 +87,14 @@ describe("token de Realtime (ADR-004)", () => {
 
 describe("mensaje FCM", () => {
   it("arma el mensaje v1 con enlace absoluto para web push", async () => {
-    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://acolita.test");
+    vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://llankana.test");
     const { buildFcmMessage } = await import("@/server/notifications/fcm");
     const m = buildFcmMessage("tok", { title: "Nuevo mensaje de Ana P.", body: "Hola", link: "/mensajes/abc" });
     expect(m.message).toMatchObject({
       token: "tok",
       notification: { title: "Nuevo mensaje de Ana P.", body: "Hola" },
       data: { link: "/mensajes/abc" },
-      webpush: { fcm_options: { link: "https://acolita.test/mensajes/abc" } },
+      webpush: { fcm_options: { link: "https://llankana.test/mensajes/abc" } },
     });
   });
 });

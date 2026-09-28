@@ -47,7 +47,7 @@ export default async function PreguntasFrecuentesPage() {
           }}
         />
       )}
-      <PageHeader titulo="Preguntas frecuentes" descripcion="Lo que más nos consultan sobre Acolita.App." />
+      <PageHeader titulo="Preguntas frecuentes" descripcion="Lo que más nos consultan sobre Llankana." />
       {GRUPOS.map((g) => {
         const lista = preguntas.filter((p) => p.audience === g.audience);
         if (lista.length === 0) return null;

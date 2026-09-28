@@ -21,7 +21,7 @@ export default function TrabajadoresPage() {
     <>
       <PageHeader
         titulo="Tu oficio, con respaldo municipal"
-        descripcion="Regístrate gratis en Acolita.App y muestra a toda la ciudad que fuiste capacitado y habilitado por el Municipio de Ambato."
+        descripcion="Regístrate gratis en Llankana y muestra a toda la ciudad que fuiste capacitado y habilitado por el Municipio de Ambato."
       />
 
       <div className="grid lg:grid-cols-2">

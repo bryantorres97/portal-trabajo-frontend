@@ -42,7 +42,7 @@ export function FormularioContacto() {
     const url =
       canal === "whatsapp"
         ? `https://wa.me/${institucion.whatsapp}?text=${encodeURIComponent(cuerpo())}`
-        : `mailto:${institucion.correo}?subject=${encodeURIComponent(`Acolita.App — ${motivo}`)}&body=${encodeURIComponent(cuerpo())}`;
+        : `mailto:${institucion.correo}?subject=${encodeURIComponent(`Llankana — ${motivo}`)}&body=${encodeURIComponent(cuerpo())}`;
     window.open(url, canal === "whatsapp" ? "_blank" : "_self", "noopener");
   };
 

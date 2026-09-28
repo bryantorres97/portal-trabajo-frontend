@@ -1,5 +1,5 @@
 /*
- * Service worker de las notificaciones push de Acolita.App (Firebase Cloud Messaging).
+ * Service worker de las notificaciones push de Llankana (Firebase Cloud Messaging).
  * No carga el SDK de Firebase: muestra la notificación que llega en el evento `push` y, al
  * tocarla, abre la dirección interna del portal que trae el mensaje (`data.link`).
  */
@@ -20,12 +20,12 @@ self.addEventListener("push", (event) => {
   }
   const n = carga.notification || {};
   const datos = carga.data || {};
-  const titulo = n.title || "Acolita.App";
+  const titulo = n.title || "Llankana";
   event.waitUntil(
     self.registration.showNotification(titulo, {
       body: n.body || "",
-      icon: "/icon.png",
-      badge: "/icon.png",
+      icon: "/images/marca/icono-192.png",
+      badge: "/images/marca/insignia-96.png",
       lang: "es-EC",
       tag: datos.campaignId ? `aviso-${datos.campaignId}` : undefined,
       data: { link: rutaInterna(datos.link) },

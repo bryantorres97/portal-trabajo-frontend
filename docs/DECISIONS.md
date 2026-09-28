@@ -58,8 +58,8 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - Desde abril de 2026 Supabase **no expone automáticamente** las tablas nuevas a la Data API, lo que encaja con el acceso solo desde el servidor (ADR-001).
 - **Implementación (Fase 5, 2026-09-26):**
   - Clave **ES256**. Local: `supabase/signing_keys.json` + `signing_keys_path` en `config.toml`. Nube: importar la clave en Settings → JWT Keys (`docs/setup/realtime.md`).
-  - Token: `iss = acolita`, `sub = users.id`, `aud`/`role = authenticated`, 10 minutos.
-  - En lugar de ajustar `private.current_user_id()`, la política de `realtime.messages` usa una función propia (`private.can_read_realtime_topic`) que solo acepta `iss = acolita`. Las tablas de negocio siguen sin políticas para `authenticated`.
+  - Token: `iss = llankana` (hasta el ADR-017, `acolita`), `sub = users.id`, `aud`/`role = authenticated`, 10 minutos.
+  - En lugar de ajustar `private.current_user_id()`, la política de `realtime.messages` usa una función propia (`private.can_read_realtime_topic`) que solo acepta `iss = llankana`. Las tablas de negocio siguen sin políticas para `authenticated`.
   - Verificado con Realtime real en local: topic permitido → `SUBSCRIBED`; ajeno → `Unauthorized`; otra clave → `JwtSignatureError`.
 
 ## ADR-005 — Sesión web con cookie httpOnly cifrada y OIDC authorization code + PKCE
@@ -69,7 +69,7 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - El login se hace con Hosted UI / Managed Login de Cognito.
   - El intercambio de código ocurre en el servidor, con un client secret que solo existe en el servidor.
   - **Sesión opaca en el servidor (ajuste en la Fase 1):**
-    - La cookie `acolita_session` (httpOnly, Secure, SameSite=Lax) solo contiene un identificador aleatorio de 256 bits.
+    - La cookie `llankana_session` (antes `acolita_session`, ADR-017) (httpOnly, Secure, SameSite=Lax) solo contiene un identificador aleatorio de 256 bits.
     - La tabla `auth_sessions` guarda el hash SHA-256 de ese identificador y los tokens de Cognito **cifrados** (JWE A256GCM con una clave derivada de `SESSION_SECRET`).
     - Motivos: access + refresh token de Cognito superan los 4 KB de una cookie; así se puede revocar cada sesión y cerrar todas las sesiones; y una fuga de la base sola no expone los tokens.
   - La API acepta también `Authorization: Bearer <access_token>` para clientes móviles.
@@ -221,3 +221,20 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - `POST /api/v1/me/bootstrap` con `Authorization: Bearer <access token>` + `{ idToken }`. El ID token se verifica con un verificador aparte que **solo** acepta los client IDs de `COGNITO_EXTRA_CLIENT_IDS` (el verificador del web sigue aceptando solo `COGNITO_CLIENT_ID`); ambos tokens deben tener el mismo `sub` y el ID token debe estar emitido para el `client_id` del access token. Reutiliza `upsertUserFromLogin` y audita `USER_FIRST_LOGIN`/`USER_LOGIN` con `channel: "APP"`. Idempotente.
   - Cierre global: `revokeUserSessions(userId)` (sin sesión concreta) marca `users.tokens_valid_after = now()`. Un Bearer cuyo `auth_time` (Cognito lo conserva al renovar con el refresh token) sea anterior a la marca no resuelve usuario (401). La app debe volver a iniciar sesión. Se descartó `GlobalSignOut` de Cognito: exige el scope `aws.cognito.signin.user.admin`, que el portal no pide, y no invalida los access tokens ya emitidos.
 - **Consecuencias:** un access token robado deja de servir tras el cierre global aunque no haya vencido. Cerrar una sola sesión web no afecta a la app.
+
+## ADR-017 — Cambio de nombre: Acolita.App pasa a llamarse Llankana
+
+- **Estado:** ACEPTADA (2026-09-28, pedido del usuario). Responde P-18 y cierra el bloqueo B1 para el logotipo de la plataforma.
+- **Contexto:** «Acolita.App» era el nombre de trabajo del prototipo. La plataforma pasa a llamarse **Llankana**. El usuario entregó dos logotipos en PNG (horizontal y vertical), que se redibujaron en vectores.
+- **Decisión:**
+  - Marca en vectores (`public/images/marca`, guía en `docs/marca/README.md`): símbolo de dos personas (azul `#136CC6` y verde `#31A286`) unidas por un rombo magenta (`#D92564`) y la palabra «Llankana» en azul marino (`#0D2A52`), trazada con Outfit Black. `Logo` y `LogoSimbolo` (`src/components/site/Logo.tsx`) dibujan el SVG en línea.
+  - Íconos de Next (`favicon.ico`, `icon.svg`, `apple-icon.png`, `opengraph-image.png`) y `manifest.ts`. Las notificaciones push usan `icono-192.png` e `insignia-96.png`.
+  - Los tokens `--azul`, `--verde`, `--magenta` y `--primary` toman los colores exactos de la marca y se agrega `--marino`. `--verde-fuerte` se recalcula para mantener el contraste AA. La franja `barra-marca` pasa a azul, magenta y verde.
+  - Se renombran los identificadores internos: cookies `llankana_session` y `llankana_oauth`, sal HKDF `llankana`, emisor de Realtime `iss = llankana` (y su política), variable `llankana.actor`, tareas pg_cron `llankana-*`, `x-application-name: llankana-web`, clave local `llankana.push.token` y `project_id` de la CLI. Los datos se corrigen con la migración `marca_llankana`: pregunta frecuente, nombre de la capacitación general y reseña del trabajador ficticio.
+  - **No se renombran los recursos externos ya creados:** proyecto de Firebase `acolita-3fa4a` (su ID no se puede cambiar), app client de Cognito `acolita-web-dev` y app de Entra `acolita-admin-dev`. Tampoco se editan las migraciones ya aplicadas.
+  - Los documentos legales publicados son inmutables (RN-18). El nombre nuevo llega en la próxima versión que publique el GAD desde `/admin/contenido`, y se pide a los usuarios aceptarla de nuevo.
+- **Consecuencias:**
+  - Al desplegar, **todas las sesiones web se cierran una vez**, porque cambian la cookie y la sal. La app móvil no se ve afectada, porque usa Bearer.
+  - Entre la migración y el despliegue del web, Realtime rechaza los tokens del servidor anterior y el chat pasa a la consulta periódica hasta que termine el despliegue.
+  - El navegador vuelve a registrar el token de push web.
+  - El correo `llankana@ambato.gob.ec` (`src/content/site.ts`) es provisional hasta que el GAD lo confirme.

@@ -9,7 +9,7 @@ export const institucion = {
   ordenanza: "Ordenanza RC-025-2019, Art. 12",
   telefono: "(03) 299 8700",
   whatsapp: "593998765432",
-  correo: "acolita@ambato.gob.ec",
+  correo: "llankana@ambato.gob.ec",
   correoDpd: "protecciondedatos@ambato.gob.ec",
   sede: "Av. Atahualpa y Jorge Larrea, Edificio Municipal, Ambato",
   horario: "Lunes a viernes, 08:00 a 17:00",

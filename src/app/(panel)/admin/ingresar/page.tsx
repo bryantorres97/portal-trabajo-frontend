@@ -49,7 +49,7 @@ export default async function IngresoPersonalPage({ searchParams }: PageProps<"/
       <div className="h-1 w-full barra-marca" />
       <main id="contenido" className="grid flex-1 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.1fr)]">
         <section className="hidden flex-col justify-between superficie p-10 lg:flex xl:p-14" aria-hidden>
-          <Logo className="text-3xl" />
+          <Logo className="self-start text-3xl" />
           <div className="max-w-md">
             <p className="font-display text-4xl leading-[1.1] font-extrabold tracking-tight text-balance">
               Registro, capacitación y habilitación de trabajadores de oficio.

@@ -18,7 +18,7 @@ Microsoft Entra admin center (entra.microsoft.com) → *Identity* → *Applicati
 
 | Campo | Valor |
 |---|---|
-| Name | `acolita-admin-dev` |
+| Name | `acolita-admin-dev` (nombre anterior; los recursos externos ya creados no se renombran, ADR-017) |
 | Supported account types | **Accounts in this organizational directory only** (single tenant) |
 | Redirect URI | Plataforma **Web**: `http://localhost:3000/api/auth/staff/callback` (agrega también `http://localhost:3300/api/auth/staff/callback` si usas el puerto 3300) |
 
@@ -68,7 +68,7 @@ MFA en desarrollo: opcional. En el tenant de prueba puedes activar *Security def
 
 ## 4. Pedido al GAD (para staging y producción)
 
-> Solicitamos un **app registration** en el tenant de Microsoft Entra ID del GAD Municipalidad de Ambato para el panel administrativo del Portal de Empleo (Acolita.App):
+> Solicitamos un **app registration** en el tenant de Microsoft Entra ID del GAD Municipalidad de Ambato para el panel administrativo del Portal de Empleo (Llankana):
 > - Tipo: aplicación web, **single tenant**, cliente confidencial (secreto o certificado).
 > - Redirect URIs: `https://<dominio-del-portal>/api/auth/staff/callback` y `https://<dominio-del-portal>/admin/ingresar` (destino tras cerrar sesión), y los de staging si aplica.
 > - Permisos delegados: `openid`, `profile`, `email`, `offline_access`.

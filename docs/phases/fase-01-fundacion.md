@@ -30,7 +30,7 @@ Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: COMPLE
 - [x] Headers de seguridad en `next.config.ts`: CSP sin nonce, HSTS en producción, nosniff, `frame-ancestors`, Permissions-Policy; `poweredByHeader: false`
 
 ## 5. Supabase
-- [x] `supabase init`; `project_id = "acolita"`; `auto_expose_new_tables = false`; bloque Cognito third-party documentado (desactivado, ADR-004)
+- [x] `supabase init`; `project_id = "acolita"` (hoy `llankana`, ADR-017); `auto_expose_new_tables = false`; bloque Cognito third-party documentado (desactivado, ADR-004)
 - [x] Migración `base_identidad_roles_auditoria`: `users` + `user_identities` (ADR-008, sin cédula), `roles`, `permissions`, `role_permissions`, `user_roles`, `audit_log` (append-only con triggers y sin UPDATE/DELETE/TRUNCATE), schema `private` con helpers
 - [x] Migración `sesiones_auth`: `auth_sessions` (sesiones opacas, ADR-005)
 - [x] `seed.sql`: 9 roles, 25 permisos, 50 asignaciones. *Las categorías se siembran en la Fase 3, cuando exista la tabla `categories`.*

@@ -899,7 +899,7 @@ export function buildOpenApiDocument(serverUrl = "/api/v1") {
   return {
     openapi: "3.1.0",
     info: {
-      title: "Acolita.App — API /api/v1",
+      title: "Llankana — API /api/v1",
       version: "1.0.0",
       description: [
         "API del Portal de Empleo del GAD Municipalidad de Ambato para la web y la app móvil.",

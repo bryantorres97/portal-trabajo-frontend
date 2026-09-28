@@ -10,7 +10,7 @@ import { getPublicCatalog } from "@/server/catalog/catalog";
 
 export const metadata: Metadata = {
   title: "Oficios y servicios",
-  description: "Catálogo de oficios disponibles en Acolita.App, con tarifas referenciales para el cantón Ambato.",
+  description: "Catálogo de oficios disponibles en Llankana, con tarifas referenciales para el cantón Ambato.",
 };
 
 export default async function OficiosPage() {
@@ -21,7 +21,7 @@ export default async function OficiosPage() {
     <>
       <PageHeader
         titulo="Oficios y servicios"
-        descripcion="Estos son los oficios que puedes encontrar en Acolita.App. Cada trabajador acuerda el precio final contigo, por día o por obra cierta."
+        descripcion="Estos son los oficios que puedes encontrar en Llankana. Cada trabajador acuerda el precio final contigo, por día o por obra cierta."
       />
 
       <Section>

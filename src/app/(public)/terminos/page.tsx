@@ -9,7 +9,7 @@ import { getLegalDocument, type LegalDocument } from "@/server/users/consents";
 
 export const metadata: Metadata = {
   title: "Términos y condiciones",
-  description: "Términos y condiciones de uso de Acolita.App, plataforma municipal de intermediación laboral.",
+  description: "Términos y condiciones de uso de Llankana, plataforma municipal de intermediación laboral.",
 };
 
 /** Muestra la versión vigente de TERMINOS (la misma que el usuario acepta en /cuenta/consentimiento). */

@@ -27,7 +27,7 @@ Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEM
 ### Base de datos (`20260926210000_contrataciones`)
 - [x] `app_settings`, `contracts`, `contract_terms`, `contract_events`; `messages.contract_id`/`contract_terms_id` y `sender_id` nulo solo en mensajes de sistema
 - [x] Funciones: proponer, contraproponer/modificar, aceptar, rechazar/retirar, cancelar, iniciar/terminar/confirmar, disputa y su retiro, resolución por el GAD, listado, detalle, opciones del formulario, mantenimiento
-- [x] pg_cron `acolita-contratos-plazos` (cada 15 min), creado solo si la extensión está disponible
+- [x] pg_cron `acolita-contratos-plazos` (hoy `llankana-contratos-plazos`, ADR-017) (cada 15 min), creado solo si la extensión está disponible
 - [x] Motivos de disputa (`report_reasons` con `target_type = CONTRACT`)
 - [x] pgTAP `06_fase6_contrataciones.test.sql` (73 pruebas)
 - [x] Aplicada en la nube: 13 funciones `fn_*contract*`, tarea pg_cron `acolita-contratos-plazos`, advisors sin observaciones

@@ -42,7 +42,7 @@ test.describe("Fase 2B — ingreso del personal", () => {
     const res = await request.get("/api/auth/staff/callback?code=x&state=y", { maxRedirects: 0 });
     expect(res.status()).toBe(307);
     expect(res.headers()["location"]).toMatch(/\/admin\/ingresar\?error=(login_invalido|no_configurado)$/);
-    expect(res.headers()["set-cookie"] ?? "").not.toMatch(/acolita_session=[^;]/);
+    expect(res.headers()["set-cookie"] ?? "").not.toMatch(/llankana_session=[^;]/);
   });
 
   test("la CSP permite terminar el logout en Microsoft", async ({ request }) => {

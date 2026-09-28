@@ -307,7 +307,7 @@ function Formulario({
                 <Smartphone className="h-4 w-4" aria-hidden />
               </span>
               <div className="min-w-0 text-sm">
-                <p className="text-xs opacity-70">Acolita.App · ahora</p>
+                <p className="text-xs opacity-70">Llankana · ahora</p>
                 <p className="truncate font-bold">{titulo || "Título del aviso"}</p>
                 <p className="line-clamp-3 opacity-90">{mensaje || "El mensaje aparece aquí."}</p>
               </div>

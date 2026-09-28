@@ -38,7 +38,7 @@ async function derivarClave(secret: string, proposito: string): Promise<Uint8Arr
     {
       name: "HKDF",
       hash: "SHA-256",
-      salt: new TextEncoder().encode("acolita.app"),
+      salt: new TextEncoder().encode("llankana"),
       info: new TextEncoder().encode(proposito),
     },
     material,

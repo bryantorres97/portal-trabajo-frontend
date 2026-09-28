@@ -5,7 +5,7 @@
 ## 1. Crear el User Pool
 
 1. Consola AWS → Amazon Cognito → **Create user pool**. Cualquier región sirve. El pool dev actual está en `us-east-1`; el del GAD, en `us-east-2`.
-2. Tipo de aplicación: **Traditional web application** (genera un client **con secret**, igual que el institucional). Nombre: `acolita-web-dev`.
+2. Tipo de aplicación: **Traditional web application** (genera un client **con secret**, igual que el institucional). Nombre: `acolita-web-dev` (nombre anterior; los recursos externos ya creados no se renombran, ADR-017).
 3. Opciones de inicio de sesión: **email** (y teléfono si quieres probarlo). Registro autónomo habilitado.
 4. Atributos requeridos: `email`. Opcionales: `given_name`, `family_name` (los mismos que entrega el pool del GAD).
 5. Return URL: `http://localhost:3000/api/auth/callback`.

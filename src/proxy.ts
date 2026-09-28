@@ -32,5 +32,7 @@ export function proxy(request: NextRequest) {
 
 export const config = {
   // Excluye assets estáticos e imágenes optimizadas.
-  matcher: ["/((?!_next/static|_next/image|images/|icon.png|robots.txt|sitemap.xml).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|images/|favicon.ico|icon.svg|apple-icon.png|opengraph-image.png|manifest.webmanifest|robots.txt|sitemap.xml).*)",
+  ],
 };

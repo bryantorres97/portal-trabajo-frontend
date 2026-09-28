@@ -59,7 +59,7 @@ export function buildFcmMessage(token: string, m: PushMessage) {
       // FCM exige HTTPS en fcm_options.link (en local el service worker abre data.link).
       webpush: {
         ...(url.protocol === "https:" ? { fcm_options: { link: url.toString() } } : {}),
-        notification: { icon: "/icon.png" },
+        notification: { icon: "/images/marca/icono-192.png", badge: "/images/marca/insignia-96.png" },
       },
       android: { priority: "HIGH" as const, notification: { channel_id: androidChannel(m.data?.event) } },
     },

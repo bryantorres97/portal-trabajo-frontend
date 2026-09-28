@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="105 85 640 466" role="img" aria-label="Llankana"><title>Llankana</title><g fill="none" stroke-width="86" stroke-linejoin="round">
+  <circle cx="262" cy="160" r="71" fill="#0D2A52" stroke="none"/>
+  <path d="M364.3 340.8L325.2 301.7A40 40 0 0 0 296.9 290L217.4 290A65.4 65.4 0 0 0 171.1 401.6L260.3 490.8A43 43 0 0 0 321.2 490.8L366 446" stroke="#0D2A52"/>
+  <g transform="matrix(-1 0 0 1 850 0)">
+    <circle cx="262" cy="160" r="71" fill="#0D2A52" stroke="none"/>
+    <path d="M364.3 340.8L325.2 301.7A40 40 0 0 0 296.9 290L217.4 290A65.4 65.4 0 0 0 171.1 401.6L260.3 490.8A43 43 0 0 0 321.2 490.8L366 446" stroke="#0D2A52"/>
+  </g>
+  <rect x="376" y="343" width="98" height="98" rx="11" transform="rotate(45 425 392)" fill="#0D2A52" stroke="none"/>
+</g></svg>
