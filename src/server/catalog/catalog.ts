@@ -184,7 +184,7 @@ export async function listCatalogForAdmin(actor: AppUser) {
 }
 
 const COLORES = ["verde", "azul", "magenta", "amarillo", "naranja"] as const;
-const UNIDADES = ["JORNAL", "JORNADA", "HORA", "OBRA", "SERVICIO"] as const;
+const UNIDADES = ["JORNAL", "HORA", "OBRA", "SERVICIO"] as const;
 
 const opcional = <T extends z.ZodType>(s: T) =>
   z.preprocess((v) => (typeof v === "string" && v.trim() === "" ? undefined : v), s.optional());

@@ -222,7 +222,7 @@ Visitante → busca por texto, categoría o sector → ve la lista de habilitado
 
 ### 7.3 Negociación y contratación
 
-1. Cualquiera de las partes presiona "Proponer condiciones" en el chat. El formulario incluye descripción, fecha o rango, lugar (sector o dirección, visible solo para las partes), precio y modalidad (jornal, obra, hora) y observaciones.
+1. Cualquiera de las partes presiona "Proponer condiciones" en el chat. El formulario incluye descripción, fecha o rango, lugar (sector o dirección, visible solo para las partes), precio y modalidad (por día, obra, hora) y observaciones.
 2. Se crea `contract_terms` v1 y el contrato queda en `PROPUESTA_ENVIADA`. En el chat aparece una tarjeta con la propuesta.
 3. La contraparte acepta, rechaza o contrapropone (v2).
 4. Cuando ambos aceptaron la misma versión → `CONTRATADA` → se notifica a ambos → queda visible en "Mis contrataciones".

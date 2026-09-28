@@ -19,8 +19,7 @@ const COLORES = [
 ] as const;
 
 const UNIDADES = [
-  ["JORNAL", "Por jornal"],
-  ["JORNADA", "Por jornada"],
+  ["JORNAL", "Por día"],
   ["HORA", "Por hora"],
   ["OBRA", "Por obra"],
   ["SERVICIO", "Por servicio"],

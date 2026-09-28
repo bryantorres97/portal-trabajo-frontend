@@ -62,7 +62,7 @@ export default function ContratantesPage() {
       <Section titulo="Tus responsabilidades">
         <ul className="divide-y divide-border tarjeta">
           {[
-            "Acordar con claridad el alcance del trabajo, la modalidad (jornal u obra cierta) y el valor antes de iniciar.",
+            "Acordar con claridad el alcance del trabajo, la modalidad (por día u obra cierta) y el valor antes de iniciar.",
             "Pagar el valor acordado directamente al trabajador al finalizar el servicio.",
             "Brindar condiciones seguras en el lugar de trabajo.",
             "Calificar el servicio recibido para fortalecer la reputación del trabajador.",

@@ -76,14 +76,13 @@ export function hayFiltros(f: Filtros): boolean {
 }
 
 const unidades: Record<string, string> = {
-  JORNAL: "por jornal",
-  JORNADA: "por jornada",
+  JORNAL: "por día",
   HORA: "por hora",
   OBRA: "por obra",
   SERVICIO: "por servicio",
 };
 
-/** "$25 – $35 por jornal" (tarifa referencial). */
+/** "$25 – $35 por día" (tarifa referencial). */
 export function formatearTarifa(min: number | null, max: number | null, unidad: string | null): string | null {
   if (min == null && max == null) return null;
   const f = (n: number) => `$${Number.isInteger(n) ? n : n.toFixed(2)}`;

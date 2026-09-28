@@ -59,7 +59,7 @@ describe("urlBusqueda", () => {
 
 describe("formatos", () => {
   it("formatea tarifas referenciales", () => {
-    expect(formatearTarifa(25, 35, "JORNAL")).toBe("$25 – $35 por jornal");
+    expect(formatearTarifa(25, 35, "JORNAL")).toBe("$25 – $35 por día");
     expect(formatearTarifa(15, 15, "SERVICIO")).toBe("$15 por servicio");
     expect(formatearTarifa(null, 40, "HORA")).toBe("$40 por hora");
     expect(formatearTarifa(12.5, null, "OBRA")).toBe("$12.50 por obra");

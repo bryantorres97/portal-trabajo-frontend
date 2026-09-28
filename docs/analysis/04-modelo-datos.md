@@ -61,7 +61,7 @@ Se muestran los campos clave, no todos.
 
 ### Catálogo
 
-> **Implementado en la Fase 3** (`20260925134749_catalogo_trabajadores_busqueda`): `categories` (grupos) → `services` (oficios, con tarifa referencial y unidad `JORNAL|JORNADA|HORA|OBRA|SERVICIO`), `worker_services`, `parishes` (27 parroquias del cantón, [INFERIDO] P-12) y `worker_profiles` con `search_text` y `search_vector` mantenidos por triggers. La lectura pública pasa solo por `fn_public_search_workers`, `fn_public_worker` y `fn_public_catalog`.
+> **Implementado en la Fase 3** (`20260925134749_catalogo_trabajadores_busqueda`): `categories` (grupos) → `services` (oficios, con tarifa referencial y unidad `JORNAL|HORA|OBRA|SERVICIO`), `worker_services`, `parishes` (27 parroquias del cantón, [INFERIDO] P-12) y `worker_profiles` con `search_text` y `search_vector` mantenidos por triggers. La lectura pública pasa solo por `fn_public_search_workers`, `fn_public_worker` y `fn_public_catalog`.
 
 | Tabla | Campos importantes | Notas |
 |---|---|---|
