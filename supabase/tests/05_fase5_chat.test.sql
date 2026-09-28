@@ -113,13 +113,13 @@ select lives_ok($$ select public.fn_report_message('00000000-0000-0000-0000-0000
   'el cliente denuncia un mensaje recibido');
 
 -- -----------------------------------------------------------------------------
--- Autorización de canales de Realtime (JWT propio: iss = acolita)
+-- Autorización de canales de Realtime (JWT propio: iss = llankana)
 -- -----------------------------------------------------------------------------
-select set_config('request.jwt.claims', '{"iss":"acolita","role":"authenticated","sub":"00000000-0000-0000-0000-0000000005c1"}', true);
+select set_config('request.jwt.claims', '{"iss":"llankana","role":"authenticated","sub":"00000000-0000-0000-0000-0000000005c1"}', true);
 select ok(private.can_read_realtime_topic('conversation:' || (select v from t where k = 'c'))
   and private.can_read_realtime_topic('user:00000000-0000-0000-0000-0000000005c1'),
   'el cliente lee su conversación y su canal personal');
-select set_config('request.jwt.claims', '{"iss":"acolita","role":"authenticated","sub":"00000000-0000-0000-0000-0000000005c3"}', true);
+select set_config('request.jwt.claims', '{"iss":"llankana","role":"authenticated","sub":"00000000-0000-0000-0000-0000000005c3"}', true);
 select ok(not private.can_read_realtime_topic('conversation:' || (select v from t where k = 'c'))
   and not private.can_read_realtime_topic('user:00000000-0000-0000-0000-0000000005c1'),
   'un tercero no puede suscribirse a la conversación ni al canal ajeno');

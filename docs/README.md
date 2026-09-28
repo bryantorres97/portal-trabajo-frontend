@@ -1,4 +1,4 @@
-# Documentación — Portal de Empleo y Servicios GAD Ambato (Acolita.App)
+# Documentación — Portal de Empleo y Servicios GAD Ambato (Llankana)
 
 ## Cómo retomar el trabajo
 

@@ -15,8 +15,8 @@ import {
 } from "@/server/contracts/contracts";
 import { getAdminDb } from "@/server/db/admin";
 import { hoyEcuador } from "@/server/domain/contracts/schemas";
-import { DomainError } from "@/server/errors";
 import type { RequestContext } from "@/server/http/request-info";
+import { estado } from "../support/estado";
 
 /** Fase 6 — contrataciones contra la base del CI (concurrencia real entre conexiones). */
 
@@ -72,15 +72,6 @@ beforeAll(async () => {
     .conversationId;
 });
 
-async function estado<T>(p: Promise<T>) {
-  try {
-    await p;
-    return "ok";
-  } catch (e) {
-    return e instanceof DomainError ? e.status : "error";
-  }
-}
-
 describe("negociación y aceptación bilateral", () => {
   it("la contratación nace con la propuesta y se confirma con la aceptación de la misma versión", async () => {
     const id = await proposeContract(cliente, { conversationId, terms: terminos() }, ctx);
@@ -102,31 +93,44 @@ describe("negociación y aceptación bilateral", () => {
     expect(await progressContract(cliente, id, "CONFIRM", ctx)).toBe("FINALIZADA");
   });
 
-  it("aceptaciones y contrapropuestas simultáneas se serializan: solo una gana, la otra recibe 409", async () => {
+  it("aceptaciones y contrapropuestas simultáneas se serializan: nunca dos cambios sobre la misma versión", async () => {
     const id = await proposeContract(cliente, { conversationId, terms: terminos(50) }, ctx);
     const { version, contentHash } = (await getContract(trabajador, id)).current;
 
-    const resultados = await Promise.all([
+    const [aceptacion, ...contrapropuestas] = await Promise.all([
       estado(acceptContract(trabajador, id, { version, contentHash }, ctx)),
       estado(counterContract(trabajador, id, { baseVersion: version, terms: terminos(80) }, ctx)),
       estado(counterContract(cliente, id, { baseVersion: version, terms: terminos(55) }, ctx)),
     ]);
-    expect(resultados.filter((r) => r === "ok")).toHaveLength(1);
-    expect(resultados.filter((r) => r === 409)).toHaveLength(2);
+    // Solo una de las dos contrapropuestas crea la versión 2; la otra llega tarde (409).
+    expect(contrapropuestas.sort()).toEqual([409, "ok"]);
 
     const final = await getContract(cliente, id);
-    const aceptada = resultados[0] === "ok";
-    expect(final.status).toBe(aceptada ? "CONTRATADA" : "PROPUESTA_ENVIADA");
-    expect(final.versions).toHaveLength(aceptada ? 1 : 2);
-    if (final.status === "PROPUESTA_ENVIADA") {
-      await declineContract(
-        final.current.proposedByMe ? cliente : trabajador,
-        id,
-        final.current.proposedByMe ? "WITHDRAW" : "REJECT",
-        { version: final.current.version },
-        ctx,
-      );
+    expect(final.versions).toHaveLength(2);
+    if (aceptacion === "ok") {
+      // La aceptación ganó: la versión 1 queda acordada y la contrapropuesta posterior, basada en
+      // esa misma versión vigente, se registra como propuesta de modificación pendiente.
+      expect(final.status).toBe("CONTRATADA");
+      expect(final.agreed?.version).toBe(version);
+      expect(final.pending?.version).toBe(version + 1);
     } else {
+      // La contrapropuesta ganó: aceptar la versión 1, ya obsoleta, recibe 409.
+      expect(aceptacion).toBe(409);
+      expect(final.status).toBe("PROPUESTA_ENVIADA");
+      expect(final.agreed).toBeNull();
+    }
+
+    // Cierra este caso para no bloquear la conversación en los siguientes. `final` se leyó como el
+    // cliente: retira la versión pendiente si es suya y, si la propuso el trabajador, la rechaza.
+    const pendiente = final.pending ?? final.current;
+    await declineContract(
+      cliente,
+      id,
+      pendiente.proposedByMe ? "WITHDRAW" : "REJECT",
+      { version: pendiente.version },
+      ctx,
+    );
+    if (aceptacion === "ok") {
       await progressContract(trabajador, id, "START", ctx);
       await progressContract(cliente, id, "CONFIRM", ctx);
     }

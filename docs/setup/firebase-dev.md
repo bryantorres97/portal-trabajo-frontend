@@ -1,6 +1,6 @@
 # Firebase (push) — proyecto de desarrollo
 
-Proyecto de pruebas: `acolita-3fa4a` (cuenta personal, como Cognito dev). Para producción el GAD crea el suyo y entrega los mismos datos.
+Proyecto de pruebas: `acolita-3fa4a` (cuenta personal, como Cognito dev). Se creó con el nombre anterior de la plataforma y el ID de un proyecto de Firebase no se puede cambiar: se mantiene (ADR-017). Para producción el GAD crea el suyo y entrega los mismos datos.
 
 ## 1. Proyecto y API
 

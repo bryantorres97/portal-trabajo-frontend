@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("portal público", () => {
   test("inicio: buscador de oficios filtra resultados", async ({ page }) => {
     await page.goto("/");
-    await expect(page).toHaveTitle(/Acolita\.App/);
+    await expect(page).toHaveTitle(/Llankana/);
     await expect(page.getByRole("heading", { level: 1 })).toContainText("necesitas");
     await expect(page.locator("html")).toHaveAttribute("lang", "es-EC");
     await page.waitForLoadState("networkidle"); // el filtro en vivo requiere la hidratación de React

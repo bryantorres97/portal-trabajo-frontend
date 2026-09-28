@@ -7,13 +7,13 @@ import { institucion, puntosDeAcopio } from "@/content/site";
 
 export const metadata: Metadata = {
   title: "Contacto",
-  description: "Canales de atención de Acolita.App y del GAD Municipalidad de Ambato.",
+  description: "Canales de atención de Llankana y del GAD Municipalidad de Ambato.",
 };
 
 export default function ContactoPage() {
   return (
     <>
-      <PageHeader titulo="Estamos para acolitarte" descripcion={`${institucion.direccion} del ${institucion.gad}.`} />
+      <PageHeader titulo="Estamos para ayudarte" descripcion={`${institucion.direccion} del ${institucion.gad}.`} />
 
       <div className="grid lg:grid-cols-2">
         <Section>

@@ -78,7 +78,7 @@ export default function ComoFuncionaPage() {
   return (
     <>
       <PageHeader
-        titulo="Cómo funciona Acolita.App"
+        titulo="Cómo funciona Llankana"
         descripcion="Un proceso municipal en dos caminos: la habilitación del trabajador de oficio y la contratación del servicio con respaldo."
       />
 

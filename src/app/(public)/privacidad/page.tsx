@@ -11,7 +11,7 @@ import { getLegalDocument, type LegalDocument } from "@/server/users/consents";
 export const metadata: Metadata = {
   title: "Privacidad y protección de datos",
   description:
-    "Aviso de privacidad de Acolita.App: qué datos tratamos, con qué finalidad y cómo ejercer tus derechos conforme a la LOPDP.",
+    "Aviso de privacidad de Llankana: qué datos tratamos, con qué finalidad y cómo ejercer tus derechos conforme a la LOPDP.",
 };
 
 /**
@@ -64,7 +64,7 @@ export default async function PrivacidadPage() {
     <>
       <PageHeader
         titulo="Privacidad y protección de datos"
-        descripcion="Acolita.App trata tus datos personales conforme a la Ley Orgánica de Protección de Datos Personales del Ecuador."
+        descripcion="Llankana trata tus datos personales conforme a la Ley Orgánica de Protección de Datos Personales del Ecuador."
       />
 
       <Section>
@@ -99,7 +99,7 @@ export default async function PrivacidadPage() {
           </p>
           <p className="mt-4 text-sm font-semibold">Delegado de Protección de Datos</p>
           <a
-            href={`mailto:${institucion.correoDpd}?subject=${encodeURIComponent("Solicitud de derechos — Acolita.App")}`}
+            href={`mailto:${institucion.correoDpd}?subject=${encodeURIComponent("Solicitud de derechos — Llankana")}`}
             className="mt-3 flex min-h-13 items-center justify-center rounded-2xl bg-primary px-5 text-center text-base font-bold text-primary-foreground sm:max-w-sm"
           >
             Enviar solicitud

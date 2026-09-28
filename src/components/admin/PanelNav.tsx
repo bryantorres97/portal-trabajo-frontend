@@ -52,7 +52,7 @@ export function PanelNav({ usuario }: { usuario: UsuarioPanel }) {
               <ContenidoNav usuario={usuario} alNavegar={() => setAbierto(false)} />
             </SheetContent>
           </Sheet>
-          <Link href="/admin" className="flex min-w-0 items-baseline gap-2" aria-label="Panel del GAD, inicio">
+          <Link href="/admin" className="flex min-w-0 items-center gap-2" aria-label="Panel del GAD, inicio">
             <Logo className="text-xl" />
             <span className="truncate text-sm font-semibold text-muted-foreground">Panel del GAD</span>
           </Link>

@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { getPublicServices } from "@/server/catalog/catalog";
 
 export const metadata: Metadata = {
-  title: { absolute: "Buscar un profesional en Ambato | Acolita.App" },
+  title: { absolute: "Buscar un profesional en Ambato | Llankana" },
   description:
     "Busca el oficio que necesitas —albañilería, plomería, electricidad, carpintería, cerrajería y más— con trabajadores habilitados por el GAD Municipalidad de Ambato.",
 };

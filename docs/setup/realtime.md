@@ -2,8 +2,8 @@
 
 Decisión: ADR-004. El navegador se suscribe a canales **privados** de Realtime (Broadcast) con un JWT de 10 minutos que emite el servidor (`POST /api/v1/realtime/token`):
 
-- `iss = acolita`, `sub = users.id`, `role = authenticated`, firmado con **ES256**.
-- La política RLS de `realtime.messages` (`private.can_read_realtime_topic`) solo acepta tokens con `iss = acolita` de usuarios ACTIVOS:
+- `iss = llankana`, `sub = users.id`, `role = authenticated`, firmado con **ES256**.
+- La política RLS de `realtime.messages` (`private.can_read_realtime_topic`) solo acepta tokens con `iss = llankana` de usuarios ACTIVOS:
   - `user:{id}` → su dueño (avisos de bandeja);
   - `conversation:{id}` → sus dos partes.
 - Nadie publica desde el navegador: los eventos (`message`, `read`, `status`, `inbox`) los emite la base con triggers.

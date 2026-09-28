@@ -1,4 +1,4 @@
-# Acolita.App — Portal de Empleo y Servicios del GAD Municipalidad de Ambato
+# Llankana — Portal de Empleo y Servicios del GAD Municipalidad de Ambato
 
 Plataforma municipal que conecta a ciudadanos con trabajadores de oficio **registrados, capacitados y habilitados** por el GAD. Incluye chat, contratación con condiciones inmutables, calificaciones, denuncias, moderación y auditoría.
 

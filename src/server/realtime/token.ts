@@ -7,11 +7,11 @@ import { getRealtimeEnv } from "@/lib/env";
 /**
  * JWT de corta vida para suscribirse a canales privados de Supabase Realtime (ADR-004).
  * Lo firma el servidor con su clave ES256, que Supabase conoce (importada en el proyecto).
- * `iss = 'acolita'` y `sub = users.id`: la política RLS de realtime.messages
+ * `iss = 'llankana'` y `sub = users.id`: la política RLS de realtime.messages
  * (`private.can_read_realtime_topic`) solo acepta ese emisor y usuarios ACTIVOS.
  */
 
-export const REALTIME_TOKEN_ISSUER = "acolita";
+export const REALTIME_TOKEN_ISSUER = "llankana";
 export const REALTIME_TOKEN_TTL_SECONDS = 600;
 
 let clave: { kid: string; key: CryptoKey } | undefined;

@@ -42,7 +42,7 @@ export default function ContratantesPage() {
     <>
       <PageHeader
         titulo="Contrata con seguridad"
-        descripcion="Acolita.App te permite encontrar trabajadores de oficio de Ambato habilitados por el Municipio, con acuerdos registrados y respaldo institucional."
+        descripcion="Llankana te permite encontrar trabajadores de oficio de Ambato habilitados por el Municipio, con acuerdos registrados y respaldo institucional."
       />
 
       <Section>
@@ -78,8 +78,8 @@ export default function ContratantesPage() {
         <p className="flex gap-3 rounded-2xl border border-amarillo/50 bg-amarillo/10 p-4 text-sm leading-relaxed">
           <AlertTriangle className="h-5 w-5 shrink-0 text-naranja" aria-hidden />
           <span>
-            Acolita.App es un servicio de intermediación. No existe relación de dependencia laboral entre el trabajador
-            y el contratante, ni entre el trabajador y el GAD Municipalidad de Ambato.
+            Llankana es un servicio de intermediación. No existe relación de dependencia laboral entre el trabajador y
+            el contratante, ni entre el trabajador y el GAD Municipalidad de Ambato.
           </span>
         </p>
       </Section>

@@ -85,13 +85,14 @@ describe("consentimiento (RN-18)", () => {
       .limit(1)
       .single();
     const version = (max!.version as number) + 1;
-    await db.from("legal_documents").insert({
+    const { error } = await db.from("legal_documents").insert({
       code: "TERMINOS",
       version,
       title: "Términos v" + version,
-      content_md: "x",
+      content_md: "Texto de prueba de los términos, versión nueva.", // la base exige 20 caracteres o más
       published_at: new Date().toISOString(),
     });
+    expect(error).toBeNull();
     expect((await getPendingConsents(user.id)).map((d) => `${d.code}@${d.version}`)).toEqual([`TERMINOS@${version}`]);
   });
 });

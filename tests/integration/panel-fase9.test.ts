@@ -29,19 +29,22 @@ async function personal(rol: string): Promise<AppUser> {
   return (await loadUser(data.id)) as AppUser;
 }
 
-const hoy = new Intl.DateTimeFormat("en-CA", { timeZone: "America/Guayaquil" }).format(new Date());
+const fecha = (d: Date) => new Intl.DateTimeFormat("en-CA", { timeZone: "America/Guayaquil" }).format(d);
+const hoy = fecha(new Date());
+/** Los reportes admiten hasta dos años: un rango relativo no envejece con el calendario. */
+const haceUnAno = fecha(new Date(Date.now() - 365 * 86_400_000));
 
 describe("panel administrativo", () => {
   it("el supervisor ve indicadores con los datos del seed (15 habilitados)", async () => {
     const supervisor = await personal("SUPERVISOR");
-    const m = await getMetrics(supervisor, "2025-01-01", hoy);
+    const m = await getMetrics(supervisor, haceUnAno, hoy);
     expect(m.workers.byStatus.HABILITADO).toBeGreaterThanOrEqual(15);
     expect(m.workers.enabledByCategory.length).toBeGreaterThan(0);
   });
 
   it("cada exportación queda auditada con los filtros y las filas", async () => {
     const supervisor = await personal("SUPERVISOR");
-    const { csv } = await exportReport(supervisor, "trabajadores", { desde: "2024-01-01", hasta: hoy }, ctx);
+    const { csv } = await exportReport(supervisor, "trabajadores", { desde: haceUnAno, hasta: hoy }, ctx);
     expect(csv.startsWith("﻿Nombre público;Estado")).toBe(true);
     const { data } = await getAdminDb()
       .from("audit_log")
@@ -49,7 +52,7 @@ describe("panel administrativo", () => {
       .eq("actor_id", supervisor.id)
       .eq("action", "DATA_EXPORTED")
       .single();
-    expect(data?.metadata).toMatchObject({ tipo: "trabajadores", desde: "2024-01-01", hasta: hoy });
+    expect(data?.metadata).toMatchObject({ tipo: "trabajadores", desde: haceUnAno, hasta: hoy });
     const { csv: auditoria } = await exportAudit(supervisor, { desde: hoy, hasta: hoy }, ctx);
     expect(auditoria).toContain("DATA_EXPORTED");
   });

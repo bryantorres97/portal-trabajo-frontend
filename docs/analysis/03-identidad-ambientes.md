@@ -89,10 +89,10 @@ Reglas: **nunca** usar el pool productivo ni sus usuarios en local o dev; cada a
 |---|---|---|---|---|
 | Next.js | `pnpm dev` | Deploy automático de la rama `development` | Deploy de `main` + tag RC | Deploy de tag de release |
 | Cognito | Pool dev personal (us-east-1) | Pool dev personal (app client aparte) | Pool de staging propio del proyecto | App Client del portal en `contribuyentes-externos` |
-| Supabase | CLI local (Docker) | Proyecto `acolita-dev` | Proyecto `acolita-staging` | Proyecto `acolita-prod` (plan Pro, PITR) |
+| Supabase | CLI local (Docker) | Proyecto `Portal Empleo` | Proyecto `llankana-staging` | Proyecto `llankana-prod` (plan Pro, PITR) |
 | Storage | Local (CLI) | Proyecto dev | Proyecto staging | Proyecto prod |
-| Firebase | Proyecto `acolita-dev` (o desactivado) | `acolita-dev` | `acolita-staging` | `acolita-prod` |
-| Dominio | `localhost:3000` | `dev.<dominio>` | `staging.<dominio>` | [PENDIENTE] p. ej. `acolita.ambato.gob.ec` |
+| Firebase | Proyecto `acolita-3fa4a` (creado con el nombre anterior) | `acolita-3fa4a` | `llankana-staging` | `llankana-prod` |
+| Dominio | `localhost:3000` | `dev.<dominio>` | `staging.<dominio>` | [PENDIENTE] p. ej. `llankana.ambato.gob.ec` |
 | Datos | Seed sintético | Seed sintético | Datos sintéticos o anonimizados | Reales |
 | Secrets | `.env.local` (no versionado) | Gestor del proveedor | Gestor del proveedor | Gestor del proveedor, con acceso restringido |
 

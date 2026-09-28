@@ -6,7 +6,7 @@ import { runModerationMaintenance } from "@/server/reports/admin";
 
 /**
  * GET /api/internal/moderation — levanta las suspensiones vencidas. Respaldo de la tarea pg_cron
- * `acolita-moderacion-vigencias`; lo invoca el programador con `Authorization: Bearer <CRON_SECRET>`.
+ * `llankana-moderacion-vigencias`; lo invoca el programador con `Authorization: Bearer <CRON_SECRET>`.
  */
 export async function GET(request: Request) {
   const rechazo = cronRejection(request);

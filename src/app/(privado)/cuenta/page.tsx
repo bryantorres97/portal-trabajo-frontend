@@ -94,7 +94,7 @@ function Ingreso() {
   return (
     <div className="grid items-center gap-10 px-4 pt-10 pb-6 sm:px-6 lg:grid-cols-2 lg:pt-16">
       <div>
-        <h1 className="text-4xl leading-tight font-extrabold sm:text-5xl">Ingresa a Acolita.App</h1>
+        <h1 className="text-4xl leading-tight font-extrabold sm:text-5xl">Ingresa a Llankana</h1>
         <p className="mt-4 max-w-lg text-lg text-muted-foreground">
           Inicia sesión o crea tu cuenta para contactar trabajadores y gestionar tus contrataciones.
         </p>

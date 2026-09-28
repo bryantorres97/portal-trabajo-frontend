@@ -32,7 +32,7 @@ test.describe("Fase 4 — trabajadores", () => {
     const sinCookie = await request.get(ruta, { maxRedirects: 0 });
     expect(sinCookie.status()).toBe(307);
     const invalida = await request.get(ruta, {
-      headers: { cookie: "acolita_session=invalida; __Host-acolita_session=invalida" },
+      headers: { cookie: "llankana_session=invalida; __Host-llankana_session=invalida" },
       maxRedirects: 0,
     });
     expect(invalida.status()).toBe(403);

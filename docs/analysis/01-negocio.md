@@ -6,7 +6,7 @@ Entregables §37: 1 Resumen ejecutivo · 2 Comprensión del negocio · 3 Actores
 
 ## 1. Resumen ejecutivo
 
-El GAD Municipal de Ambato necesita una plataforma web institucional (nombre de trabajo **Acolita.App**, tomado del prototipo) que conecte a ciudadanos que necesitan servicios de oficio con trabajadores **registrados presencialmente, capacitados y habilitados por el GAD**. La plataforma permite descubrir trabajadores, conversar por chat, acordar condiciones que quedan registradas de forma inmutable, formalizar la contratación, calificar, denunciar y moderar. Todo con auditoría estricta.
+El GAD Municipal de Ambato necesita una plataforma web institucional (nombre **Llankana**; hasta el 2026-09-28 se llamó Acolita.App, ADR-017) que conecte a ciudadanos que necesitan servicios de oficio con trabajadores **registrados presencialmente, capacitados y habilitados por el GAD**. La plataforma permite descubrir trabajadores, conversar por chat, acordar condiciones que quedan registradas de forma inmutable, formalizar la contratación, calificar, denunciar y moderar. Todo con auditoría estricta.
 
 Pilares técnicos:
 

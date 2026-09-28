@@ -114,8 +114,8 @@ describe("FCM", () => {
 describe("despacho de avisos", () => {
   beforeEach(() => {
     vi.resetModules();
-    vi.stubEnv("FCM_PROJECT_ID", "acolita-test");
-    vi.stubEnv("FCM_CLIENT_EMAIL", "push@acolita-test.iam.gserviceaccount.com");
+    vi.stubEnv("FCM_PROJECT_ID", "llankana-test");
+    vi.stubEnv("FCM_CLIENT_EMAIL", "push@llankana-test.iam.gserviceaccount.com");
     vi.stubEnv("FCM_PRIVATE_KEY", "clave");
   });
 
@@ -185,8 +185,8 @@ describe("despacho de avisos", () => {
 describe("dispositivos anónimos de la app", () => {
   beforeEach(() => {
     vi.resetModules();
-    vi.stubEnv("FCM_PROJECT_ID", "acolita-test");
-    vi.stubEnv("FCM_CLIENT_EMAIL", "push@acolita-test.iam.gserviceaccount.com");
+    vi.stubEnv("FCM_PROJECT_ID", "llankana-test");
+    vi.stubEnv("FCM_CLIENT_EMAIL", "push@llankana-test.iam.gserviceaccount.com");
     vi.stubEnv("FCM_PRIVATE_KEY", "clave");
     vi.stubEnv("SESSION_SECRET", "s".repeat(40));
   });

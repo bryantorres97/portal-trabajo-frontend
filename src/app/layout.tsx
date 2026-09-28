@@ -20,15 +20,16 @@ const figtree = Figtree({
 
 export const metadata: Metadata = {
   metadataBase: new URL(publicEnv.NEXT_PUBLIC_APP_URL),
+  applicationName: "Llankana",
   title: {
-    default: "Acolita.App | Trabajo verificado en Ambato",
-    template: "%s | Acolita.App",
+    default: "Llankana | Trabajo verificado en Ambato",
+    template: "%s | Llankana",
   },
   description:
     "Plataforma municipal de intermediación laboral del GAD Municipalidad de Ambato: trabajadores de oficio registrados, capacitados y habilitados por el Municipio.",
   authors: [{ name: "GAD Municipalidad de Ambato" }],
   openGraph: {
-    siteName: "Acolita.App",
+    siteName: "Llankana",
     type: "website",
     locale: "es_EC",
   },

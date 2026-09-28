@@ -6,10 +6,10 @@
 const esProduccion = process.env.NODE_ENV === "production";
 
 /** En producción se usa el prefijo `__Host-` (exige Secure, Path=/ y sin Domain). */
-export const SESSION_COOKIE = esProduccion ? "__Host-acolita_session" : "acolita_session";
+export const SESSION_COOKIE = esProduccion ? "__Host-llankana_session" : "llankana_session";
 
 /** Cookie temporal con state/nonce/PKCE durante el login. */
-export const OAUTH_COOKIE = esProduccion ? "__Host-acolita_oauth" : "acolita_oauth";
+export const OAUTH_COOKIE = esProduccion ? "__Host-llankana_oauth" : "llankana_oauth";
 
 export const SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 30; // 30 días (ciudadanos)
 export const INTERNAL_SESSION_MAX_AGE_SECONDS = 60 * 60 * 12; // 12 h (personal GAD)

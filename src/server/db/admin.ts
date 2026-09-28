@@ -16,7 +16,7 @@ export function getAdminDb(): SupabaseClient {
     const env = getSupabaseEnv();
     client = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-      global: { headers: { "x-application-name": "acolita-web" } },
+      global: { headers: { "x-application-name": "llankana-web" } },
     });
   }
   return client;
