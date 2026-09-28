@@ -4,8 +4,8 @@
 // También lo usa el CI (.github/workflows/ci.yml) antes de `supabase start`.
 //
 // Ojo: desde la CLI 2.1xx, `supabase gen signing-key` ya no imprime el JWK: lo agrega él mismo a
-// supabase/signing_keys.json (y pregunta si el archivo existe). Las versiones anteriores lo
-// imprimían. Este script acepta ambos comportamientos y verifica el archivo final.
+// supabase/signing_keys.json, que debe existir (en Linux falla con NotFound si no está). Las
+// versiones anteriores lo imprimían. Este script acepta ambos comportamientos y verifica el archivo.
 import { execSync } from "node:child_process";
 import { existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
@@ -15,8 +15,9 @@ if (existsSync(destino)) {
     console.log(`${destino} ya existe (usa --force para regenerarla).`);
     process.exit(0);
   }
-  rmSync(destino); // sin archivo, la CLI no pregunta nada
+  rmSync(destino);
 }
+writeFileSync(destino, "[]\n"); // la CLI agrega la clave a este arreglo vacío
 
 const salida = execSync("supabase gen signing-key --algorithm ES256", {
   encoding: "utf8",
