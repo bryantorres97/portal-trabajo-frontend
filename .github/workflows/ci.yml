@@ -1,0 +1,97 @@
+# CI — ADR-007. Proveedor de despliegue: [PENDIENTE] (P-16).
+# Seguridad: antes de producción, fijar las acciones por SHA completo (Fase 10).
+name: CI
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  app:
+    name: Lint, tipos, tests unitarios y build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      APP_ENV: local
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+      - name: Build sin base de datos (las páginas dinámicas no la requieren al compilar)
+        run: pnpm build
+      - name: Auditoría de dependencias
+        run: pnpm audit --prod --audit-level high
+
+  database:
+    name: Base de datos, integración y E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      NEXT_TELEMETRY_DISABLED: "1"
+      APP_ENV: local
+      CI: "true"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.116.0
+      # Clave ES256 local para los JWT de Realtime (ADR-004): config.toml la referencia.
+      - name: Generar la clave de firma local
+        run: supabase gen signing-key --algorithm ES256 | grep '^{' | jq -s '.' > supabase/signing_keys.json
+      # API (PostgREST), Storage y Realtime se usan en integración y E2E; se omite el resto.
+      - run: supabase start -x imgproxy,mailpit,studio,edge-runtime,logflare,vector,supavisor
+      - name: Aplicar migraciones y seed sobre una base limpia
+        run: supabase db reset --local
+      - run: supabase db lint --local --fail-on error
+      - run: supabase db advisors --local --fail-on warn
+      - run: supabase test db
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Integración contra la base local
+        run: pnpm test:integration
+      - name: Rendimiento de la búsqueda (p95 < 300 ms con 5 000 trabajadores)
+        run: supabase db query -f scripts/perf-busqueda.sql 2>&1 | tee perf.txt; grep -q "PERF_OK" perf.txt
+      - name: Restaurar datos de desarrollo antes de los E2E
+        run: supabase db reset --local
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: E2E + accesibilidad (build contra la base local)
+        run: pnpm test:e2e:local
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: playwright-report
+          retention-days: 7
+
+  secrets:
+    name: Detección de secretos
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
