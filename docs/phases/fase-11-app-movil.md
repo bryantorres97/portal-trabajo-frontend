@@ -41,7 +41,7 @@ Pedido del usuario (2026-09-28): antes de construir la app (`../portal_empleo_mo
 - Validación en la nube con transacción revertida: 3/3; `00_base_seguridad` y `01_fase2` sin regresiones.
 
 ## Validación manual (con la app o con curl)
-1. Crear en el pool dev un app client **público** (sin secret) con callback `ec.gob.ambato.acolita.dev://auth` y agregarlo a `COGNITO_EXTRA_CLIENT_IDS`.
+1. ✅ (2026-09-28: `llankana-movil`, `24s2147dtdmuant46jk29q8rmk`; guía en `../portal_empleo_mobile_app/docs/setup/cognito-movil.md`) Crear en el pool dev un app client **público** (sin secret) con callback `ec.gob.ambato.llankana://auth` (logout `ec.gob.ambato.llankana://logout`) y agregarlo a `COGNITO_EXTRA_CLIENT_IDS`.
 2. Obtener tokens con ese client (Managed Login + PKCE) y llamar `POST /api/v1/me/bootstrap` con Bearer y `{ idToken }` → 201 la primera vez, 200 después.
 3. `GET /api/v1/me/unread` con Bearer → conteo real.
 4. Desde el web, «Cerrar sesión en todos los dispositivos» → la app recibe 401 con su token hasta volver a ingresar.
