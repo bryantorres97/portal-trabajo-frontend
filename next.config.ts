@@ -3,6 +3,8 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV !== "production";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
 const supabaseWs = supabaseUrl.replace(/^http/, "ws");
+// Imágenes del catálogo en el bucket público de Supabase (/admin/catalogo).
+const catalogImages = supabaseUrl ? new URL("/storage/v1/object/public/catalog-images/**", supabaseUrl) : null;
 const cognitoDomain = (process.env.COGNITO_DOMAIN ?? "").replace(/^https?:\/\//, "").replace(/\/$/, "");
 
 /**
@@ -14,7 +16,7 @@ const csp = [
   `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""}`,
   "style-src 'self' 'unsafe-inline'",
   // Multimedia provisional desde Unsplash (ADR-009); se reemplaza por material oficial del GAD.
-  "img-src 'self' blob: data: https://images.unsplash.com",
+  `img-src 'self' blob: data: https://images.unsplash.com ${supabaseUrl}`.trim(),
   "font-src 'self'",
   // Push web: el SDK de Firebase registra el navegador en FCM (docs/phases/fase-09b-notificaciones-push.md).
   `connect-src 'self' ${supabaseUrl} ${supabaseWs} https://firebaseinstallations.googleapis.com https://fcmregistrations.googleapis.com`.trim(),
@@ -45,7 +47,7 @@ const nextConfig: NextConfig = {
   },
   images: {
     formats: ["image/avif", "image/webp"],
-    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
+    remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }, ...(catalogImages ? [catalogImages] : [])],
   },
   async headers() {
     return [

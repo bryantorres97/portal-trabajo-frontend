@@ -5,7 +5,14 @@ import { describe, expect, it } from "vitest";
 import { parseFiltros } from "@/lib/busqueda";
 import { AuthError } from "@/server/auth/authorize";
 import { loadUser, upsertUserFromLogin, type AppUser } from "@/server/auth/users";
-import { getPublicCatalog, getPublicService, listParishes, saveCategory, saveService } from "@/server/catalog/catalog";
+import {
+  getPublicCatalog,
+  getPublicService,
+  listParishes,
+  saveCategory,
+  saveService,
+  setServiceImage,
+} from "@/server/catalog/catalog";
 import { getAdminDb } from "@/server/db/admin";
 import type { RequestContext } from "@/server/http/request-info";
 import { getPublicWorker, searchWorkers } from "@/server/search/workers";
@@ -179,6 +186,39 @@ describe("catálogo", () => {
 
     const { data: eventos } = await getAdminDb().from("audit_log").select("action").eq("resource_id", id);
     expect(eventos?.map((e) => e.action).sort()).toEqual(["SERVICE_CREATED", "SERVICE_UPDATED"]);
+  });
+
+  it("imagen: sube al bucket público, reemplaza borrando la anterior y rechaza archivos falsos", async () => {
+    const actor = await admin();
+    const slug = `oficio-img-${randomUUID().slice(0, 6)}`;
+    const categoria = (await getAdminDb().from("categories").select("id").eq("slug", "hogar").single()).data!.id;
+    const id = await saveService(
+      actor,
+      { slug, name: "Oficio con imagen", categoryId: categoria, priceUnit: "HORA", color: "azul", active: "on" },
+      ctx,
+    );
+    const png = (n: number) =>
+      new File([new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, n])], "foto.png", {
+        type: "image/png",
+      });
+    const ruta = async () =>
+      (await getAdminDb().from("services").select("image_path").eq("id", id).single()).data!.image_path;
+    const existe = async (path: string) => !(await getAdminDb().storage.from("catalog-images").download(path)).error;
+
+    await setServiceImage(actor, { id }, png(1), ctx);
+    const primera = await ruta();
+    expect(primera).toMatch(/^services\/[0-9a-f-]{36}\.png$/);
+    expect((await getPublicService(slug))?.imagePath).toContain("/storage/v1/object/public/catalog-images/services/");
+
+    await setServiceImage(actor, { id }, png(2), ctx);
+    expect(await ruta()).not.toBe(primera);
+    expect(await existe(primera)).toBe(false);
+
+    const falso = new File([new TextEncoder().encode("<svg/>")], "x.png", { type: "image/png" });
+    await expect(setServiceImage(actor, { id }, falso, ctx)).rejects.toThrow();
+
+    await setServiceImage(actor, { id }, null, ctx);
+    expect(await ruta()).toBeNull();
   });
 
   it("valida datos y exige catalog.manage", async () => {

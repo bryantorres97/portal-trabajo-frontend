@@ -1,8 +1,12 @@
 "use client";
 
+import { ImageOff, ImageUp } from "lucide-react";
+import { useEffect, useState, type ChangeEvent } from "react";
+
 import { ActionForm, FieldError } from "@/components/forms/ActionForm";
 import { campoCompacto } from "@/components/ui/campo";
 import type { ActionState } from "@/lib/action-state";
+import { cn } from "@/lib/utils";
 
 type Accion = (prev: ActionState, formData: FormData) => Promise<ActionState>;
 
@@ -38,7 +42,7 @@ function Campos({ state, v, pre }: { state: ActionState; v: Base; pre: string })
   return (
     <>
       {v.id && <input type="hidden" name="id" value={v.id} />}
-      <div className="grid gap-3 sm:grid-cols-2">
+      <div className="grid gap-3 @md:grid-cols-2">
         <div>
           <label htmlFor={id("name")} className="text-sm font-bold">
             Nombre
@@ -80,13 +84,13 @@ function Campos({ state, v, pre }: { state: ActionState; v: Base; pre: string })
           name="description"
           defaultValue={v.description ?? ""}
           maxLength={300}
-          rows={2}
-          className={campoCompacto}
+          rows={4}
+          className={cn(campoCompacto, "resize-y leading-relaxed")}
           {...err("description")}
         />
         <FieldError id={id("description-error")} state={state} name="description" />
       </div>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid gap-3 @xs:grid-cols-2 @lg:grid-cols-3">
         <div>
           <label htmlFor={id("color")} className="text-sm font-bold">
             Color
@@ -125,7 +129,7 @@ function Campos({ state, v, pre }: { state: ActionState; v: Base; pre: string })
 export function CategoryForm({ action, valores, pre }: { action: Accion; valores?: Base; pre: string }) {
   const v: Base = valores ?? { slug: "", name: "", description: null, color: "azul", sortOrder: 0, active: true };
   return (
-    <ActionForm action={action} submitLabel={v.id ? "Guardar categoría" : "Crear categoría"}>
+    <ActionForm action={action} submitLabel={v.id ? "Guardar categoría" : "Crear categoría"} className="@container">
       {(state) => <Campos state={state} v={v} pre={pre} />}
     </ActionForm>
   );
@@ -163,7 +167,7 @@ export function ServiceForm({
   };
   const id = (n: string) => `${pre}-${n}`;
   return (
-    <ActionForm action={action} submitLabel={v.id ? "Guardar oficio" : "Crear oficio"}>
+    <ActionForm action={action} submitLabel={v.id ? "Guardar oficio" : "Crear oficio"} className="@container">
       {(state) => (
         <>
           <div>
@@ -179,7 +183,7 @@ export function ServiceForm({
             </select>
           </div>
           <Campos state={state} v={v} pre={pre} />
-          <fieldset className="grid grid-cols-3 gap-3">
+          <fieldset className="grid gap-3 @sm:grid-cols-3">
             <legend className="mb-1 text-sm font-bold">Tarifa referencial (USD, opcional)</legend>
             <div>
               <label htmlFor={id("priceMin")} className="text-xs font-semibold">
@@ -228,5 +232,95 @@ export function ServiceForm({
         </>
       )}
     </ActionForm>
+  );
+}
+
+/**
+ * Imagen de un oficio: vista previa, subida (JPG, PNG o WebP de hasta 4 MB) y quitar.
+ * Se guarda en el bucket público del catálogo; el servidor verifica el tipo real del archivo.
+ */
+export function ImagenOficioForm({
+  action,
+  id,
+  imagen,
+  pre,
+}: {
+  action: Accion;
+  id: string;
+  imagen: string | null;
+  pre: string;
+}) {
+  const [vista, setVista] = useState<string | null>(null);
+  const [nombre, setNombre] = useState<string | null>(null);
+
+  useEffect(() => () => void (vista && URL.revokeObjectURL(vista)), [vista]);
+
+  function alElegir(e: ChangeEvent<HTMLInputElement>) {
+    const archivo = e.target.files?.[0];
+    setNombre(archivo?.name ?? null);
+    setVista(archivo && archivo.type.startsWith("image/") ? URL.createObjectURL(archivo) : null);
+  }
+
+  const mostrada = vista ?? imagen;
+  return (
+    <section className="@container mb-4 rounded-xl border border-border bg-card p-3" aria-labelledby={`${pre}-titulo`}>
+      <h4 id={`${pre}-titulo`} className="font-sans text-sm font-bold tracking-normal">
+        Imagen
+      </h4>
+      <div className="mt-2 grid gap-3 @md:grid-cols-[minmax(0,14rem)_minmax(0,1fr)]">
+        <div className="grid aspect-[4/3] place-items-center overflow-hidden rounded-lg bg-muted">
+          {mostrada ? (
+            // eslint-disable-next-line @next/next/no-img-element -- vista previa local (blob:) o del bucket
+            <img
+              src={mostrada}
+              alt={vista ? "Vista previa de la imagen elegida" : "Imagen actual"}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <span className="flex flex-col items-center gap-1 text-xs font-semibold text-muted-foreground">
+              <ImageOff className="h-6 w-6" aria-hidden /> Sin imagen
+            </span>
+          )}
+        </div>
+        <div className="space-y-3">
+          <ActionForm action={action} submitLabel="Subir imagen" pendingLabel="Subiendo…" tamano="sm">
+            <input type="hidden" name="id" value={id} />
+            <label
+              htmlFor={`${pre}-archivo`}
+              className="flex cursor-pointer items-center gap-3 rounded-xl border-2 border-dashed border-border p-3 text-sm transition-colors hover:border-primary/50 hover:bg-primary/5 has-[:focus-visible]:border-primary"
+            >
+              <ImageUp className="h-6 w-6 shrink-0 text-primary" aria-hidden />
+              <span className="min-w-0">
+                <span className="block font-bold">{nombre ? "Cambiar archivo" : "Elegir imagen"}</span>
+                <span className="block truncate text-xs text-muted-foreground">
+                  {nombre ?? "JPG, PNG o WebP · máximo 4 MB · horizontal (4:3)"}
+                </span>
+              </span>
+              <input
+                id={`${pre}-archivo`}
+                name="imagen"
+                type="file"
+                required
+                accept="image/jpeg,image/png,image/webp"
+                onChange={alElegir}
+                className="sr-only"
+              />
+            </label>
+          </ActionForm>
+          {imagen && (
+            <ActionForm
+              action={action}
+              submitLabel="Quitar imagen"
+              pendingLabel="Quitando…"
+              variant="danger"
+              tamano="sm"
+            >
+              <input type="hidden" name="id" value={id} />
+              <input type="hidden" name="quitar" value="1" />
+            </ActionForm>
+          )}
+        </div>
+      </div>
+    </section>
   );
 }

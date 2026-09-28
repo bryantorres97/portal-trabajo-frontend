@@ -2,11 +2,16 @@ import "server-only";
 
 import { z } from "zod";
 
+import { getSupabaseEnv } from "@/lib/env";
+import { logger } from "@/lib/logger";
+import { catalogImageUrl, isCatalogObject, serviceImagePath } from "@/lib/imagen-catalogo";
 import { requirePermission } from "@/server/auth/authorize";
 import type { AppUser } from "@/server/auth/users";
 import { getAdminDb } from "@/server/db/admin";
+import { EXTENSION, PHOTO_TYPES } from "@/server/domain/documents/files";
 import { throwPg } from "@/server/errors";
 import { auditParams, type RequestContext } from "@/server/http/request-info";
+import { CATALOG_BUCKET, readUpload, removeObject, uploadObject } from "@/server/storage/files";
 
 export type ColorMarca = "verde" | "azul" | "magenta" | "amarillo" | "naranja";
 
@@ -51,6 +56,11 @@ type CatalogRow = {
   enabled_workers: number;
 };
 
+/** URL pública de una imagen del catálogo (bucket o ruta del sitio). */
+function urlImagen(path: string | null): string | null {
+  return catalogImageUrl(path, getSupabaseEnv().NEXT_PUBLIC_SUPABASE_URL);
+}
+
 /** Catálogo público activo, agrupado por categoría, con el número de trabajadores habilitados por oficio. */
 export async function getPublicCatalog(): Promise<PublicCategory[]> {
   const { data, error } = await getAdminDb().rpc("fn_public_catalog");
@@ -77,7 +87,7 @@ export async function getPublicCatalog(): Promise<PublicCategory[]> {
       priceMin: r.reference_price_min == null ? null : Number(r.reference_price_min),
       priceMax: r.reference_price_max == null ? null : Number(r.reference_price_max),
       priceUnit: r.price_unit,
-      imagePath: r.image_path,
+      imagePath: urlImagen(r.image_path),
       color: r.color,
       enabledWorkers: Number(r.enabled_workers),
       category: { slug: r.category_slug, name: r.category_name },
@@ -124,6 +134,8 @@ export type AdminService = AdminCategory & {
   priceMin: number | null;
   priceMax: number | null;
   priceUnit: string;
+  /** URL para mostrarla, o null si no tiene imagen. */
+  imagePath: string | null;
 };
 
 export async function listCatalogForAdmin(actor: AppUser) {
@@ -138,7 +150,7 @@ export async function listCatalogForAdmin(actor: AppUser) {
     db
       .from("services")
       .select(
-        "id, category_id, slug, name, description, color, sort_order, active, reference_price_min, reference_price_max, price_unit",
+        "id, category_id, slug, name, description, color, sort_order, active, reference_price_min, reference_price_max, price_unit, image_path",
       )
       .order("sort_order")
       .order("name"),
@@ -166,6 +178,7 @@ export async function listCatalogForAdmin(actor: AppUser) {
     priceMin: s.reference_price_min == null ? null : Number(s.reference_price_min),
     priceMax: s.reference_price_max == null ? null : Number(s.reference_price_max),
     priceUnit: s.price_unit,
+    imagePath: urlImagen(s.image_path),
   }));
   return { categorias, servicios };
 }
@@ -244,4 +257,42 @@ export async function saveService(actor: AppUser, input: unknown, ctx: RequestCo
   });
   if (error) throwPg(error);
   return data as string;
+}
+
+export const serviceImageSchema = z.object({ id: z.uuid() });
+
+/**
+ * Sube (o quita, con `file` null) la imagen de un oficio. El tipo se verifica por la
+ * firma binaria; el cambio queda auditado en la base y la imagen anterior se borra del bucket.
+ */
+export async function setServiceImage(
+  actor: AppUser,
+  input: unknown,
+  file: FormDataEntryValue | null,
+  ctx: RequestContext,
+): Promise<void> {
+  requirePermission(actor, "catalog.manage");
+  const { id } = serviceImageSchema.parse(input);
+  let nueva: string | null = null;
+  if (file !== null) {
+    const archivo = await readUpload(file, PHOTO_TYPES);
+    nueva = serviceImagePath(crypto.randomUUID(), EXTENSION[archivo.kind]);
+    await uploadObject(nueva, archivo, CATALOG_BUCKET, "31536000");
+  }
+  const { data, error } = await getAdminDb().rpc("fn_admin_set_service_image", {
+    p_actor_id: actor.id,
+    p_id: id,
+    p_image_path: nueva,
+    ...auditParams(ctx),
+  });
+  if (error) {
+    if (nueva) await removeObject(nueva, CATALOG_BUCKET).catch(() => undefined);
+    throwPg(error);
+  }
+  const anterior = data as string | null;
+  if (isCatalogObject(anterior)) {
+    await removeObject(anterior, CATALOG_BUCKET).catch((e) =>
+      logger.warn("catalog.image_cleanup_failed", { path: anterior, error: e }),
+    );
+  }
 }
