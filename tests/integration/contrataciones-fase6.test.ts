@@ -120,10 +120,11 @@ describe("negociación y aceptación bilateral", () => {
       expect(final.agreed).toBeNull();
     }
 
-    // Cierra este caso para no bloquear la conversación en los siguientes.
+    // Cierra este caso para no bloquear la conversación en los siguientes. `final` se leyó como el
+    // cliente: retira la versión pendiente si es suya y, si la propuso el trabajador, la rechaza.
     const pendiente = final.pending ?? final.current;
     await declineContract(
-      pendiente.proposedByMe ? cliente : trabajador,
+      cliente,
       id,
       pendiente.proposedByMe ? "WITHDRAW" : "REJECT",
       { version: pendiente.version },
