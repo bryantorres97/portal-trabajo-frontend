@@ -100,6 +100,7 @@ export default async function BuscarPage({ searchParams }: PageProps<"/buscar">)
         <FormularioAutoEnvio
           action="/buscar"
           label="Filtros de búsqueda"
+          esperaAlEscribir={400}
           className="relative z-30 -mx-4 space-y-3 bg-background/90 px-4 py-3 backdrop-blur-md sm:-mx-6 sm:px-6 lg:sticky lg:top-[4.75rem]"
         >
           <div className="flex gap-2">
@@ -294,7 +295,7 @@ export default async function BuscarPage({ searchParams }: PageProps<"/buscar">)
           </ul>
         )}
 
-        <div className="mt-6">
+        <div className="mt-6 transition-opacity [form[data-pendiente]~&]:opacity-50">
           {resultado.items.length === 0 ? (
             <div className="flex flex-col items-center gap-3 rounded-3xl superficie px-6 py-14 text-center">
               <span className="grid h-16 w-16 place-items-center rounded-3xl bg-card text-muted-foreground shadow-[var(--shadow-suave)]">

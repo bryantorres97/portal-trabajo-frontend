@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Barra de búsqueda de los listados del panel. Los filtros extra (selects, casillas) se aplican
- * solos al cambiar; el texto se envía con Enter o con el botón.
+ * solos al cambiar y el texto filtra solo al dejar de escribir (también con Enter o el botón).
  */
 export function BuscadorPanel({
   action,
@@ -23,7 +23,12 @@ export function BuscadorPanel({
   children?: ReactNode;
 }) {
   return (
-    <FormularioAutoEnvio action={action} label={etiqueta} className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+    <FormularioAutoEnvio
+      action={action}
+      label={etiqueta}
+      esperaAlEscribir={400}
+      className="flex flex-col gap-2 sm:flex-row sm:flex-wrap"
+    >
       <label className="relative min-w-0 flex-1 sm:min-w-64">
         <span className="sr-only">{etiqueta}</span>
         <Search
