@@ -9,7 +9,7 @@
 |---|---|
 | Fase actual | **Fase 11 (soporte de la API para la app móvil) completada** (commit, migración en la nube y validación manual con la app OK). **Fase 9B (notificaciones push) implementada** (commit y migración en la nube; validación manual pendiente). **Fase 9 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 8 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 7 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
 | Siguiente fase | Fase 10 — Calidad y producción |
-| Rama de trabajo | `development` · último commit: canal de Android de los push (`110e50e`). Se commitea solo con confirmación del usuario |
+| Rama de trabajo | `development` · último commit: canal de Android de los push (`110e50e`) y docs; remoto `origin` en GitHub. Se commitea solo con confirmación del usuario |
 | Última actualización | 2026-09-28 |
 
 ## Siguiente paso concreto
@@ -23,7 +23,7 @@
 6. **Fase 9**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-09-panel-administrativo.md`).
 7. **Fase 8**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-08-denuncias-moderacion.md`). Preguntar al GAD P-14 (sanciones, plazos y a quién se escala): hoy se usan valores recomendados.
 8. **Fase 7**: commit y migración en la nube ✅; falta la validación manual (`docs/phases/fase-07-calificaciones.md`).
-9. **Fase 6**: commit y migración en la nube ✅. Validación manual en curso: propuesta, contrapropuesta y aceptación OK; faltan ejecución (inicio, fin, confirmación), retiro, rechazo, cancelación y disputa (`docs/phases/fase-06-contrataciones.md`). El repositorio no tiene remoto: las pruebas de integración y E2E con base no se han ejecutado en un CI.
+9. **Fase 6**: commit y migración en la nube ✅. Validación manual en curso: propuesta, contrapropuesta y aceptación OK; faltan ejecución (inicio, fin, confirmación), retiro, rechazo, cancelación y disputa (`docs/phases/fase-06-contrataciones.md`). El repositorio está en GitHub (`bryantorres97/portal-trabajo-frontend`) y el CI corre en cada push a `development`: falta revisar allí el resultado de las pruebas de integración y E2E con base.
 10. **Fase 5**: validar manualmente (`docs/phases/fase-05-chat.md`), con un trabajador vinculado de la Fase 4. Push: proyecto Firebase de pruebas listo (Fase 9B).
 11. **Fase 4 implementada** (commit y migración en la nube hechos): validar manualmente (lista en `docs/phases/fase-04-gestion-trabajadores.md`). Preguntar al GAD P-06 (documentos obligatorios) y P-13 (capacitación): hoy se usan los valores recomendados.
 12. **Fase 2 implementada**: validar manualmente con login real (lista en `docs/phases/fase-02-usuarios-perfiles.md`) (commit `3d9ca0d`). Después, Fase 3.
