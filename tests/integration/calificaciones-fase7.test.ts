@@ -7,9 +7,9 @@ import { startConversation } from "@/server/chat/chat";
 import { acceptContract, getContract, progressContract, proposeContract } from "@/server/contracts/contracts";
 import { getAdminDb } from "@/server/db/admin";
 import { hoyEcuador } from "@/server/domain/contracts/schemas";
-import { DomainError } from "@/server/errors";
 import type { RequestContext } from "@/server/http/request-info";
 import { getClientReputation, getContractReviews, listPublicWorkerReviews, saveReview } from "@/server/reviews/reviews";
+import { estado } from "../support/estado";
 
 /** Fase 7 — calificaciones contra la base del CI (RN-06, RN-07, RN-20 y concurrencia). */
 
@@ -73,15 +73,6 @@ async function finalizada(cliente: AppUser, t: { user: AppUser; workerId: string
   await progressContract(t.user, id, "START", ctx);
   await progressContract(cliente, id, "CONFIRM", ctx);
   return { id, conversationId };
-}
-
-async function estado<T>(p: Promise<T>) {
-  try {
-    await p;
-    return "ok";
-  } catch (e) {
-    return e instanceof DomainError ? e.status : "error";
-  }
 }
 
 let cliente: AppUser;

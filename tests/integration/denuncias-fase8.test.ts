@@ -5,10 +5,10 @@ import { beforeAll, describe, expect, it } from "vitest";
 import { loadUser, upsertUserFromLogin, type AppUser } from "@/server/auth/users";
 import { reportMessage, sendMessage, startConversation } from "@/server/chat/chat";
 import { getAdminDb } from "@/server/db/admin";
-import { DomainError } from "@/server/errors";
 import type { RequestContext } from "@/server/http/request-info";
 import { accessReportEvidence, applyModeration, getReport, updateReport } from "@/server/reports/admin";
 import { addReportFile, addReportNote, createReport, getMyReport } from "@/server/reports/reports";
+import { estado } from "../support/estado";
 
 /** Fase 8 — denuncias contra la base del CI (Storage real para la evidencia, RN-09 y sanciones). */
 
@@ -38,15 +38,6 @@ async function personal(rol: string): Promise<AppUser> {
   await db.from("user_identities").insert({ user_id: data.id, issuer: ENTRA, sub: randomUUID(), provider: "ENTRA" });
   await db.from("user_roles").insert({ user_id: data.id, role_code: rol });
   return (await loadUser(data.id)) as AppUser;
-}
-
-async function estado<T>(p: Promise<T>) {
-  try {
-    await p;
-    return "ok";
-  } catch (e) {
-    return e instanceof DomainError ? e.status : "error";
-  }
 }
 
 const png = () =>

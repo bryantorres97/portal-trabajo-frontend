@@ -17,6 +17,8 @@ export default defineConfig({
     env: {
       NODE_ENV: "test",
       SESSION_SECRET: "clave-de-pruebas-de-integracion-no-usar-en-produccion",
+      // Los avisos programados están apagados en Vercel Hobby (ADR-015, B6); las pruebas los cubren igual.
+      PUSH_SCHEDULER_ENABLED: "true",
     },
   },
 });
