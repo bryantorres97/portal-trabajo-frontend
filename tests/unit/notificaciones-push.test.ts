@@ -90,6 +90,18 @@ describe("FCM", () => {
     expect(isInvalidTokenResponse(503, "UNAVAILABLE")).toBe(false);
   });
 
+  it("usa el canal de Android de la app según el evento", async () => {
+    const { buildFcmMessage } = await import("@/server/notifications/fcm");
+    const canal = (event?: string) =>
+      buildFcmMessage("tok", { title: "t", body: "b", link: "/", data: event ? { event } : undefined }).message.android
+        .notification.channel_id;
+    expect(canal("NEW_MESSAGE")).toBe("mensajes");
+    expect(canal("CONTRACT_UPDATE")).toBe("contrataciones");
+    expect(canal("REVIEW_REQUEST")).toBe("contrataciones");
+    expect(canal("AVISO_GAD")).toBe("avisos_gad");
+    expect(canal()).toBe("avisos_gad");
+  });
+
   it("sin HTTPS no incluye fcm_options.link (FCM lo rechazaría)", async () => {
     vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3300");
     const { buildFcmMessage } = await import("@/server/notifications/fcm");
