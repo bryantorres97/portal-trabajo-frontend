@@ -29,7 +29,7 @@ const numero = new Intl.NumberFormat("es-EC");
  * Nuevo aviso push del GAD. Tras crearlo, el formulario se reinicia (se vuelve a montar con otra
  * `key`) y el mensaje de resultado queda visible.
  */
-export function NuevoAviso({ fcmListo }: { fcmListo: boolean }) {
+export function NuevoAviso({ fcmListo, programables }: { fcmListo: boolean; programables: boolean }) {
   const [version, setVersion] = useState(0);
   const [state, action, pending] = useActionState(async (prev: ActionState, fd: FormData) => {
     const r = await crearAviso(prev, fd);
@@ -61,6 +61,7 @@ export function NuevoAviso({ fcmListo }: { fcmListo: boolean }) {
         pending={pending}
         state={state.status === "error" ? state : initialActionState}
         fcmListo={fcmListo}
+        programables={programables}
       />
     </div>
   );
@@ -71,11 +72,14 @@ function Formulario({
   pending,
   state,
   fcmListo,
+  programables,
 }: {
   action: (fd: FormData) => void;
   pending: boolean;
   state: ActionState;
   fcmListo: boolean;
+  /** Sin programador por minuto (plan Hobby de Vercel) solo se envía al momento. */
+  programables: boolean;
 }) {
   const [titulo, setTitulo] = useState("");
   const [mensaje, setMensaje] = useState("");
@@ -248,48 +252,50 @@ function Formulario({
           </span>
         </label>
 
-        <fieldset>
-          <legend className={etiqueta}>¿Cuándo?</legend>
-          <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2">
-            <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
-              <input
-                type="radio"
-                name="cuando"
-                value="ahora"
-                checked={cuando === "ahora"}
-                onChange={() => setCuando("ahora")}
-                className="h-4 w-4 accent-primary"
-              />
-              Enviar ahora
-            </label>
-            <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
-              <input
-                type="radio"
-                name="cuando"
-                value="programar"
-                checked={cuando === "programar"}
-                onChange={() => setCuando("programar")}
-                className="h-4 w-4 accent-primary"
-              />
-              Programar
-            </label>
-            {cuando === "programar" && (
-              <div>
-                <label htmlFor="aviso-fecha" className="sr-only">
-                  Fecha y hora de envío (hora de Ecuador)
-                </label>
+        {programables && (
+          <fieldset>
+            <legend className={etiqueta}>¿Cuándo?</legend>
+            <div className="mt-2 flex flex-wrap items-center gap-x-5 gap-y-2">
+              <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
                 <input
-                  id="aviso-fecha"
-                  type="datetime-local"
-                  name="scheduledAt"
-                  aria-describedby="aviso-fecha-e"
-                  className={cn(campoCompacto, "mt-0 w-auto")}
+                  type="radio"
+                  name="cuando"
+                  value="ahora"
+                  checked={cuando === "ahora"}
+                  onChange={() => setCuando("ahora")}
+                  className="h-4 w-4 accent-primary"
                 />
-              </div>
-            )}
-          </div>
-          <FieldError id="aviso-fecha-e" state={state} name="scheduledAt" />
-        </fieldset>
+                Enviar ahora
+              </label>
+              <label className="flex min-h-11 items-center gap-2 text-sm font-semibold">
+                <input
+                  type="radio"
+                  name="cuando"
+                  value="programar"
+                  checked={cuando === "programar"}
+                  onChange={() => setCuando("programar")}
+                  className="h-4 w-4 accent-primary"
+                />
+                Programar
+              </label>
+              {cuando === "programar" && (
+                <div>
+                  <label htmlFor="aviso-fecha" className="sr-only">
+                    Fecha y hora de envío (hora de Ecuador)
+                  </label>
+                  <input
+                    id="aviso-fecha"
+                    type="datetime-local"
+                    name="scheduledAt"
+                    aria-describedby="aviso-fecha-e"
+                    className={cn(campoCompacto, "mt-0 w-auto")}
+                  />
+                </div>
+              )}
+            </div>
+            <FieldError id="aviso-fecha-e" state={state} name="scheduledAt" />
+          </fieldset>
+        )}
       </div>
 
       <aside className="space-y-4 xl:sticky xl:top-6 xl:self-start">

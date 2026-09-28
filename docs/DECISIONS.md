@@ -209,6 +209,7 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - Dispositivos anónimos (`device_tokens.user_id` NULL) solo desde la app móvil: FCM valida el token (`validate_only`) y hay un límite de 30 por IP y hora (se guarda un HMAC de la IP, no la IP).
   - Los tokens web se ligan a la sesión: al cerrarla o vencer, el navegador deja de recibir push.
   - Despacho: al responder (`after()`) tras cada acción que genera push y con Vercel Cron cada minuto (`/api/internal/outbox`) para reintentos y avisos programados. **Requiere el plan Pro de Vercel** (Hobby solo admite tareas diarias); la alternativa es pg_cron + pg_net llamando al mismo endpoint.
+  - **Desactivado temporalmente (2026-09-28)**: el primer despliegue será en Vercel Hobby. `vercel.json` no declara crons y `PUSH_SCHEDULER_ENABLED` (por defecto apagada) oculta y rechaza los avisos programados. Los push salen con `after()`; los reintentos y lo que no alcance a enviarse se procesan en el siguiente despacho o con «Procesar envíos pendientes» del panel. Para reactivarlo: volver a agregar `"crons": [{ "path": "/api/internal/outbox", "schedule": "* * * * *" }]` (Pro) o crear la tarea pg_cron + pg_net, y poner `PUSH_SCHEDULER_ENABLED=true`.
   - Permiso nuevo `notifications.broadcast` (ADMIN_SISTEMA); crear y cancelar se auditan. Máximo 20 avisos por hora por funcionario.
 - **Consecuencias:** conteos exactos (entregados, fallidos, descartados) y tokens inválidos desactivados; con cientos de miles de dispositivos habrá que evaluar temas de FCM o más concurrencia.
 

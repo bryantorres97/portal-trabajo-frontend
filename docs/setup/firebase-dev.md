@@ -29,7 +29,7 @@ El navegador usa el service worker `public/sw-notificaciones.js` (sin el SDK de 
 
 ## 5. Tareas programadas
 
-`CRON_SECRET` (≥ 32 caracteres) protege `/api/internal/outbox`. En Vercel, `vercel.json` lo llama cada minuto (plan Pro; ADR-015). En local no hay cron: los avisos «Enviar ahora» salen al crearlos y el panel tiene «Procesar envíos pendientes».
+`CRON_SECRET` (≥ 32 caracteres) protege `/api/internal/outbox`. En Vercel Hobby no hay cron por minuto: `vercel.json` no lo declara por ahora y los avisos programados están ocultos (`PUSH_SCHEDULER_ENABLED=false`; ADR-015, B6). En local no hay cron: los avisos «Enviar ahora» salen al crearlos y el panel tiene «Procesar envíos pendientes».
 
 ## Verificación sin enviar nada
 

@@ -189,6 +189,14 @@ export function isFcmConfigured(): boolean {
   return fcmSchema.safeParse(process.env).success;
 }
 
+/**
+ * Indica si hay un programador que llama a `/api/internal/outbox` cada minuto (Vercel Cron en el
+ * plan Pro, o pg_cron + pg_net). Sin él no se ofrecen avisos programados (ADR-015, B6).
+ */
+export function isPushSchedulerEnabled(): boolean {
+  return process.env.PUSH_SCHEDULER_ENABLED === "true";
+}
+
 /** Indica si el login está configurado (para mostrar un aviso en lugar de fallar). */
 export function isAuthConfigured(): boolean {
   return cognitoSchema.safeParse(process.env).success && sessionSchema.safeParse(process.env).success;

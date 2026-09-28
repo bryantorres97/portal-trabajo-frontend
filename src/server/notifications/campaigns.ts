@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { isPushSchedulerEnabled } from "@/lib/env";
+
 import { requirePermission } from "@/server/auth/authorize";
 import type { AppUser } from "@/server/auth/users";
 import { getAdminDb } from "@/server/db/admin";
@@ -13,7 +15,7 @@ import {
   type Plataforma,
   type Segmento,
 } from "@/server/domain/notifications/schemas";
-import { throwPg } from "@/server/errors";
+import { DomainError, throwPg } from "@/server/errors";
 import { auditParams, type RequestContext } from "@/server/http/request-info";
 import { scheduleDispatch } from "@/server/notifications/dispatcher";
 
@@ -50,6 +52,9 @@ export async function estimateAudience(actor: AppUser, input: unknown): Promise<
 export async function createCampaign(actor: AppUser, input: unknown, ctx: RequestContext): Promise<string> {
   requirePermission(actor, PERMISO);
   const d = crearCampanaSchema().parse(input);
+  if (d.scheduledAt && !isPushSchedulerEnabled()) {
+    throw new DomainError(422, "Los avisos programados no están disponibles en este ambiente. Envíalo ahora.");
+  }
   const { data, error } = await getAdminDb().rpc("fn_admin_create_push_campaign", {
     p_actor_id: actor.id,
     p_title: d.title,

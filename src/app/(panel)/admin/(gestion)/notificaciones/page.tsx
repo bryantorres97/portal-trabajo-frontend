@@ -4,7 +4,7 @@ import { BellRing } from "lucide-react";
 import { AdminHeader, Bloque, Insignia, tabla } from "@/components/admin/AdminHeader";
 import { ActionForm } from "@/components/forms/ActionForm";
 import { Paginacion } from "@/components/site/Paginacion";
-import { isFcmConfigured } from "@/lib/env";
+import { isFcmConfigured, isPushSchedulerEnabled } from "@/lib/env";
 import { formatearFechaHora } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 import { requirePagePermission } from "@/server/auth/current-user";
@@ -47,7 +47,7 @@ export default async function NotificacionesPage({ searchParams }: PageProps<"/a
 
       <div className="space-y-6">
         <Bloque titulo="Nuevo aviso">
-          <NuevoAviso fcmListo={fcmListo} />
+          <NuevoAviso fcmListo={fcmListo} programables={isPushSchedulerEnabled()} />
         </Bloque>
 
         <section aria-labelledby="historial" className="space-y-3">

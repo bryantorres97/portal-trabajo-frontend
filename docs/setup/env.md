@@ -30,6 +30,7 @@ La validación está en `src/lib/env.ts` (servidor, `server-only`) y `src/lib/en
 | `NEXT_PUBLIC_FIREBASE_API_KEY`, `…_PROJECT_ID`, `…_MESSAGING_SENDER_ID`, `…_APP_ID` | Push web (opcional) | Sí (públicas) | App web del proyecto de pruebas | Idem | Idem | App web del proyecto del GAD |
 | `NEXT_PUBLIC_FIREBASE_VAPID_KEY` | Push web (opcional) | Sí (pública) | Vacío (Firebase usa su clave por defecto) | Par de claves propio | Idem | Idem |
 | `CRON_SECRET` | Tareas programadas | No | Opcional | Aleatorio (≥ 32) | Idem | Idem |
+| `PUSH_SCHEDULER_ENABLED` | Avisos programados | No | `false` | `false` | `false` (Hobby) | `true` solo con cron por minuto |
 
 Reglas:
 - Solo las variables con prefijo `NEXT_PUBLIC_` llegan al navegador, y se incrustan **en tiempo de build**. Nunca se agregan secretos con ese prefijo.
