@@ -21,7 +21,7 @@ export default async function OficiosPage() {
     <>
       <PageHeader
         titulo="Oficios y servicios"
-        descripcion="Estos son los oficios que puedes encontrar en Acolita.App. Cada trabajador acuerda el precio final contigo, por jornal o por obra cierta."
+        descripcion="Estos son los oficios que puedes encontrar en Acolita.App. Cada trabajador acuerda el precio final contigo, por día o por obra cierta."
       />
 
       <Section>
@@ -90,10 +90,8 @@ export default async function OficiosPage() {
       <Section titulo="Modalidades de contratación" className="pt-10">
         <div className="grid gap-3 sm:grid-cols-2">
           <article className="rounded-2xl superficie p-5">
-            <h3 className="text-base font-bold">Jornal</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Se paga por unidad de tiempo, normalmente el día de trabajo.
-            </p>
+            <h3 className="text-base font-bold">Por día</h3>
+            <p className="mt-1 text-sm text-muted-foreground">Se paga por cada día de trabajo.</p>
           </article>
           <article className="rounded-2xl superficie p-5">
             <h3 className="text-base font-bold">Obra cierta</h3>

@@ -75,20 +75,18 @@ export function tonoEstado(status: ContractStatus): "info" | "exito" | "alerta" 
   }
 }
 
-export const UNIDADES_PRECIO = ["JORNAL", "JORNADA", "HORA", "OBRA", "SERVICIO"] as const;
+export const UNIDADES_PRECIO = ["JORNAL", "HORA", "OBRA", "SERVICIO"] as const;
 export type UnidadPrecio = (typeof UNIDADES_PRECIO)[number];
 
 export const ETIQUETAS_UNIDAD: Record<UnidadPrecio, string> = {
-  JORNAL: "Por jornal (día de trabajo)",
-  JORNADA: "Por jornada",
+  JORNAL: "Por día de trabajo",
   HORA: "Por hora",
   OBRA: "Por obra completa",
   SERVICIO: "Por servicio",
 };
 
 const SUFIJO_UNIDAD: Record<string, string> = {
-  JORNAL: "por jornal",
-  JORNADA: "por jornada",
+  JORNAL: "por día",
   HORA: "por hora",
   OBRA: "por la obra",
   SERVICIO: "por el servicio",
