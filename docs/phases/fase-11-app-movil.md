@@ -28,13 +28,14 @@ Pedido del usuario (2026-09-28): antes de construir la app (`../portal_empleo_mo
 - [x] `buildMe` compartido entre `GET /me` y `/me/bootstrap`
 - [x] Rutas nuevas: `me/bootstrap`, `me/worker/photo`, `me/worker/proposal`, `report-reasons`, `content/faq`, `content/legal/[code]`, `openapi.json`
 - [x] `me/unread` con Bearer
+- [x] (2026-09-28, Fase M8 de la app) Push con `android.notification.channel_id` según el evento: `NEW_MESSAGE` → `mensajes`, `CONTRACT_UPDATE`/`REVIEW_REQUEST` → `contrataciones`, el resto → `avisos_gad` (`androidChannel` en `fcm.ts`; prueba en `notificaciones-push.test.ts`). Requiere desplegar el web.
 
 ### Pruebas
 - [x] Unit `app-movil.test.ts` (17): bootstrap (alta, idempotencia, tokens inválidos o cruzados, cierre global, cuenta bloqueada, validación), `isAuthTimeRevoked`, no leídos con Bearer, foto y propuesta, motivos, legales
 - [x] Unit `openapi.test.ts` (6): cada método de cada Route Handler está documentado y viceversa, referencias válidas, `required` según la entrada, seguridad por ruta
 - [x] Unit `verify.test.ts` (+3): ID token móvil
 - [x] Integración `app-movil.test.ts` (CI): cierre global contra la base
-- [ ] Validación manual con la app (Fase M2 de la app)
+- [x] Validación manual con la app (Fase M2 de la app): ingreso real contra el despliegue en Vercel (2026-09-28)
 
 ## Resultados
 - Unit 474; lint, formato, tipos y build OK.

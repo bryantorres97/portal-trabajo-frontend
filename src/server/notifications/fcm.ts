@@ -38,6 +38,16 @@ async function accessToken(fetcher: typeof fetch): Promise<string> {
   return json.access_token;
 }
 
+/**
+ * Canal de Android de la app móvil según el evento (los crea la app: `PushChannel` en
+ * `core/push/push_service.dart`). Sin él, Android usa el canal por defecto del manifiesto.
+ */
+export function androidChannel(event: string | undefined): string {
+  if (event === "NEW_MESSAGE") return "mensajes";
+  if (event === "CONTRACT_UPDATE" || event === "REVIEW_REQUEST") return "contrataciones";
+  return "avisos_gad";
+}
+
 /** Cuerpo del mensaje FCM v1 (exportado para pruebas). */
 export function buildFcmMessage(token: string, m: PushMessage) {
   const url = new URL(m.link, getAppEnv().NEXT_PUBLIC_APP_URL);
@@ -51,7 +61,7 @@ export function buildFcmMessage(token: string, m: PushMessage) {
         ...(url.protocol === "https:" ? { fcm_options: { link: url.toString() } } : {}),
         notification: { icon: "/icon.png" },
       },
-      android: { priority: "HIGH" as const },
+      android: { priority: "HIGH" as const, notification: { channel_id: androidChannel(m.data?.event) } },
     },
   };
 }

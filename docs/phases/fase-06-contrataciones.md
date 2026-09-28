@@ -53,7 +53,7 @@ Objetivo, criterios y riesgos en `docs/analysis/08-roadmap.md`. **Estado: IMPLEM
 ## Resultados
 - Pruebas locales: unit 362; lint, formato, tipos y build OK.
 - Validación en la nube, transacción revertida (`scripts/validar-nube.mjs`): pgTAP Fase 6 73/73 y Fase 5 37/37 con la migración nueva.
-- Integración y E2E: se ejecutan en el CI (el repositorio aún no tiene remoto, así que no se han corrido).
+- Integración y E2E: se ejecutan en el CI de GitHub en cada push a `development`; falta revisar su resultado.
 
 ## Validación manual
 1. Cliente y trabajador vinculado (Fase 4) con una conversación. El cliente pulsa «Proponer condiciones» y envía la propuesta: aparece la tarjeta en el chat de ambos y la barra «En negociación».
