@@ -7,14 +7,14 @@
 
 | Campo | Valor |
 |---|---|
-| Fase actual | **Fase 11 (soporte de la API para la app móvil) implementada** (commit y migración en la nube; validación manual con la app pendiente). **Fase 9B (notificaciones push) implementada** (commit y migración en la nube; validación manual pendiente). **Fase 9 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 8 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 7 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
+| Fase actual | **Fase 11 (soporte de la API para la app móvil) completada** (commit, migración en la nube y validación manual con la app OK). **Fase 9B (notificaciones push) implementada** (commit y migración en la nube; validación manual pendiente). **Fase 9 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 8 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 7 implementada** (commit y migración en la nube; validación manual pendiente). **Fase 6 implementada** (commit y migración en la nube; validación manual pendiente). Fase 5 completada técnicamente; validación manual pendiente. Fase 4: validación manual pendiente. Desde 2026-09-26 se trabaja solo con Supabase en la nube (ADR-013). Fases 2B y 3 completadas. Fase 2: validación manual pendiente |
 | Siguiente fase | Fase 10 — Calidad y producción |
-| Rama de trabajo | `development` · último commit: Fase 9B (notificaciones push). Se commitea solo con confirmación del usuario |
+| Rama de trabajo | `development` · último commit: canal de Android de los push (`110e50e`). Se commitea solo con confirmación del usuario |
 | Última actualización | 2026-09-28 |
 
 ## Siguiente paso concreto
 
-0. **Fase 11**: commit y migración en la nube ✅. Falta crear el app client público en el pool dev, agregarlo a `COGNITO_EXTRA_CLIENT_IDS` y validar con la app (`docs/phases/fase-11-app-movil.md`).
+0. ~~**Fase 11**: app client móvil y validación con la app~~ ✅ (2026-09-28). Falta desplegar el web para que la app reciba los push en sus canales de Android.
 1. ~~Commit de Fase 0 + 1~~ ✅ `b208b58`.
 2. **Probar el login real con el pool dev** (B2). Todo está listo: `.env.local` completo, migraciones aplicadas en el proyecto Supabase dev en la nube (`Portal Empleo`), callback `http://localhost:3000/api/auth/callback` aceptado por Cognito. Solo falta que el usuario inicie sesión en el navegador (`pnpm dev` → `/cuenta`). Checklist en `docs/setup/cognito-dev.md`.
 3. Solicitar al GAD el App Client del portal (P-02). Preguntas abiertas: P-02, P-06, P-13, P-15, P-20 (P-21 decidida: Entra ID para el personal, ADR-012). Pedir al GAD el app registration de Entra (texto listo en `docs/setup/entra-dev.md` §4).
@@ -69,7 +69,7 @@ Ver `docs/analysis/08-roadmap.md`. Cada fase crea `docs/phases/fase-XX-*.md` al 
 - [x] Fase 3 — Catálogo y búsqueda → `docs/phases/fase-03-catalogo-busqueda.md` (incluye el seed de categorías desde `src/content/site.ts`)
 - [x] Fase 4 — Gestión de trabajadores → `docs/phases/fase-04-gestion-trabajadores.md` (incluye el código de activación) · validación manual pendiente
 - [x] Fase 5 — Chat → `docs/phases/fase-05-chat.md` · validación manual pendiente
-- [x] Fase 6 — Contrataciones → `docs/phases/fase-06-contrataciones.md` (ADR-014) · migración en la nube · validación manual pendiente
+- [x] Fase 6 — Contrataciones → `docs/phases/fase-06-contrataciones.md` (ADR-014) · migración en la nube · validación manual OK
 - [x] Fase 7 — Calificaciones → `docs/phases/fase-07-calificaciones.md` · migración en la nube · validación manual pendiente
 - [x] Fase 8 — Denuncias y moderación → `docs/phases/fase-08-denuncias-moderacion.md` · migración en la nube · validación manual pendiente
 - [x] Fase 9 — Panel administrativo → `docs/phases/fase-09-panel-administrativo.md` · migración en la nube · validación manual pendiente
