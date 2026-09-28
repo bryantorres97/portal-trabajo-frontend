@@ -1,5 +1,6 @@
 import "server-only";
 
+import { CATALOG_IMAGE_BUCKET } from "@/lib/imagen-catalogo";
 import { getAdminDb } from "@/server/db/admin";
 import { checkFile, type FileKind } from "@/server/domain/documents/files";
 import { DomainError } from "@/server/errors";
@@ -12,6 +13,12 @@ export const WORKER_BUCKET = "worker-files";
 
 /** Bucket PRIVADO `report-evidence` (archivos que adjunta quien denuncia, Fase 8). */
 export const EVIDENCE_BUCKET = "report-evidence";
+
+/**
+ * Bucket PÚBLICO `catalog-images` (imágenes de los oficios). Se lee por URL pública;
+ * subir y borrar solo lo hace el servidor. Los nombres son UUID: el contenido nunca cambia.
+ */
+export const CATALOG_BUCKET = CATALOG_IMAGE_BUCKET;
 
 /** Vigencia de las URLs firmadas de documentos (04-modelo-datos.md §7). */
 export const SIGNED_URL_SECONDS = 300;
@@ -39,10 +46,15 @@ export async function readUpload(
   };
 }
 
-export async function uploadObject(path: string, file: ValidatedFile, bucket = WORKER_BUCKET): Promise<void> {
+export async function uploadObject(
+  path: string,
+  file: ValidatedFile,
+  bucket = WORKER_BUCKET,
+  cacheControl = "private, max-age=0",
+): Promise<void> {
   const { error } = await getAdminDb()
     .storage.from(bucket)
-    .upload(path, file.bytes, { contentType: file.kind, upsert: false, cacheControl: "private, max-age=0" });
+    .upload(path, file.bytes, { contentType: file.kind, upsert: false, cacheControl });
   if (error) throw Object.assign(new Error(`No se pudo guardar el archivo: ${error.message}`), { cause: error });
 }
 

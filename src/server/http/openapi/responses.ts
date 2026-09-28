@@ -64,7 +64,9 @@ export const publicServiceSchema = z.object({
   priceMin: nulo(z.number()),
   priceMax: nulo(z.number()),
   priceUnit: z.string(),
-  imagePath: nulo(z.string()).describe("Ruta relativa al sitio web (p. ej. /images/oficios/…)"),
+  imagePath: nulo(z.string()).describe(
+    "URL absoluta de la imagen (bucket público del catálogo) o ruta relativa al sitio web (p. ej. /images/oficios/…)",
+  ),
   color: colorMarca,
   enabledWorkers: z.number().int(),
   category: z.object({ slug: z.string(), name: z.string() }),
