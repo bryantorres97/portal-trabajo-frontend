@@ -2,7 +2,7 @@
 -- programación, despacho, reintentos, cancelación y permisos.
 -- Ejecutar: supabase test db
 begin;
-select plan(46);
+select plan(48);
 
 select ok((select bool_and(c.relrowsecurity) from pg_class c join pg_namespace n on n.oid = c.relnamespace
   where n.nspname = 'public' and c.relname in ('push_campaigns', 'push_deliveries')), 'RLS activado en campañas y entregas');
@@ -52,6 +52,10 @@ select throws_ok($$ select public.fn_register_device('00000000-0000-0000-0000-00
 select is(public.fn_register_anonymous_device('ANDROID', 'tok-push-anonimo-android-0000', repeat('c', 64)), 'OK',
   'la app sin sesión registra un dispositivo anónimo');
 select ok((select user_id is null from public.device_tokens where token = 'tok-push-anonimo-android-0000'), 'queda sin dueño');
+select is(public.fn_register_anonymous_device('ANDROID', 'tok-push-anonimo-android-0000', repeat('c', 64)), 'OK',
+  'registrar otra vez el mismo token anónimo responde OK');
+select is((select count(*)::int from public.device_tokens where token = 'tok-push-anonimo-android-0000'), 1,
+  '…y no duplica la fila');
 select throws_ok($$ select public.fn_register_anonymous_device('WEB', 'tok-push-anonimo-web-000000000', repeat('c', 64)) $$,
   '23514', null, 'el navegador no registra dispositivos anónimos');
 select is(public.fn_register_anonymous_device('ANDROID', 'tok-push-clara-android-000000', repeat('c', 64)), 'OK',
