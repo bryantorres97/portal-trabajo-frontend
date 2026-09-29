@@ -10,6 +10,7 @@ import type { AppNotification } from "@/server/notifications/notifications";
 import type { MyReport, MyReportSummary } from "@/server/reports/reports";
 import type { ClientReputation, ContractReview, ContractReviews, PublicReview } from "@/server/reviews/reviews";
 import type { PublicWorker, SearchResult, WorkerCard } from "@/server/search/workers";
+import type { AccountDeletionCheck, AccountDeletionResult } from "@/server/users/account-deletion";
 import type { MeResponse } from "@/server/users/me";
 import type { OwnWorker } from "@/server/workers/public-profile";
 
@@ -135,6 +136,27 @@ export const publicReviewSchema = z.object({
 });
 
 // --- Cuenta ---------------------------------------------------------------------------------
+
+export const accountDeletionCheckSchema = z.object({
+  canDelete: z.boolean().describe("No hay contrataciones en marcha"),
+  isWorker: z.boolean().describe("Tiene ficha de trabajador vinculada (se retira del catálogo y se anonimiza)"),
+  blockingContracts: z
+    .array(
+      z.object({
+        id: z.string(),
+        status: estadoContrato,
+        role: rolContrato,
+        counterpartName: z.string(),
+      }),
+    )
+    .describe("Contrataciones en marcha que hay que terminar o cancelar antes"),
+  pendingProposals: z.number().int().describe("Propuestas sin aceptar que se cancelarán"),
+});
+
+export const accountDeletionResultSchema = z.object({
+  cancelledProposals: z.number().int(),
+  closedConversations: z.number().int(),
+});
 
 export const meSchema = z.object({
   id: z.string(),
@@ -412,4 +434,6 @@ export type ComprobacionesDeTipos = [
   Asegurar<Igual<Out<typeof myReportSummarySchema>, MyReportSummary>>,
   Asegurar<Igual<Out<typeof myReportSchema>, MyReport>>,
   Asegurar<Igual<Out<typeof notificationSchema>, AppNotification>>,
+  Asegurar<Igual<Out<typeof accountDeletionCheckSchema>, AccountDeletionCheck>>,
+  Asegurar<Igual<Out<typeof accountDeletionResultSchema>, AccountDeletionResult>>,
 ];
