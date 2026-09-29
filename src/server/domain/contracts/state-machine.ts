@@ -186,4 +186,5 @@ export const ETIQUETAS_EVENTO: Record<string, string> = {
   DISPUTA_ABIERTA: "Disputa abierta",
   DISPUTA_RETIRADA: "Disputa retirada",
   DISPUTA_RESUELTA: "El GAD resolvió la disputa",
+  CUENTA_ELIMINADA: "Propuesta cancelada: una de las partes eliminó su cuenta",
 };

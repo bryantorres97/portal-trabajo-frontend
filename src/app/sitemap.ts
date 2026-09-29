@@ -18,6 +18,7 @@ const PAGINAS_ESTATICAS = [
   "/preguntas-frecuentes",
   "/privacidad",
   "/terminos",
+  "/eliminar-cuenta",
 ];
 
 /** Sitemap dinámico: páginas institucionales, oficios y perfiles de trabajadores habilitados. */

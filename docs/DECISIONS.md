@@ -238,3 +238,21 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - Entre la migración y el despliegue del web, Realtime rechaza los tokens del servidor anterior y el chat pasa a la consulta periódica hasta que termine el despliegue.
   - El navegador vuelve a registrar el token de push web.
   - El correo `llankana@ambato.gob.ec` (`src/content/site.ts`) es provisional hasta que el GAD lo confirme.
+
+## ADR-018 — Eliminación de cuenta por el titular
+
+- **Estado:** ACEPTADA (2026-09-29, decisiones del usuario). Falta la validación jurídica del GAD sobre plazos de retención (LOPDP, modelo de datos §7).
+- **Contexto:** Google Play exige que las apps que permiten crear cuenta ofrezcan eliminarla dentro de la app y en una página web accesible sin la app. La LOPDP reconoce el derecho de supresión. El modelo de datos preveía anonimizar al eliminar, pero no había flujo.
+- **Decisión:**
+  - **Inmediata e irreversible**, sin período de gracia: `fn_delete_account` anonimiza todo en una transacción.
+  - **Se impide con contrataciones en marcha** (`CONTRATADA`, `EN_CURSO`, `FINALIZACION_PENDIENTE`, `EN_DISPUTA`), para proteger a la otra parte. Las propuestas sin aceptar se cancelan (evento `CUENTA_ELIMINADA`) y se avisa a la otra parte. `GET /api/v1/me/deletion` dice qué lo impide antes de confirmar.
+  - **Se borra:** identidades, perfil de cliente, sesiones web (sus refresh tokens se revocan en Cognito), notificaciones, dispositivos, envíos pendientes y roles (se revocan). La fila de `users` queda como seudónimo: `ELIMINADO`, sin correo, con el nombre «Cuenta eliminada» y `tokens_valid_after` para invalidar los tokens de la app.
+  - **Trabajador vinculado:** la ficha pasa a `INACTIVO`, se desvincula y se anonimiza (`deleted_at`); se borran foto, documentos (también del bucket), oficios y códigos. Se conservan calificación y contrataciones completadas. Un trigger congela la ficha: el GAD no puede reactivarla ni agregarle datos.
+  - **Se conserva:** mensajes y reseñas (el autor aparece como «Cuenta eliminada»; `private.short_name` no lo abrevia), contrataciones, denuncias, consentimientos y auditoría, sin datos personales. Las conversaciones quedan `CERRADA`.
+  - **La cuenta ciudadana de Cognito no se borra:** es del GAD y la usan otros servicios municipales. Al borrar las identidades, un nuevo ingreso crea una cuenta nueva y vacía.
+  - `fn_delete_account` es `SECURITY DEFINER` (el servidor no tiene `DELETE` en varias de esas tablas y no conviene dárselo en general); solo `service_role` la ejecuta.
+  - Superficies: `DELETE /api/v1/me` (Bearer o cookie con mismo origen), `/cuenta/eliminar` (web, con confirmación) y la página pública `/eliminar-cuenta` para Google Play, que también indica el correo del delegado de protección de datos para quien no puede ingresar.
+- **Consecuencias:**
+  - Las cuentas institucionales (Entra ID) no se eliminan por este flujo.
+  - Si falla la revocación en Cognito o el borrado de archivos, la cuenta queda eliminada igual y se registra un aviso (`account.delete.*`).
+  - La política de privacidad del GAD debería mencionar este procedimiento en su próxima versión.

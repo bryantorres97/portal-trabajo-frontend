@@ -11,6 +11,7 @@ import {
   MonitorSmartphone,
   Search,
   ShieldCheck,
+  Trash2,
   UserRound,
 } from "lucide-react";
 import type { ReactNode } from "react";
@@ -339,6 +340,12 @@ export function PanelCuenta({ d }: { d: DatosPanelCuenta }) {
                 </p>
               </ActionForm>
             </div>
+            <Link
+              href="/cuenta/eliminar"
+              className="mt-4 flex items-center gap-2 border-t border-border/70 pt-4 text-sm font-bold text-destructive hover:underline"
+            >
+              <Trash2 className="h-4 w-4" aria-hidden /> Eliminar mi cuenta
+            </Link>
           </Bloque>
 
           {d.esPersonal && (

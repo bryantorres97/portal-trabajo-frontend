@@ -12,6 +12,7 @@ import { revokeUserSessions } from "@/server/auth/session";
 import { SESSION_COOKIE } from "@/server/auth/session-cookie";
 import { formToObject, runAction } from "@/server/http/action";
 import { currentRequestContext, safeReturnTo } from "@/server/http/request-info";
+import { deleteAccount } from "@/server/users/account-deletion";
 import { acceptCurrentConsents } from "@/server/users/consents";
 import { unlinkIdentity } from "@/server/users/identities";
 import { saveClientProfile } from "@/server/users/profile";
@@ -101,4 +102,27 @@ export async function guardarPreferenciasAvisos(_prev: ActionState, formData: Fo
       ? "Recibirás los avisos del GAD en tus dispositivos."
       : "Ya no recibirás los avisos del GAD por push. Los verás en esta página.";
   });
+}
+
+/** Elimina la cuenta de inmediato (ADR-018) y lleva a la página pública con la confirmación. */
+export async function eliminarCuenta(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  const resultado = await runAction(async () => {
+    const { user } = await requireAuth();
+    if (formData.get("entiendo") !== "on") {
+      throw new z.ZodError([
+        {
+          code: "custom",
+          path: ["entiendo"],
+          message: "Confirma que entiendes que no se puede deshacer.",
+          input: undefined,
+        },
+      ]);
+    }
+    await deleteAccount(user, await currentRequestContext());
+  });
+  if (resultado.status === "ok") {
+    (await cookies()).delete(SESSION_COOKIE);
+    redirect("/eliminar-cuenta?hecho=1");
+  }
+  return resultado;
 }
