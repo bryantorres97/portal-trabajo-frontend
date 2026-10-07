@@ -1,6 +1,6 @@
 -- pgTAP: Fase 8 — denuncias y moderación (RN-09, RN-16, sanciones con vigencia). Ejecutar: supabase test db
 begin;
-select plan(55);
+select plan(57);
 
 -- -----------------------------------------------------------------------------
 -- Seguridad
@@ -14,6 +14,10 @@ select ok(not has_table_privilege('service_role', 'public.sensitive_access_log',
 select ok(not has_function_privilege('authenticated', 'public.fn_admin_access_report_evidence(uuid, uuid, text, inet, text, text)', 'EXECUTE'),
   'authenticated no accede a la evidencia directamente');
 select ok(exists (select 1 from storage.buckets where id = 'report-evidence' and not public), 'bucket privado para la evidencia');
+select ok(exists (select 1 from public.role_permissions where role_code = 'ADMIN_SISTEMA' and permission_code = 'report.read'),
+  'el administrador del sistema consulta las denuncias');
+select ok(not exists (select 1 from public.role_permissions where role_code = 'ADMIN_SISTEMA'
+  and permission_code in ('report.manage', 'report.evidence.read')), 'pero no las gestiona ni ve la evidencia');
 
 -- -----------------------------------------------------------------------------
 -- Datos: cliente, trabajador, tercero, moderador y responsable de denuncias
