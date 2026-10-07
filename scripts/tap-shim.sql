@@ -1,4 +1,4 @@
--- Adaptador mínimo de pgTAP (plan, ok, is, throws_ok, lives_ok, finish) para validar migraciones
+-- Adaptador mínimo de pgTAP (plan, ok, is, set_eq, throws_ok, lives_ok, finish) para validar migraciones
 -- y pruebas en Supabase dev de la nube, donde pgTAP no está disponible (ADR-013).
 -- Lo usa scripts/validar-nube.mjs: todo corre en UNA transacción que termina siempre en una
 -- excepción (finish), así que nada queda guardado en la nube.
@@ -29,6 +29,21 @@ create function tap_shim.is(p_obtenido anyelement, p_esperado anyelement, p_desc
 returns text language sql as $$
   select tap_shim.ok(p_obtenido is not distinct from p_esperado, p_descripcion,
     'obtenido: ' || coalesce(p_obtenido::text, 'NULL') || ' · esperado: ' || coalesce(p_esperado::text, 'NULL'));
+$$;
+
+-- set_eq(consulta, arreglo): la consulta devuelve exactamente ese conjunto (sin orden ni repetidos).
+create function tap_shim.set_eq(p_sql text, p_esperado anyarray, p_descripcion text default null)
+returns text language plpgsql as $$
+declare
+  v_obtenido text[];
+  v_esperado text[] := (select coalesce(array_agg(distinct x::text order by x::text), '{}') from unnest(p_esperado) x);
+begin
+  execute format('select coalesce(array_agg(distinct x::text order by x::text), ''{}'') from (%s) as q(x)', p_sql)
+    into v_obtenido;
+  return tap_shim.ok(v_obtenido = v_esperado, p_descripcion,
+    'sobran: ' || coalesce((select string_agg(x, ', ') from unnest(v_obtenido) x where x <> all (v_esperado)), '—')
+    || ' · faltan: ' || coalesce((select string_agg(x, ', ') from unnest(v_esperado) x where x <> all (v_obtenido)), '—'));
+end;
 $$;
 
 create function tap_shim.lives_ok(p_sql text, p_descripcion text default null)

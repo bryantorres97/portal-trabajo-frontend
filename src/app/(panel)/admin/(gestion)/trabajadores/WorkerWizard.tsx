@@ -8,6 +8,9 @@ import type { z } from "zod";
 import { campo } from "@/components/ui/campo";
 import { cn } from "@/lib/utils";
 import {
+  ETIQUETAS_DOCUMENTO,
+  TIPOS_DOCUMENTO,
+  normalizarDocumento,
   sugerirNombrePublico,
   workerContactSchema,
   workerPersonalSchema,
@@ -26,6 +29,8 @@ type Opciones = {
 export type WizardValues = {
   firstNames: string;
   lastNames: string;
+  idDocumentType: string;
+  idDocumentNumber: string;
   birthDate: string;
   phone: string;
   email: string;
@@ -45,6 +50,8 @@ export type WizardValues = {
 const VACIO: WizardValues = {
   firstNames: "",
   lastNames: "",
+  idDocumentType: "CEDULA",
+  idDocumentNumber: "",
   birthDate: "",
   phone: "",
   email: "",
@@ -69,13 +76,18 @@ const PASOS = [
 ] as const;
 
 const CAMPOS_POR_PASO: string[][] = [
-  ["firstNames", "lastNames", "birthDate"],
+  ["firstNames", "lastNames", "idDocumentType", "idDocumentNumber", "birthDate"],
   ["phone", "email", "address", "parishCode", "emergencyContactName", "emergencyContactPhone"],
   ["services", "primaryService", "publicDisplayName", "specialty", "publicBio", "yearsExperience", "isAvailable"],
   [],
 ];
 
-const MOTIVOS: Record<string, string> = { TELEFONO: "mismo celular", EMAIL: "mismo correo", NOMBRES: "mismos nombres" };
+const MOTIVOS: Record<string, string> = {
+  DOCUMENTO: "mismo documento de identidad",
+  TELEFONO: "mismo celular",
+  EMAIL: "mismo correo",
+  NOMBRES: "mismos nombres",
+};
 
 type Props = {
   action: (prev: WorkerFormState, formData: FormData) => Promise<WorkerFormState>;
@@ -98,6 +110,7 @@ export function WorkerWizard({ action, opciones, initial = VACIO, workerId, canc
   const [principal, setPrincipal] = useState(initial.primaryService);
   const [resumen, setResumen] = useState<Record<string, unknown>>({});
   const [ultimoEstado, setUltimoEstado] = useState(state);
+  const [tipoDocumento, setTipoDocumento] = useState(initial.idDocumentType);
   const formRef = useRef<HTMLFormElement>(null);
   const edicion = !!workerId;
 
@@ -230,7 +243,7 @@ export function WorkerWizard({ action, opciones, initial = VACIO, workerId, canc
       <fieldset hidden={paso !== 0} className="grid gap-4 sm:grid-cols-2">
         <legend className="sr-only">Datos personales</legend>
         <p className="text-sm text-muted-foreground sm:col-span-2">
-          Datos privados: solo los ve el personal autorizado del GAD. El portal no registra la cédula.
+          Datos privados: solo los ve el personal autorizado del GAD. El documento de identidad nunca se publica.
         </p>
         <div>
           <label htmlFor="firstNames" className="text-sm font-bold">
@@ -261,6 +274,43 @@ export function WorkerWizard({ action, opciones, initial = VACIO, workerId, canc
             {...err("lastNames")}
           />
           {mensajeError("lastNames")}
+        </div>
+        <div>
+          <label htmlFor="idDocumentType" className="text-sm font-bold">
+            Documento de identidad
+          </label>
+          <select
+            id="idDocumentType"
+            name="idDocumentType"
+            value={tipoDocumento}
+            onChange={(e) => setTipoDocumento(e.target.value)}
+            className={campo}
+            {...err("idDocumentType")}
+          >
+            {TIPOS_DOCUMENTO.map((t) => (
+              <option key={t} value={t}>
+                {ETIQUETAS_DOCUMENTO[t]}
+              </option>
+            ))}
+          </select>
+          {mensajeError("idDocumentType")}
+        </div>
+        <div>
+          <label htmlFor="idDocumentNumber" className="text-sm font-bold">
+            {tipoDocumento === "PASAPORTE" ? "Número de pasaporte" : "Número de cédula"}
+          </label>
+          <input
+            id="idDocumentNumber"
+            name="idDocumentNumber"
+            defaultValue={initial.idDocumentNumber}
+            inputMode={tipoDocumento === "PASAPORTE" ? "text" : "numeric"}
+            placeholder={tipoDocumento === "PASAPORTE" ? "Letras y números" : "10 dígitos"}
+            maxLength={tipoDocumento === "PASAPORTE" ? 24 : 12}
+            autoComplete="off"
+            className={campo}
+            {...err("idDocumentNumber")}
+          />
+          {mensajeError("idDocumentNumber")}
         </div>
         <div>
           <label htmlFor="birthDate" className="text-sm font-bold">
@@ -526,6 +576,10 @@ export function WorkerWizard({ action, opciones, initial = VACIO, workerId, canc
         <dl className="grid gap-x-6 gap-y-3 tarjeta p-5 text-sm sm:grid-cols-2">
           {[
             ["Nombres", `${resumen.firstNames ?? ""} ${resumen.lastNames ?? ""}`],
+            [
+              ETIQUETAS_DOCUMENTO[resumen.idDocumentType as keyof typeof ETIQUETAS_DOCUMENTO] ?? "Documento",
+              normalizarDocumento(String(resumen.idDocumentNumber ?? "")) || "—",
+            ],
             ["Fecha de nacimiento", resumen.birthDate || "—"],
             ["Celular", resumen.phone || "—"],
             ["Correo", resumen.email || "—"],
@@ -574,10 +628,17 @@ export function WorkerWizard({ action, opciones, initial = VACIO, workerId, canc
               </li>
             ))}
           </ul>
-          <label className="flex min-h-11 items-center gap-3 font-semibold">
-            <input type="checkbox" name="duplicatesConfirmed" className="h-5 w-5 accent-primary" />
-            Confirmo que es una persona distinta y quiero registrarla
-          </label>
+          {state.duplicates.some((d) => d.reasons.includes("DOCUMENTO")) ? (
+            <p className="font-semibold">
+              El documento de identidad ya pertenece a un trabajador registrado: no se puede registrar de nuevo. Revisa
+              su ficha o corrige el número.
+            </p>
+          ) : (
+            <label className="flex min-h-11 items-center gap-3 font-semibold">
+              <input type="checkbox" name="duplicatesConfirmed" className="h-5 w-5 accent-primary" />
+              Confirmo que es una persona distinta y quiero registrarla
+            </label>
+          )}
         </div>
       )}
 

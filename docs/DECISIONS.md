@@ -103,7 +103,7 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
 
 ## ADR-008 — Modelo de identidad: un usuario, varias identidades; sin cédula
 
-- **Estado:** ACEPTADA (2026-09-24)
+- **Estado:** ACEPTADA (2026-09-24). La ficha del trabajador registra cédula o pasaporte desde el 2026-10-07 (ADR-019); las cuentas siguen sin cédula.
 - **Contexto:**
   - El usuario confirmó que **el portal no manejará cédula**.
   - El instructivo del GAD indica que el `sub` de Cognito **cambia según el método de login** (nativo, Google, Facebook). Además, la cédula nunca viaja en los tokens: solo se obtiene del *Identity & Onboarding Service* del GAD (`GET /identity/me`), que es quien entrega el `userId` maestro estable.
@@ -256,3 +256,19 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
   - Las cuentas institucionales (Entra ID) no se eliminan por este flujo.
   - Si falla la revocación en Cognito o el borrado de archivos, la cuenta queda eliminada igual y se registra un aviso (`account.delete.*`).
   - La política de privacidad del GAD debería mencionar este procedimiento en su próxima versión.
+
+## ADR-019 — Documento de identidad del trabajador (cédula o pasaporte)
+
+- **Estado:** ACEPTADA (2026-10-07, pedido y decisiones del usuario). Revisa ADR-008 solo para la ficha del trabajador.
+- **Contexto:** el GAD quiere identificar a cada trabajador por su documento en el registro presencial. ADR-008 había descartado la cédula porque no viaja en los tokens de Cognito ni sirve para vincular cuentas; eso no cambia.
+- **Decisión:**
+  - `worker_profiles` guarda `id_document_type` (`CEDULA` o `PASAPORTE`) e `id_document_number`, sin espacios ni guiones y en mayúsculas.
+  - **Obligatorio** en el alta presencial y al editar la ficha (Zod y `fn_admin_create_worker`/`fn_admin_update_worker`). Los trabajadores registrados antes quedan sin documento hasta que el personal edite su ficha; por eso la columna admite nulos.
+  - La **cédula** se valida con provincia (01–24 o 30), tercer dígito menor que 6 y dígito verificador (módulo 10), en TS (`cedulaValida`) y en la base (`private.cedula_valida`, en una restricción de la tabla). El **pasaporte**, por formato: 5 a 20 letras o números.
+  - **Único por tipo**: un documento no puede pertenecer a dos trabajadores (índice único y error 409 con mensaje claro). La detección de duplicados lo informa como «mismo documento de identidad» y el operador no puede confirmarlo.
+  - **Dato privado:** solo lo lee el servidor; se muestra en la ficha y se busca en el listado con `worker.read.private`. Nunca se publica ni va en la auditoría (solo el nombre del campo cambiado) ni en los registros (`logger` lo redacta).
+  - Al eliminar la cuenta (ADR-018) el documento se borra con el resto de datos personales (trigger sobre `deleted_at`).
+- **Consecuencias:**
+  - La vinculación de la cuenta sigue siendo con el código de activación; el documento no se compara con datos de Cognito.
+  - Las cuentas (`users`, `user_identities`) siguen sin cédula: la prueba pgTAP lo verifica.
+  - Es un dato personal adicional: la política de privacidad del GAD debería mencionarlo en su próxima versión (P-15).

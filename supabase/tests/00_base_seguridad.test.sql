@@ -27,7 +27,8 @@ select is((select count(*)::int from public.roles), 9, '9 roles sembrados');
 select ok(exists (select 1 from public.role_permissions where role_code = 'ADMIN_TRABAJADORES' and permission_code = 'worker.enable'),
   'ADMIN_TRABAJADORES puede habilitar trabajadores');
 
--- Identidades (ADR-008): (issuer, sub) único; sin columnas de cédula
+-- Identidades (ADR-008): (issuer, sub) único. El documento de identidad solo está en la ficha del
+-- trabajador (ADR-019), nunca en las cuentas ni en las identidades.
 insert into public.users (id) values ('00000000-0000-0000-0000-000000000001');
 insert into public.user_identities (user_id, issuer, sub)
   values ('00000000-0000-0000-0000-000000000001', 'https://iss', 'sub-1');
@@ -36,7 +37,8 @@ select throws_ok($$ insert into public.user_identities (user_id, issuer, sub)
   '23505', null, '(issuer, sub) es único');
 select ok(not has_table_privilege('anon', 'public.user_identities', 'SELECT'), 'anon no lee user_identities');
 select is((select count(*)::int from information_schema.columns
-  where table_schema = 'public' and column_name ilike '%cedula%'), 0, 'ninguna tabla almacena cédula');
+  where table_schema = 'public' and (column_name ilike '%cedula%' or column_name ilike '%id_document%')
+    and table_name <> 'worker_profiles'), 0, 'el documento de identidad solo se guarda en la ficha del trabajador');
 
 select * from finish();
 rollback;

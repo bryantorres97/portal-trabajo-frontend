@@ -4,6 +4,7 @@ import { ArrowUpRight, FileText, Link2, Lightbulb, Pencil } from "lucide-react";
 import { AdminHeader, Aviso, Bloque, Insignia } from "@/components/admin/AdminHeader";
 import { ETIQUETAS_INSCRIPCION, EstadoDocumento, EstadoTrabajador } from "@/components/admin/EstadoTrabajador";
 import { ActionForm } from "@/components/forms/ActionForm";
+import { ZonaArchivo } from "@/components/forms/ZonaArchivo";
 import { AvanceHabilitacion, habilitacionDetenida } from "@/components/site/AvanceHabilitacion";
 import { boton } from "@/components/ui/boton";
 import { campoCompacto, etiqueta } from "@/components/ui/campo";
@@ -11,7 +12,8 @@ import { formatearFecha, formatearFechaHora } from "@/lib/formatos";
 import { cn } from "@/lib/utils";
 import { hasPermission } from "@/server/auth/authorize";
 import type { AppUser } from "@/server/auth/users";
-import { formatBytes } from "@/server/domain/documents/files";
+import { DOCUMENT_TYPES, MAX_FILE_BYTES, formatBytes } from "@/server/domain/documents/files";
+import { ETIQUETAS_DOCUMENTO } from "@/server/domain/workers/schemas";
 import {
   ETIQUETAS_ESTADO,
   accionHacia,
@@ -139,6 +141,10 @@ function Datos({ w }: { w: WorkerDetail }) {
     ...(p
       ? ([
           ["Nombres", `${p.firstNames} ${p.lastNames}`],
+          [
+            p.idDocumentType ? ETIQUETAS_DOCUMENTO[p.idDocumentType] : "Documento de identidad",
+            p.idDocumentNumber ?? "Sin registrar: complétalo al editar los datos",
+          ],
           ["Celular", p.phone ?? "—"],
           ["Correo", p.email ?? "—"],
           ["Fecha de nacimiento", formatearFecha(p.birthDate)],
@@ -410,16 +416,14 @@ function Documentos({ w, actor, tipos }: { w: WorkerDetail; actor: AppUser; tipo
                 </div>
               </div>
               <div>
-                <label htmlFor="file" className={etiqueta}>
-                  Archivo <span className="font-normal text-muted-foreground">(PDF, JPG, PNG o WEBP; máximo 4 MB)</span>
-                </label>
-                <input
+                <span className={etiqueta}>Archivo</span>
+                <ZonaArchivo
                   id="file"
                   name="file"
-                  type="file"
                   required
-                  accept="application/pdf,image/jpeg,image/png,image/webp"
-                  className={campoCompacto}
+                  accept={DOCUMENT_TYPES.join(",")}
+                  maxBytes={MAX_FILE_BYTES}
+                  formatos="PDF, JPG, PNG o WEBP"
                 />
               </div>
             </ActionForm>
@@ -618,7 +622,7 @@ function Cuenta({ w, actor }: { w: WorkerDetail; actor: AppUser }) {
             Hay un código vigente hasta {formatearFechaHora(w.activationCode.expiresAt)}. Emitir uno nuevo lo anula.
           </p>
         )}
-        {puedeEmitir && <EmitirCodigoForm action={emitirCodigoActivacion} workerId={w.id} />}
+        {puedeEmitir && <EmitirCodigoForm action={emitirCodigoActivacion} workerId={w.id} workerName={w.displayName} />}
       </div>
     </Bloque>
   );

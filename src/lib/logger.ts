@@ -8,7 +8,7 @@ type Nivel = "debug" | "info" | "warn" | "error";
 
 const prioridad: Record<Nivel, number> = { debug: 10, info: 20, warn: 30, error: 40 };
 
-const CLAVES_SENSIBLES = /token|secret|password|authorization|cookie|cedula|code_verifier/i;
+const CLAVES_SENSIBLES = /token|secret|password|authorization|cookie|cedula|id_?document|code_verifier/i;
 
 export function redactar(valor: unknown, profundidad = 0): unknown {
   if (profundidad > 5 || valor === null || typeof valor !== "object") return valor;
