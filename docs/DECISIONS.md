@@ -264,7 +264,8 @@ Estados posibles: `ACEPTADA`, `PROPUESTA` (pendiente de validar), `REEMPLAZADA`.
 - **Decisión:**
   - `worker_profiles` guarda `id_document_type` (`CEDULA` o `PASAPORTE`) e `id_document_number`, sin espacios ni guiones y en mayúsculas.
   - **Obligatorio** en el alta presencial y al editar la ficha (Zod y `fn_admin_create_worker`/`fn_admin_update_worker`). Los trabajadores registrados antes quedan sin documento hasta que el personal edite su ficha; por eso la columna admite nulos.
-  - La **cédula** se valida con provincia (01–24 o 30), tercer dígito menor que 6 y dígito verificador (módulo 10), en TS (`cedulaValida`) y en la base (`private.cedula_valida`, en una restricción de la tabla). El **pasaporte**, por formato: 5 a 20 letras o números.
+  - La **cédula** se valida con provincia (01–24 o 30) y dígito verificador (módulo 10), en TS (`cedulaValida`) y en la base (`private.cedula_valida`, en una restricción de la tabla). El **pasaporte**, por formato: 5 a 20 letras o números.
+  - **No se exige tercer dígito menor que 6** (decisión del usuario, 2026-10-07): esa regla viene del RUC (6 entidad pública, 9 sociedad) y no se pudo confirmar que el Registro Civil nunca emita cédulas de personas con un tercer dígito mayor; rechazar a una persona real es peor que aceptar un formato poco común. Migración `cedula_sin_tercer_digito`.
   - **Único por tipo**: un documento no puede pertenecer a dos trabajadores (índice único y error 409 con mensaje claro). La detección de duplicados lo informa como «mismo documento de identidad» y el operador no puede confirmarlo.
   - **Dato privado:** solo lo lee el servidor; se muestra en la ficha y se busca en el listado con `worker.read.private`. Nunca se publica ni va en la auditoría (solo el nombre del campo cambiado) ni en los registros (`logger` lo redacta).
   - Al eliminar la cuenta (ADR-018) el documento se borra con el resto de datos personales (trigger sobre `deleted_at`).

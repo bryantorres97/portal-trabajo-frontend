@@ -250,7 +250,8 @@ describe("formulario del trabajador", () => {
     }
     expect(cedulaValida("1801234560")).toBe(false); // dígito verificador
     expect(cedulaValida("2501234567")).toBe(false); // provincia inexistente
-    expect(cedulaValida("1871234567")).toBe(false); // tercer dígito ≥ 6
+    expect(cedulaValida("1765432107")).toBe(true); // el tercer dígito no se restringe
+    expect(cedulaValida("1765432108")).toBe(false);
     expect(cedulaValida("180123456")).toBe(false);
     expect(cedulaValida("18012345A6")).toBe(false);
   });

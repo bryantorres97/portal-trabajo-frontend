@@ -10,8 +10,8 @@ select plan(20);
 select ok(private.cedula_valida('1801234566') and private.cedula_valida('1710034065')
   and private.cedula_valida('0609876545') and private.cedula_valida('3000000012'), 'acepta cédulas válidas');
 select ok(not private.cedula_valida('1801234560'), 'rechaza un dígito verificador incorrecto');
-select ok(not private.cedula_valida('2501234567') and not private.cedula_valida('1871234567'),
-  'rechaza provincias inexistentes y tercer dígito ≥ 6');
+select ok(not private.cedula_valida('2501234567') and private.cedula_valida('1765432107'),
+  'rechaza provincias inexistentes y no restringe el tercer dígito');
 select ok(not private.cedula_valida('180123456') and not private.cedula_valida(null), 'rechaza longitudes y nulos');
 select ok(not has_function_privilege('authenticated', 'private.worker_check_id_document(jsonb, uuid)', 'EXECUTE'),
   'authenticated no ejecuta la verificación del documento');

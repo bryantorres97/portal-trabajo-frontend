@@ -50,13 +50,14 @@ const fechaNacimiento = z
 const booleano = z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean());
 
 /**
- * Cédula ecuatoriana: 10 dígitos, provincia 01–24 o 30, tercer dígito menor que 6 y dígito
- * verificador con módulo 10 (coeficientes 2-1-2-1-2-1-2-1-2). La base aplica la misma regla.
+ * Cédula ecuatoriana: 10 dígitos, provincia 01–24 o 30 y dígito verificador con módulo 10
+ * (coeficientes 2-1-2-1-2-1-2-1-2). No se exige tercer dígito menor que 6: esa regla es del RUC y
+ * podría rechazar cédulas reales (ADR-019). La base aplica la misma regla.
  */
 export function cedulaValida(cedula: string): boolean {
   if (!/^\d{10}$/.test(cedula)) return false;
   const provincia = Number(cedula.slice(0, 2));
-  if (!((provincia >= 1 && provincia <= 24) || provincia === 30) || Number(cedula[2]) >= 6) return false;
+  if (!((provincia >= 1 && provincia <= 24) || provincia === 30)) return false;
   let suma = 0;
   for (let i = 0; i < 9; i++) {
     const d = Number(cedula[i]) * (i % 2 === 0 ? 2 : 1);
