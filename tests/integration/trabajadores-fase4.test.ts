@@ -82,6 +82,9 @@ function formulario(marca: string, extra: Record<string, unknown> = {}) {
   return {
     firstNames: "Prueba",
     lastNames: marca,
+    // Pasaporte aleatorio: el documento no puede repetirse entre trabajadores.
+    idDocumentType: "PASAPORTE",
+    idDocumentNumber: `P${randomUUID().replace(/-/g, "").slice(0, 12).toUpperCase()}`,
     phone: `09${String(Math.floor(Math.random() * 1e8)).padStart(8, "0")}`,
     publicDisplayName: `Prueba ${marca}`,
     specialty: `Especialidad ${marca}`,
@@ -123,6 +126,31 @@ describe("alta presencial", () => {
       const [a] = await auditoria("WORKER_CREATED", confirmado.id);
       expect(a.metadata).toMatchObject({ duplicatesConfirmed: true });
     }
+  });
+
+  it("no admite dos trabajadores con el mismo documento de identidad, ni confirmando", async () => {
+    const doc = { idDocumentType: "PASAPORTE", idDocumentNumber: `D${randomUUID().replace(/-/g, "").slice(0, 10)}` };
+    const primero = await createWorker(operador, formulario(`doc${randomUUID().slice(0, 6)}`, doc), ctx);
+    if (primero.status !== "created") throw new Error("no creado");
+
+    const otro = { ...doc, idDocumentNumber: doc.idDocumentNumber.toLowerCase() };
+    const segundo = await createWorker(operador, formulario(`doc${randomUUID().slice(0, 6)}`, otro), ctx);
+    expect(segundo.status).toBe("duplicates");
+    if (segundo.status === "duplicates") {
+      expect(segundo.candidates.find((c) => c.id === primero.id)?.reasons).toContain("DOCUMENTO");
+    }
+    await expect(
+      createWorker(operador, formulario(`doc${randomUUID().slice(0, 6)}`, { ...otro, duplicatesConfirmed: "on" }), ctx),
+    ).rejects.toMatchObject({ status: 409 });
+
+    const ajeno = await createWorker(operador, formulario(`doc${randomUUID().slice(0, 6)}`), ctx);
+    if (ajeno.status !== "created") throw new Error("no creado");
+    const ficha = await getWorkerForEdit(admin, ajeno.id, ctx);
+    await expect(
+      updateWorker(admin, ajeno.id, { ...ficha.values, ...doc, isAvailable: "on" }, ctx),
+    ).rejects.toMatchObject({
+      status: 409,
+    });
   });
 
   it("un supervisor sin worker.create no registra", async () => {
@@ -357,6 +385,7 @@ describe("datos de las pantallas del panel", () => {
     const [a] = await auditoria("WORKER_UPDATED", r.id);
     expect(a.metadata.fields).toEqual(expect.arrayContaining(["specialty", "services"]));
     expect(a.metadata.fields).not.toContain("phone");
+    expect(a.metadata.fields).not.toContain("id_document_number");
     expect((await getWorkerDetail(admin, r.id, ctx)).services.find((s) => s.isPrimary)?.slug).toBe("pintura");
 
     await changeWorkerStatus(admin, { workerId: r.id, to: "PENDIENTE_REVISION" }, ctx);

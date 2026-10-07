@@ -265,3 +265,72 @@
   border-radius: var(--radius-2xl);
   box-shadow: var(--shadow-suave);
 }
+
+/* Ticket del código de activación: solo se imprime desde «Imprimir ticket» (CodigoEmitido.tsx),
+   que pone la clase en <html>. Ancho de 72 mm: cabe en un rollo de 80 mm y en una hoja A4. */
+.ticket-impresion {
+  display: none;
+}
+@media print {
+  html.imprimir-ticket body > :not(.ticket-impresion) {
+    display: none !important;
+  }
+  html.imprimir-ticket body {
+    background: #fff;
+  }
+  html.imprimir-ticket .ticket-impresion {
+    display: block;
+    width: 72mm;
+    margin: 0 auto;
+    padding: 4mm 2mm;
+    color: #000;
+    font-size: 9.5pt;
+    line-height: 1.35;
+    text-align: center;
+    print-color-adjust: exact;
+  }
+  .ticket-cabecera {
+    padding-bottom: 3mm;
+    border-bottom: 1px dashed #000;
+    font-size: 8pt;
+    letter-spacing: 0.04em;
+  }
+  .ticket-titulo {
+    margin-top: 3mm;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+  .ticket-nombre {
+    margin-top: 1mm;
+  }
+  .ticket-codigo {
+    margin: 3mm 0 1mm;
+    padding: 2.5mm 0;
+    border: 1.5px solid #000;
+    border-radius: 2mm;
+    font-family: var(--font-mono, ui-monospace, monospace);
+    font-size: 20pt;
+    font-weight: 800;
+    letter-spacing: 0.18em;
+  }
+  .ticket-vigencia {
+    font-size: 8.5pt;
+  }
+  .ticket-pasos {
+    margin-top: 3mm;
+    padding: 3mm 0 0 4.5mm;
+    border-top: 1px dashed #000;
+    list-style: decimal;
+    text-align: left;
+  }
+  .ticket-pasos li + li {
+    margin-top: 1mm;
+  }
+  .ticket-pie {
+    margin-top: 3mm;
+    padding-top: 3mm;
+    border-top: 1px dashed #000;
+    font-size: 7.5pt;
+  }
+}

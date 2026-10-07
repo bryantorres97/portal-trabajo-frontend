@@ -4,7 +4,14 @@ import { logAudit } from "@/server/audit/log";
 import { hasPermission, requirePermission } from "@/server/auth/authorize";
 import type { AppUser } from "@/server/auth/users";
 import { getAdminDb } from "@/server/db/admin";
-import { parseWorkerForm, statusChangeSchema, toWorkerRpc, workerSearchSchema } from "@/server/domain/workers/schemas";
+import {
+  normalizarDocumento,
+  parseWorkerForm,
+  statusChangeSchema,
+  toWorkerRpc,
+  workerSearchSchema,
+  type TipoDocumento,
+} from "@/server/domain/workers/schemas";
 import { WORKER_STATUSES, transitionPermission, type WorkerStatus } from "@/server/domain/workers/state-machine";
 import { DomainError, throwPg } from "@/server/errors";
 import { auditParams, type RequestContext } from "@/server/http/request-info";
@@ -76,6 +83,8 @@ export async function searchWorkersAdmin(
     if (privado) {
       filtros.push(`first_names.ilike.${p}`, `last_names.ilike.${p}`, `email.ilike.${p}`);
       if (/^\d{4,10}$/.test(telefono)) filtros.push(`phone.like.${telefono}%`);
+      const documento = normalizarDocumento(q);
+      if (/^[A-Z0-9]{5,20}$/.test(documento)) filtros.push(`id_document_number.like.${documento}%`);
     }
     grupos.push(filtros.join(","));
   }
@@ -138,6 +147,8 @@ type DetailRow = {
   user_id: string | null;
   first_names: string;
   last_names: string;
+  id_document_type: TipoDocumento | null;
+  id_document_number: string | null;
   phone: string | null;
   email: string | null;
   address: string | null;
@@ -175,7 +186,7 @@ export async function getWorkerDetail(actor: AppUser, workerId: string, ctx: Req
   const { data: w, error } = await db
     .from("worker_profiles")
     .select(
-      `id, user_id, first_names, last_names, phone, email, address, birth_date, emergency_contact_name,
+      `id, user_id, first_names, last_names, id_document_type, id_document_number, phone, email, address, birth_date, emergency_contact_name,
        emergency_contact_phone, public_display_name, specialty, public_bio, years_experience, is_available,
        availability_note, status, status_changed_at, enabled_at, suspended_until, photo_path, photo_pending_path,
        photo_status, photo_review_note, proposed_bio, proposed_availability_note, proposal_submitted_at,
@@ -309,6 +320,8 @@ export async function getWorkerDetail(actor: AppUser, workerId: string, ctx: Req
       ? {
           firstNames: w.first_names,
           lastNames: w.last_names,
+          idDocumentType: w.id_document_type,
+          idDocumentNumber: w.id_document_number,
           birthDate: w.birth_date,
           phone: w.phone,
           email: w.email,
@@ -379,6 +392,8 @@ export async function getWorkerForEdit(actor: AppUser, workerId: string, ctx: Re
     values: {
       firstNames: p.firstNames,
       lastNames: p.lastNames,
+      idDocumentType: p.idDocumentType ?? "CEDULA",
+      idDocumentNumber: p.idDocumentNumber ?? "",
       birthDate: p.birthDate ?? "",
       phone: p.phone ?? "",
       email: p.email ?? "",
@@ -403,12 +418,19 @@ export type DuplicateCandidate = {
   id: string;
   displayName: string;
   status: WorkerStatus;
-  reasons: ("TELEFONO" | "EMAIL" | "NOMBRES")[];
+  reasons: ("DOCUMENTO" | "TELEFONO" | "EMAIL" | "NOMBRES")[];
 };
 
 export async function findDuplicates(
   actor: AppUser,
-  d: { phone?: string; email?: string; firstNames: string; lastNames: string },
+  d: {
+    idDocumentType?: TipoDocumento;
+    idDocumentNumber?: string;
+    phone?: string;
+    email?: string;
+    firstNames: string;
+    lastNames: string;
+  },
   excludeId?: string,
 ): Promise<DuplicateCandidate[]> {
   requirePermission(actor, "worker.read");
@@ -419,6 +441,8 @@ export async function findDuplicates(
     p_first_names: d.firstNames,
     p_last_names: d.lastNames,
     p_exclude: excludeId ?? null,
+    p_id_document_type: d.idDocumentType ?? null,
+    p_id_document_number: d.idDocumentNumber ?? null,
   });
   if (error) throwPg(error);
   return ((data ?? []) as { id: string; public_display_name: string; status: WorkerStatus; reasons: string[] }[]).map(
@@ -435,8 +459,9 @@ export type CreateResult =
   { status: "created"; id: string } | { status: "duplicates"; candidates: DuplicateCandidate[] };
 
 /**
- * Alta presencial. Si hay posibles duplicados (teléfono, email o nombres) y el operador no los
- * confirmó, no crea nada y devuelve los candidatos para que decida (01-negocio.md §7.1).
+ * Alta presencial. Si hay posibles duplicados (documento, teléfono, email o nombres) y el operador no
+ * los confirmó, no crea nada y devuelve los candidatos para que decida (01-negocio.md §7.1). Un
+ * documento repetido no se puede confirmar: la base lo rechaza.
  */
 export async function createWorker(actor: AppUser, input: unknown, ctx: RequestContext): Promise<CreateResult> {
   requirePermission(actor, "worker.create");

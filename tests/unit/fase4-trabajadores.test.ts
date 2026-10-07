@@ -13,6 +13,7 @@ import {
   normalizeActivationCode,
 } from "@/server/domain/workers/activation-code";
 import {
+  cedulaValida,
   enrollmentUpdateSchema,
   esMayorDeEdad,
   parseWorkerForm,
@@ -205,6 +206,8 @@ const SERV_B = "00000000-0000-4000-8000-00000000000b";
 const valido = {
   firstNames: "  Manuel   Antonio ",
   lastNames: "Yánez Pilco",
+  idDocumentType: "CEDULA",
+  idDocumentNumber: "180123456-6",
   birthDate: "1985-04-10",
   phone: "099 123 4567",
   email: "MANUEL@Correo.ec",
@@ -220,14 +223,48 @@ const valido = {
 describe("formulario del trabajador", () => {
   it("normaliza y arma los datos para la base con un único oficio principal", () => {
     const d = parseWorkerForm(valido);
-    expect(d).toMatchObject({ firstNames: "Manuel Antonio", phone: "0991234567", email: "manuel@correo.ec" });
+    expect(d).toMatchObject({
+      firstNames: "Manuel Antonio",
+      idDocumentNumber: "1801234566",
+      phone: "0991234567",
+      email: "manuel@correo.ec",
+    });
     expect(d.address).toBeUndefined();
     const rpc = toWorkerRpc(d);
     expect(rpc.services).toEqual([
       { serviceId: SERV_A, isPrimary: false },
       { serviceId: SERV_B, isPrimary: true },
     ]);
-    expect(rpc.data).toMatchObject({ yearsExperience: 12, isAvailable: true, duplicatesConfirmed: false });
+    expect(rpc.data).toMatchObject({
+      idDocumentType: "CEDULA",
+      idDocumentNumber: "1801234566",
+      yearsExperience: 12,
+      isAvailable: true,
+      duplicatesConfirmed: false,
+    });
+  });
+
+  it("valida la cédula ecuatoriana con el dígito verificador", () => {
+    for (const c of ["1801234566", "1712345675", "0609876545", "3000000012", "1710034065"]) {
+      expect(cedulaValida(c), c).toBe(true);
+    }
+    expect(cedulaValida("1801234560")).toBe(false); // dígito verificador
+    expect(cedulaValida("2501234567")).toBe(false); // provincia inexistente
+    expect(cedulaValida("1765432107")).toBe(true); // el tercer dígito no se restringe
+    expect(cedulaValida("1765432108")).toBe(false);
+    expect(cedulaValida("180123456")).toBe(false);
+    expect(cedulaValida("18012345A6")).toBe(false);
+  });
+
+  it("exige el documento de identidad: cédula válida o pasaporte", () => {
+    expect(() => parseWorkerForm({ ...valido, idDocumentNumber: "" })).toThrow();
+    expect(() => parseWorkerForm({ ...valido, idDocumentType: undefined })).toThrow();
+    expect(() => parseWorkerForm({ ...valido, idDocumentType: "RUC" })).toThrow();
+    expect(() => parseWorkerForm({ ...valido, idDocumentNumber: "1801234560" })).toThrow();
+    const pasaporte = parseWorkerForm({ ...valido, idDocumentType: "PASAPORTE", idDocumentNumber: "ab 12-3456" });
+    expect(pasaporte).toMatchObject({ idDocumentType: "PASAPORTE", idDocumentNumber: "AB123456" });
+    expect(() => parseWorkerForm({ ...valido, idDocumentType: "PASAPORTE", idDocumentNumber: "A1" })).toThrow();
+    expect(() => parseWorkerForm({ ...valido, idDocumentType: "PASAPORTE", idDocumentNumber: "AB12345Ñ" })).toThrow();
   });
 
   it("exige celular o correo", () => {

@@ -175,7 +175,7 @@ Definidos en `01-negocio.md` §6. En la base se implementan como enums: `worker_
 - `reviews.rating between 1 and 5`; el comentario tiene como máximo 200 palabras (CHECK) y 2 000 caracteres.
 - `messages.body` tiene entre 1 y 2 000 caracteres cuando `kind='TEXT'`.
 - `contract_terms.price_amount >= 0`; `scheduled_end >= scheduled_start`.
-- El portal **no almacena cédula** (ADR-008). Lo verifica un test pgTAP.
+- Las cuentas **no almacenan cédula** (ADR-008). El documento de identidad (cédula o pasaporte) solo está en `worker_profiles`, como dato privado y único (ADR-019). Lo verifica un test pgTAP.
 - `conversations`: `client_user_id` distinto del `user_id` del trabajador (no se permite conversar consigo mismo).
 - `reports`: `reporter_id` distinto de `reported_user_id`; unique parcial `(reporter_id, target_type, target_id) where status in ('ABIERTA','EN_REVISION','EN_ESPERA_DE_INFORMACION','ESCALADA')`.
 - Triggers de inmutabilidad en `contract_terms`, `audit_log`, `sensitive_access_log`, `consents`, `worker_status_history` y `contract_events`.

@@ -4,7 +4,8 @@ import { WORKER_STATUSES } from "@/server/domain/workers/state-machine";
 
 /**
  * Esquemas del trabajador. Se comparten entre el asistente de registro (cliente) y el servidor
- * (Server Actions y API): el servidor SIEMPRE revalida. El portal no registra cédula (ADR-008).
+ * (Server Actions y API): el servidor SIEMPRE revalida. El documento de identidad (cédula o pasaporte)
+ * es privado y obligatorio (ADR-019).
  */
 
 const opcional = <T extends z.ZodType>(schema: T) =>
@@ -48,12 +49,59 @@ const fechaNacimiento = z
 
 const booleano = z.preprocess((v) => v === "on" || v === "true" || v === true, z.boolean());
 
+/**
+ * Cédula ecuatoriana: 10 dígitos, provincia 01–24 o 30 y dígito verificador con módulo 10
+ * (coeficientes 2-1-2-1-2-1-2-1-2). No se exige tercer dígito menor que 6: esa regla es del RUC y
+ * podría rechazar cédulas reales (ADR-019). La base aplica la misma regla.
+ */
+export function cedulaValida(cedula: string): boolean {
+  if (!/^\d{10}$/.test(cedula)) return false;
+  const provincia = Number(cedula.slice(0, 2));
+  if (!((provincia >= 1 && provincia <= 24) || provincia === 30)) return false;
+  let suma = 0;
+  for (let i = 0; i < 9; i++) {
+    const d = Number(cedula[i]) * (i % 2 === 0 ? 2 : 1);
+    suma += d > 9 ? d - 9 : d;
+  }
+  return (10 - (suma % 10)) % 10 === Number(cedula[9]);
+}
+
+export const TIPOS_DOCUMENTO = ["CEDULA", "PASAPORTE"] as const;
+export type TipoDocumento = (typeof TIPOS_DOCUMENTO)[number];
+export const ETIQUETAS_DOCUMENTO: Record<TipoDocumento, string> = { CEDULA: "Cédula", PASAPORTE: "Pasaporte" };
+
+/** Sin espacios ni guiones y en mayúsculas, como se guarda en la base. */
+export const normalizarDocumento = (v: string) => v.replace(/[\s-]/g, "").toUpperCase();
+
 /** Paso 1 — datos personales (privados). */
-export const workerPersonalSchema = z.object({
-  firstNames: texto(1, 80, "Los nombres"),
-  lastNames: texto(1, 80, "Los apellidos"),
-  birthDate: opcional(fechaNacimiento),
-});
+export const workerPersonalSchema = z
+  .object({
+    firstNames: texto(1, 80, "Los nombres"),
+    lastNames: texto(1, 80, "Los apellidos"),
+    idDocumentType: z.enum(TIPOS_DOCUMENTO, { error: "Elige el tipo de documento" }),
+    idDocumentNumber: z
+      .string({ error: "Ingresa el número del documento" })
+      .transform(normalizarDocumento)
+      .pipe(z.string().min(1, "Ingresa el número del documento")),
+    birthDate: opcional(fechaNacimiento),
+  })
+  .superRefine((v, ctx) => {
+    if (!v.idDocumentNumber) return;
+    if (v.idDocumentType === "CEDULA" && !cedulaValida(v.idDocumentNumber)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["idDocumentNumber"],
+        message: "La cédula no es válida: revisa los 10 dígitos",
+      });
+    }
+    if (v.idDocumentType === "PASAPORTE" && !/^[A-Z0-9]{5,20}$/.test(v.idDocumentNumber)) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["idDocumentNumber"],
+        message: "El pasaporte debe tener entre 5 y 20 letras o números",
+      });
+    }
+  });
 
 /** Paso 2 — contacto (privado, RN-19: nunca se publica). */
 export const workerContactSchema = z
@@ -104,6 +152,7 @@ export const workerFormSchema = z.object({
 /** Esquema completo con las validaciones cruzadas de cada paso. */
 export function parseWorkerForm(input: unknown) {
   const datos = workerFormSchema.parse(input);
+  workerPersonalSchema.parse(datos);
   workerContactSchema.parse(datos);
   workerServicesSchema.parse(datos);
   return datos;
@@ -127,6 +176,8 @@ export function toWorkerRpc(d: WorkerFormInput) {
     data: {
       firstNames: d.firstNames,
       lastNames: d.lastNames,
+      idDocumentType: d.idDocumentType,
+      idDocumentNumber: d.idDocumentNumber,
       birthDate: d.birthDate ?? null,
       phone: d.phone ?? null,
       email: d.email ?? null,

@@ -207,7 +207,7 @@ ABIERTA ──► EN_REVISION ──► RESUELTA
 
 ### 7.1 Alta y habilitación del trabajador
 
-1. El operador inicia sesión en `/admin` y crea el trabajador con nombres, contacto, sector, servicios y categorías. **El portal no registra cédula** (ADR-008). El sistema advierte posibles duplicados por teléfono, email y nombres, y el operador decide.
+1. El operador inicia sesión en `/admin` y crea el trabajador con nombres, contacto, sector, servicios y categorías. Registra la **cédula o el pasaporte** como dato privado y obligatorio (ADR-019; las cuentas siguen sin cédula, ADR-008). El sistema advierte posibles duplicados por documento, teléfono, email y nombres, y el operador decide.
 2. Carga los documentos, que se guardan en un bucket privado. Estado → `DOCUMENTACION_PENDIENTE` o `PENDIENTE_REVISION`.
 3. El admin de trabajadores valida los documentos. Estado → `CAPACITACION_PENDIENTE`.
 4. El responsable de capacitación registra la inscripción y luego el resultado con evidencia. Estado → `CAPACITACION_APROBADA`.

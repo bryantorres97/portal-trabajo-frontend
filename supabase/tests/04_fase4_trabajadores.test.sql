@@ -62,7 +62,7 @@ insert into public.user_roles (user_id, role_code) values
 
 create temp table t (k text primary key, v uuid) on commit drop;
 insert into t values ('w', public.fn_admin_create_worker('00000000-0000-0000-0000-0000000004a2',
-  '{"firstNames":"Rosa","lastNames":"Pérez","phone":"0998887766","publicDisplayName":"Rosa P.","yearsExperience":5,"parishCode":"izamba"}',
+  '{"firstNames":"Rosa","lastNames":"Pérez","idDocumentType":"CEDULA","idDocumentNumber":"1801234566","phone":"0998887766","publicDisplayName":"Rosa P.","yearsExperience":5,"parishCode":"izamba"}',
   jsonb_build_array(jsonb_build_object('serviceId', (select id from public.services where slug = 'plomeria'), 'isPrimary', true))));
 
 select is((select status::text from public.worker_profiles where id = (select v from t where k = 'w')), 'REGISTRADO',
@@ -78,10 +78,10 @@ select throws_ok($$ select public.fn_admin_create_worker('00000000-0000-0000-000
   '{"firstNames":"X","lastNames":"Y","publicDisplayName":"X Y."}', '[]') $$, '42501', null,
   'un ciudadano no registra trabajadores');
 select throws_ok($$ select public.fn_admin_create_worker('00000000-0000-0000-0000-0000000004a2',
-  '{"firstNames":"X","lastNames":"Y","publicDisplayName":"X Y."}', '[]') $$, '23514', null,
+  '{"firstNames":"X","lastNames":"Y","idDocumentType":"PASAPORTE","idDocumentNumber":"XY12345","publicDisplayName":"X Y."}', '[]') $$, '23514', null,
   'se exige al menos un oficio');
 select throws_ok($$ select public.fn_admin_create_worker('00000000-0000-0000-0000-0000000004a2',
-  '{"firstNames":"X","lastNames":"Y","publicDisplayName":"X Y.","birthDate":"2015-01-01"}',
+  '{"firstNames":"X","lastNames":"Y","idDocumentType":"PASAPORTE","idDocumentNumber":"XY12345","publicDisplayName":"X Y.","birthDate":"2015-01-01"}',
   jsonb_build_array(jsonb_build_object('serviceId', (select id from public.services where slug = 'plomeria'), 'isPrimary', true))) $$,
   '23514', null, 'se rechaza a menores de edad');
 
